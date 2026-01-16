@@ -16,6 +16,51 @@ export const createSubmission = async (req: Request, res: Response) => {
       });
     }
 
+    // Check existence of task
+    const task = await prisma.task.findUnique({
+      where: {id: taskId },
+    });
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Prevent submission to a completed task
+    if (task.status === "COMPLETED") {
+      return res.status(400).json({
+        message: "Task is already completed",
+      });
+    }
+
+    // Check option belong to task
+    const option = await prisma.option.findFirst({
+      where: {
+        id: optionId,
+        task_id: taskId,
+      },
+    });
+
+    if (!option) {
+      return res.status(400).json({
+        message: "Invalid option for this task",
+      });
+    }
+
+    // Prevent duplicate submission
+    const existingSubmission = await prisma.submission.findFirst({
+      where: {
+        worker_id: workerId,
+        task_id: taskId,
+      },
+    });
+
+    if (existingSubmission) {
+      return res.status(400).json({
+        message: "Worker has already submitted for this task",
+      });
+    }
+
+    // Create submission
     const submission = await prisma.submission.create({
       data: {
         worker_id: workerId,
