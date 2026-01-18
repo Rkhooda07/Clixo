@@ -5,6 +5,7 @@ import taskRouter from "./routes/taskRoutes.ts";
 import submissionRoutes from "./routes/submissionRoutes.ts";
 import aggregationRoutes from "./routes/aggregationRoutes.ts";
 import rewardRoutes from "./routes/rewardRoutes.ts";
+import rewardSettlementRoutes from "./routes/rewardSettlementRoutes.ts";
 
 dotenv.config();
 
@@ -28,6 +29,9 @@ app.use("/api", aggregationRoutes);
 
 // Route for preview of rewards
 app.use("/api", rewardRoutes);
+
+// Route for settlement of rewards
+app.use("/api", rewardSettlementRoutes);
 
 // Basic root route
 app.get("/", (req, res) => {
