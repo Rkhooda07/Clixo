@@ -1,6 +1,7 @@
 type Challenge = {
   walletAddress: string,
   nonce: string,
+  message: string,
   expiresAt: number,
 };
 
