@@ -50,7 +50,7 @@ model Worker {
   id                Int             @id @default(autoincrement())
   address           String          @unique
   submissions       Submission[]
-  balance_id        Int
+  wallet_address    String?         @unique   // Eth wallet    
   pending_amount    Int
   locked_amount     Int
 }
