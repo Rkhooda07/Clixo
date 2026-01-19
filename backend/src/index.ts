@@ -6,6 +6,7 @@ import submissionRoutes from "./routes/submissionRoutes.ts";
 import aggregationRoutes from "./routes/aggregationRoutes.ts";
 import rewardRoutes from "./routes/rewardRoutes.ts";
 import rewardSettlementRoutes from "./routes/rewardSettlementRoutes.ts";
+import authRoutes from "./routes/authRoutes.ts";
 
 dotenv.config();
 
@@ -32,6 +33,9 @@ app.use("/api", rewardRoutes);
 
 // Route for settlement of rewards
 app.use("/api", rewardSettlementRoutes);
+
+// Route for Siwe challenge creation
+app.use("/api", authRoutes);
 
 // Basic root route
 app.get("/", (req, res) => {
