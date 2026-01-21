@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { ethers } from "ethers";
 import prisma from "../prisma.ts";
 import { saveChallenge, getChallenge, deleteChallenge } from "../auth/siweStore.ts";
+import { signToken } from "../auth/jwt.ts";
 
 export const createSiweChallenge = async (req: Request, res: Response) => {
   const { walletAddress } = req.body;
@@ -54,7 +55,7 @@ export const verifySiweSignature = async (req: Request, res: Response) => {
     });
   }
 
-  // Recover the singer
+  // Recover the sender
   const recoveredAddress = ethers.verifyMessage(
     challenge.message,
     signature
@@ -74,10 +75,16 @@ export const verifySiweSignature = async (req: Request, res: Response) => {
     },
   });
 
+  const token = signToken({
+    workerId,
+    walletAddress,
+  });
+
   // Invalidate the nonce
   deleteChallenge(nonce);
 
   res.json({
-    message: "Wallet verified and linked successfully",
+    message: "Wallet verified and authenticated",
+    token,
   });
 };
