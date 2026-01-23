@@ -7,6 +7,7 @@ import aggregationRoutes from "./routes/aggregationRoutes.ts";
 import rewardRoutes from "./routes/rewardRoutes.ts";
 import rewardSettlementRoutes from "./routes/rewardSettlementRoutes.ts";
 import authRoutes from "./routes/authRoutes.ts";
+import payoutRoutes from "./routes/payoutRoutes.ts";
 
 dotenv.config();
 
@@ -36,6 +37,9 @@ app.use("/api", rewardSettlementRoutes);
 
 // Route for Siwe challenge creation
 app.use("/api", authRoutes);
+
+// Route for payout preview
+app.use("/api", payoutRoutes);
 
 // Basic root route
 app.get("/", (req, res) => {
