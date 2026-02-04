@@ -92,6 +92,7 @@ export const executePayout = async (
       gasFee: GAS_FEE,
       netAmount: payoutAmount - GAS_FEE,
       walletAddress: worker.wallet_address,
+      txRef: tx.hash,
       message: "Payout completed successfully",
     });
   } catch (error) {
