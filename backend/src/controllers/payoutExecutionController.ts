@@ -9,6 +9,7 @@ export const executePayout = async (
   const { workerId } = req.auth!;
   
   let payoutAmount = 0;
+  const GAS_FEE = 2;
 
   try {
     // Fetch worker
@@ -47,20 +48,42 @@ export const executePayout = async (
       });
     });
 
+    const payout = await prisma.payout.create({
+      data: {
+        workerId,
+        amount: payoutAmount,
+        gasFee: GAS_FEE,
+        netAmount: payoutAmount - GAS_FEE,
+        status: "PENDING",
+      },
+    });
+
     // Trigger blockchain transfer (placeholder)
     // const txHash = await sendOnChain(worker.wallet_address, payoutAmount);
 
     // Finalize payout (mock for now)
-    await prisma.worker.update({
-      where: { id: workerId },
-      data: {
-        locked_amount: 0,
-      },
-    });
+    await prisma.$transaction([
+      prisma.worker.update({
+        where: { id: workerId },
+        data: {
+          locked_amount: 0,
+        },
+      }),
+      prisma.payout.update({
+        where: { id: payout.id },
+        data: {
+          status: "SUCCESS",
+          txRef: "MOCK_TX_HASH",
+        },
+      }),
+    ]);
 
     return res.json({
       status: "SUCCESS",
-      amount: payoutAmount,
+      payoutId: payout.id,
+      grossAmount: payoutAmount,
+      gasFee: GAS_FEE,
+      netAmount: payoutAmount - GAS_FEE,
       walletAddress: worker.wallet_address,
       message: "Payout completed successfully",
     });
@@ -68,13 +91,15 @@ export const executePayout = async (
     console.error("Payout execution error:", error);
 
     // 🔴 IMPORTANT: rollback locked funds on failure
-    await prisma.worker.update({
-      where: { id: workerId },
-      data: {
-        pending_amount: payoutAmount,
-        locked_amount: 0,
-      },
-    });
+    await prisma.$transaction([
+      prisma.worker.update({
+        where: { id: workerId },
+        data: {
+          pending_amount: payoutAmount,
+          locked_amount: 0,
+        },
+      }),
+    ]);
 
     return res.status(500).json({
       message: "Payout failed. Funds restored.",
