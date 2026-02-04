@@ -1,6 +1,7 @@
 import type { Response } from "express";
 import prisma from "../prisma.ts";
 import type { AuthenticatedRequest } from "../middleware/authMiddleware.ts";
+import { sendEth } from "../blockchain/ethClient.ts";
 
 export const executePayout = async (
   req: AuthenticatedRequest,
@@ -10,6 +11,7 @@ export const executePayout = async (
   
   let payoutAmount = 0;
   const GAS_FEE = 2;
+  const ETH_PER_CREDIT = 0.001;
 
   try {
     // Fetch worker
@@ -58,10 +60,15 @@ export const executePayout = async (
       },
     });
 
-    // Trigger blockchain transfer (placeholder)
-    // const txHash = await sendOnChain(worker.wallet_address, payoutAmount);
+    // Execute on-chain transfer
+    const ethToSend = (payoutAmount - GAS_FEE) * ETH_PER_CREDIT;
 
-    // Finalize payout (mock for now)
+    const tx = await sendEth(
+      worker.wallet_address,
+      ethToSend
+    );
+
+    // Finalise payout
     await prisma.$transaction([
       prisma.worker.update({
         where: { id: workerId },
@@ -73,7 +80,7 @@ export const executePayout = async (
         where: { id: payout.id },
         data: {
           status: "SUCCESS",
-          txRef: "MOCK_TX_HASH",
+          txRef: tx.hash,
         },
       }),
     ]);
