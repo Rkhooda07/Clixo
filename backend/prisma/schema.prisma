@@ -1,12 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -23,23 +16,23 @@ model User {
 model Task {
   id          Int          @id @default(autoincrement())
   title       String       @default("Select the most clickable thumbnail")
-  options     Option[]
   user_id     Int
   signature   String?
   amount      String?
-  user        User         @relation(fields: [user_id], references: [id])
-  submissions Submission[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   status      String       @default("CREATED")
+  options     Option[]
+  submissions Submission[]
+  user        User         @relation(fields: [user_id], references: [id])
 }
 
 model Option {
   id          Int          @id @default(autoincrement())
-  ipfs_cid    String? // unique CID returned by Pinata (e.g., Qm123...)
-  ipfs_uri    String? // canonical IPFS URI, like ipfs://Qm123
-  gateway_url String? // Pinata gateway URL, like https://gateway.pinata.cloud/ipfs/Qm123
-  image_url   String? // optional fallback or original link (if provided)
+  ipfs_cid    String?
+  ipfs_uri    String?
+  gateway_url String?
+  image_url   String?
   option_id   Int?
   task_id     Int
   task        Task         @relation(fields: [task_id], references: [id])
@@ -49,24 +42,23 @@ model Option {
 model Worker {
   id             Int          @id @default(autoincrement())
   address        String       @unique
-  submissions    Submission[]
-  wallet_address String?      @unique // Eth wallet    
   pending_amount Int
   locked_amount  Int
-
-  payouts Payout[]
+  wallet_address String?      @unique
+  payouts        Payout[]
+  submissions    Submission[]
 }
 
 model Submission {
   id        Int      @id @default(autoincrement())
   worker_id Int
-  worker    Worker   @relation(fields: [worker_id], references: [id])
   option_id Int
-  option    Option   @relation(fields: [option_id], references: [id])
   task_id   Int
-  task      Task     @relation(fields: [task_id], references: [id])
   amount    String
   createdAt DateTime @default(now())
+  option    Option   @relation(fields: [option_id], references: [id])
+  task      Task     @relation(fields: [task_id], references: [id])
+  worker    Worker   @relation(fields: [worker_id], references: [id])
 }
 
 model Payout {
@@ -78,22 +70,5 @@ model Payout {
   status    String
   txRef     String?
   createdAt DateTime @default(now())
-
-  worker Worker @relation(fields: [workerId], references: [id])
+  worker    Worker   @relation(fields: [workerId], references: [id])
 }
-
-// Bypass the iterating step and makes it faster to show submissions
-// For now we added task_id in submission so it know but a bit slower
-
-// model SubmissionCache {
-//   id          Int       @id @default(autoincrement())
-//   task_id     Int
-//   option1     Int
-//   option2     Int
-//   option3     Int
-//   option4     Int
-//   option5     Int
-//   option6     Int
-//   option7     Int
-//   option8     Int
-// }
