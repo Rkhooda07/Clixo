@@ -8,6 +8,6 @@ const router = express.Router();
 
 router.get("/me/payout-preview", requireAuth, getPayoutPreview);
 router.post("/me/withdraw", requireAuth, executePayout);
-router.get("/me/payouts", getMypayouts);
+router.get("/me/payouts", requireAuth, getMypayouts);
 
 export default router;
