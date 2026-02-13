@@ -30,7 +30,7 @@ export async function createTask(req: Request, res: Response) {
     }
 
     // Destructure data
-    const { title, signature, amount, options } = req.body;
+    const { title, signature, amount, budget, options } = req.body;
 
     // Create task and related options in a single txn
     const task = await prisma.task.create({
@@ -38,8 +38,11 @@ export async function createTask(req: Request, res: Response) {
         title,
         signature: signature || null,
         amount: amount || null,
+        budget,
+        fundedAmount: 0,
+        status: "CREATED",
         user_id: userId,
-        option: {
+        options: {
           create: options.map((opt: any) => ({
             ipfs_cid: opt.ipfs_cid,
             ipfs_uri: opt.ipfs_uri || null,
@@ -49,7 +52,7 @@ export async function createTask(req: Request, res: Response) {
           })),
         },
       },
-      include: { option: true },
+      include: { options: true },
     });
 
     return res.status(201).json({
