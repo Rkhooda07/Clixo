@@ -29,10 +29,10 @@ export const settleTaskRewards = async (req: Request, res: Response) => {
       });
     }
 
-    // Must be completed
-    if (task.status !== "COMPLETED") {
+    // Task must be ACTIVE to settle
+    if (task.status !== "ACTIVE") {
       return res.status(400).json({
-        messsage: "Task must be completed before settlement",
+        message: "Task must be ACTIVE before settlement",
       });
     }
 
@@ -71,11 +71,18 @@ export const settleTaskRewards = async (req: Request, res: Response) => {
       });
     }
 
-    // Calculate reward
-    const totalReward = Number(task.amount || 0);
-    const rewardPerWorker = totalReward / winners.length;
+    // Calculate reward from task budget
+    const totalReward = task.budget;
 
-    // Apply rewards
+    if (task.fundedAmount < totalReward) {
+      return res.status(400).json({
+        message: "Insufficient funded amount for settlement",
+      });
+    }
+
+    const rewardPerWorker = Math.floor(totalReward / winners.length);
+
+    // Apply rewards and deduct budget
     await prisma.$transaction(async (tx) => {
       for (const submission of winners) {
         await tx.worker.update({
@@ -88,21 +95,24 @@ export const settleTaskRewards = async (req: Request, res: Response) => {
         });
       }
 
-      // Mark as rewarded
+      // Deduct full budget from fundedAmount
       await tx.task.update({
-        where: { id: taskId},
+        where: { id: taskId },
         data: {
-          status: "REWARDED",
+          fundedAmount: {
+            decrement: totalReward,
+          },
+          status: "SETTLED",
         },
       });
     });
 
     res.json({
       taskId,
-      rewardedWorkers: winners.length,
+      winners: winners.length,
       rewardPerWorker,
       totalReward,
-      status: "REWARDED",
+      status: "SETTLED",
     });
   } catch (error) {
     console.error("Reward settlement error: ", error);
