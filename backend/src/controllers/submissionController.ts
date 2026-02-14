@@ -26,9 +26,9 @@ export const createSubmission = async (req: Request, res: Response) => {
     }
 
     // Prevent submission to a completed task
-    if (task.status === "COMPLETED") {
+    if (task.status !== "ACTIVE") {
       return res.status(400).json({
-        message: "Task is already completed",
+        message: "Task is not active yet",
       });
     }
 
