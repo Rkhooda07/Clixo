@@ -10,6 +10,7 @@ datasource db {
 model User {
   id      Int    @id @default(autoincrement())
   address String @unique
+  balance Int    @default(0)
   tasks   Task[]
 }
 

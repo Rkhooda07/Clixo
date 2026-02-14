@@ -70,27 +70,35 @@ export async function fundTask (req: Request, res: Response) {
 
     const remainingBudget = task.budget - task.fundedAmount;
 
-    if (credits > remainingBudget) {
-      return res.status(400).json({
-        message: `Deposit exceeds remaining budget. Remaining credits allowed: ${remainingBudget}`,
-      });
-    }
-
     if (credits <= 0) {
       return res.status(400).json({
         message: "Invalid deposit amount",
       });
     }
 
-    // Update fundedAmount
+    const usableCredits = Math.min(credits, remainingBudget);
+    const excessCredits = credits - usableCredits;
+
     const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: {
         fundedAmount: {
-          increment: credits,
+          increment: usableCredits,
         },
       },
     });
+
+    // Store excess credits in user's balance
+    if (excessCredits > 0) {
+      await prisma.user.update({
+        where: { id: task.user_id },
+        data: {
+          balance: {
+            increment: excessCredits,
+          },
+        },
+      });
+    }
 
     // Activate if fully funded
     if (updatedTask.fundedAmount >= updatedTask.budget &&
@@ -107,7 +115,8 @@ export async function fundTask (req: Request, res: Response) {
     return res.json({
       success: true,
       depositedEth: ethAmount,
-      creditedAmount: credits,
+      usableCredits,
+      excessCredits,
       newFundedAmount: updatedTask.fundedAmount,
     });
   } catch (error: any) {
