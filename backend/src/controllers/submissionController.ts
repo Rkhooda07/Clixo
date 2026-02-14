@@ -7,10 +7,10 @@ import prisma from "../prisma.ts";
 */
 export const createSubmission = async (req: Request, res: Response) => {
   try {
-    const { workerId, taskId, optionId, amount } = req.body;
+    const { workerId, taskId, optionId } = req.body;
 
     // Basic sanity check
-    if (!workerId || !taskId || !optionId || !amount) {
+    if (!workerId || !taskId || !optionId) {
       return res.status(400).json ({
         message: "Missing required fields",
       });
@@ -65,8 +65,7 @@ export const createSubmission = async (req: Request, res: Response) => {
       data: {
         worker_id: workerId,
         task_id: taskId,
-        option_id: optionId,
-        amount,
+        option_id: optionId
       },
     });
 

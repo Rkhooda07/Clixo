@@ -56,7 +56,6 @@ model Submission {
   worker_id Int
   option_id Int
   task_id   Int
-  amount    String
   createdAt DateTime @default(now())
   option    Option   @relation(fields: [option_id], references: [id])
   task      Task     @relation(fields: [task_id], references: [id])
