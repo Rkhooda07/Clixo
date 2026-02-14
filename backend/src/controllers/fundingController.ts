@@ -32,6 +32,13 @@ export async function fundTask (req: Request, res: Response) {
       });
     }
 
+    // Reject if already fully funded
+    if (task.fundedAmount >= task.budget) {
+      return res.status(400).json({
+        message: "Task is already fully funded",
+      });
+    }
+
     // Fetch tx from blockchain
     const tx = await provider.getTransaction(txHash);
 
@@ -60,6 +67,14 @@ export async function fundTask (req: Request, res: Response) {
     // Convert eth to credits
     const ethAmount = Number(ethers.formatEther(tx.value));
     const credits = ethAmount / ETH_PER_CREDIT;
+
+    const remainingBudget = task.budget - task.fundedAmount;
+
+    if (credits > remainingBudget) {
+      return res.status(400).json({
+        message: `Deposit exceeds remaining budget. Remaining credits allowed: ${remainingBudget}`,
+      });
+    }
 
     if (credits <= 0) {
       return res.status(400).json({
