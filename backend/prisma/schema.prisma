@@ -8,10 +8,11 @@ datasource db {
 }
 
 model User {
-  id      Int    @id @default(autoincrement())
-  address String @unique
-  balance Int    @default(0)
+  id      Int       @id @default(autoincrement())
+  address String    @unique
+  balance Int       @default(0)
   tasks   Task[]
+  funding Funding[]
 }
 
 model Task {
@@ -28,6 +29,7 @@ model Task {
   options      Option[]
   submissions  Submission[]
   user         User         @relation(fields: [user_id], references: [id])
+  funding      Funding[]
 }
 
 model Option {
@@ -73,4 +75,17 @@ model Payout {
   txRef     String?
   createdAt DateTime @default(now())
   worker    Worker   @relation(fields: [workerId], references: [id])
+}
+
+model Funding {
+  id        Int      @id @default(autoincrement())
+  user_id   Int
+  task_id   Int?
+  txHash    String?  @unique
+  credits   Int
+  source    String // BLOCKCHAIN | INTERNAL BALANCE
+  createdAt DateTime @default(now())
+
+  user User  @relation(fields: [user_id], references: [id])
+  task Task? @relation(fields: [task_id], references: [id])
 }

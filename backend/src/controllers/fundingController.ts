@@ -72,6 +72,14 @@ export async function fundTask (req: Request, res: Response) {
             },
           },
         }),
+        prisma.funding.create({
+          data: {
+            user_id: user.id,
+            task_id: taskId,
+            credits: usableFromBalance,
+            source: "INTERNAL_BALANCE",
+          },
+        }),
       ]);
 
       const updatedTaskAfterBalance = await prisma.task.findUnique({
@@ -123,6 +131,17 @@ export async function fundTask (req: Request, res: Response) {
       });
     }
 
+    // Prevent tx replay
+    const existingFunding = await prisma.funding.findUnique({
+      where: { txHash },
+    });
+
+    if (existingFunding) {
+      return res.status(400).json({
+        message: "This transaction has already been processed",
+      });
+    }
+
     // Fetch tx from blockchain
     const tx = await provider.getTransaction(txHash);
 
@@ -167,6 +186,16 @@ export async function fundTask (req: Request, res: Response) {
         fundedAmount: {
           increment: usableCredits,
         },
+      },
+    });
+
+    await prisma.funding.create({
+      data: {
+        user_id: user.id,
+        task_id: taskId,
+        txHash,
+        credits: credits,
+        source: "BLOCKCHAIN",
       },
     });
 
