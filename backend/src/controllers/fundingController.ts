@@ -13,11 +13,11 @@ const ETH_PER_CREDIT = 0.001;
 export async function fundTask (req: Request, res: Response) {
   try {
     const taskId = Number(req.params.id);
-    const { txHash } = req.body;
+    const { txHash } = req.body || {};
 
-    if (!taskId || !txHash) {
+    if (!taskId) {
       return res.status(400).json({
-        message: "taskId and txHash are required",
+        message: "taskId is required",
       });
     }
 
@@ -32,10 +32,94 @@ export async function fundTask (req: Request, res: Response) {
       });
     }
 
-    // Reject if already fully funded
-    if (task.fundedAmount >= task.budget) {
+    // Fetch task owner (user)
+    const user = await prisma.user.findUnique({
+      where: { id: task.user_id },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Task owner not found",
+      });
+    }
+
+    const remainingBudget = task.budget - task.fundedAmount;
+
+    if (remainingBudget <= 0) {
       return res.status(400).json({
         message: "Task is already fully funded",
+      });
+    }
+
+    // -> Try to use internal balance first
+    if (user.balance > 0) {
+      const usableFromBalance = Math.min(user.balance, remainingBudget);
+
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: user.id },
+          data: {
+            balance: {
+              decrement: usableFromBalance,
+            },
+          },
+        }),
+        prisma.task.update({
+          where: { id: taskId },
+          data: {
+            fundedAmount: {
+              increment: usableFromBalance,
+            },
+          },
+        }),
+      ]);
+
+      const updatedTaskAfterBalance = await prisma.task.findUnique({
+        where: { id: taskId },
+      });
+
+      // If fully funded after balance usage → activate
+      if (
+        updatedTaskAfterBalance &&
+        updatedTaskAfterBalance.fundedAmount >= updatedTaskAfterBalance.budget &&
+        updatedTaskAfterBalance.status !== "ACTIVE"
+      ) {
+        await prisma.task.update({
+          where: { id: taskId },
+          data: { status: "ACTIVE" },
+        });
+      }
+
+      // If fully funded using balance only → return early
+      if (
+        updatedTaskAfterBalance &&
+        updatedTaskAfterBalance.fundedAmount >= updatedTaskAfterBalance.budget
+      ) {
+        return res.json({
+          success: true,
+          source: "INTERNAL_BALANCE",
+          newFundedAmount: updatedTaskAfterBalance.fundedAmount,
+        });
+      }
+    }
+
+    // -> If still not fully funded, require blockchain tx
+    const latestTask = await prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    const updatedRemaining =
+      latestTask!.budget - latestTask!.fundedAmount;
+
+    if (updatedRemaining <= 0) {
+      return res.status(400).json({
+        message: "Task is already fully funded",
+      });
+    }
+
+    if (!txHash) {
+      return res.status(400).json({
+        message: "txHash required for remaining funding",
       });
     }
 
@@ -68,15 +152,13 @@ export async function fundTask (req: Request, res: Response) {
     const ethAmount = Number(ethers.formatEther(tx.value));
     const credits = ethAmount / ETH_PER_CREDIT;
 
-    const remainingBudget = task.budget - task.fundedAmount;
-
     if (credits <= 0) {
       return res.status(400).json({
         message: "Invalid deposit amount",
       });
     }
 
-    const usableCredits = Math.min(credits, remainingBudget);
+    const usableCredits = Math.min(credits, updatedRemaining);
     const excessCredits = credits - usableCredits;
 
     const updatedTask = await prisma.task.update({
