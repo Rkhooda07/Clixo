@@ -30,7 +30,7 @@ export async function createTask(req: Request, res: Response) {
     }
 
     // Destructure data
-    const { title, signature, amount, budget, options } = req.body;
+    const { title, signature, amount, budget, deadline, options } = req.body;
 
     // Create task and related options in a single txn
     const task = await prisma.task.create({
@@ -39,6 +39,7 @@ export async function createTask(req: Request, res: Response) {
         signature: signature || null,
         amount: amount || null,
         budget,
+        deadline: new Date(deadline),
         fundedAmount: 0,
         status: "CREATED",
         user_id: userId,

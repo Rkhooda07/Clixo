@@ -32,6 +32,18 @@ export const createSubmission = async (req: Request, res: Response) => {
       });
     }
 
+    // If deadline is set, prevent submission after deadline
+    if (task.deadline) {
+      const now = new Date();
+      const deadline = new Date(task.deadline);
+
+      if (now > deadline) {
+        return res.status(400).json({
+          message: "Task deadline has passed",
+        });
+      }
+    }
+
     // Check option belong to task
     const option = await prisma.option.findFirst({
       where: {

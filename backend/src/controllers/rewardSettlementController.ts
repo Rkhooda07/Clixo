@@ -29,10 +29,10 @@ export const settleTaskRewards = async (req: Request, res: Response) => {
       });
     }
 
-    // Task must be ACTIVE to settle
-    if (task.status !== "ACTIVE") {
+    // Task must be CLOSED to settle
+    if (task.status !== "CLOSED") {
       return res.status(400).json({
-        message: "Task must be ACTIVE before settlement",
+        message: "Task must be CLOSED before settlement",
       });
     }
 
