@@ -2,6 +2,7 @@ import express from "express";
 import { createTask } from "../controllers/taskController.ts";
 import { fundTask } from "../controllers/fundingController.ts";
 import { getTaskStats } from "../controllers/taskStatsController.ts";
+import { getTasks, getTasksById } from "../controllers/taskPublicController.ts";
 
 const router = express.Router();
 
@@ -13,5 +14,11 @@ router.post("/:id/fund", fundTask);
 
 // Check stats for a task
 router.get("/:id/stats", getTaskStats);
+
+// Get all active tasks
+router.get("/", getTasks);
+
+// Get specific task by its Id
+router.get("/:id", getTasksById);
 
 export default router;
