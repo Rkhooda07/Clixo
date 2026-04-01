@@ -6,7 +6,7 @@ import { getChallenge } from "@/lib/api";
 export default function Navbar() {
   const handleConnect = async() => {
     try {
-      const { address } = await connectWallet();
+      const { signer, address } = await connectWallet();
 
       console.log("Wallet: ", address);
 
@@ -14,6 +14,11 @@ export default function Navbar() {
 
       console.log("Challenge message: ", data.message);
       console.log("Challenge nonce: ", data.nonce);
+
+      const signature = await signer.signMessage(data.message);
+
+      console.log(signature);
+
     } catch (err) {
       console.log(err);
     }
