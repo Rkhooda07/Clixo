@@ -5,6 +5,11 @@ type ChallengeResponse = {
   nonce: string;
 };
 
+type VerifyResponse = {
+  message: string;
+  token: string;
+};
+
 export const getChallenge = async (walletAddress: string) => {
   const res = await fetch(`${BASE}/auth/challenge`, {
     method: "POST",
@@ -15,8 +20,34 @@ export const getChallenge = async (walletAddress: string) => {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to get challenge");
+    const error = await res.json().catch(() => null);
+    throw new Error(error?.message ?? "Failed to get challenge");
   }
 
   return res.json() as Promise<ChallengeResponse>;
 }
+
+export const verifyUser = async (
+  walletAddress: string,
+  signature: string,
+  nonce: string
+) => {
+  const res = await fetch(`${BASE}/auth/verify`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      walletAddress,
+      signature,
+      nonce,
+    }),
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => null);
+    throw new Error(error?.message ?? "Verification failed");
+  }
+
+  return res.json() as Promise<VerifyResponse>;
+};

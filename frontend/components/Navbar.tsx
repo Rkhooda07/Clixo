@@ -1,7 +1,7 @@
 "use client";
 
 import { connectWallet } from "@/lib/wallet";
-import { getChallenge } from "@/lib/api";
+import { getChallenge, verifyUser } from "@/lib/api";
 
 export default function Navbar() {
   const handleConnect = async() => {
@@ -18,6 +18,19 @@ export default function Navbar() {
       const signature = await signer.signMessage(data.message);
 
       console.log(signature);
+
+      const result = await verifyUser(
+        address,
+        signature,
+        data.nonce
+      );
+
+      console.log("TOKEN: ", result.token);
+
+      // Store token
+      localStorage.setItem("token", result.token);
+
+      console.log("User logged in successfully");
 
     } catch (err) {
       console.log(err);

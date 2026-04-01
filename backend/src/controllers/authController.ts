@@ -32,9 +32,9 @@ export const createSiweChallenge = async (req: Request, res: Response) => {
 };
 
 export const verifySiweSignature = async (req: Request, res: Response) => {
-  const { walletAddress, signature, nonce, workerId} = req.body;
+  const { walletAddress, signature, nonce } = req.body;
 
-  if (!walletAddress || !signature || !nonce || !workerId) {
+  if (!walletAddress || !signature || !nonce) {
     return res.status(400).json({
       message: "Missing fields"
     });
@@ -67,16 +67,37 @@ export const verifySiweSignature = async (req: Request, res: Response) => {
     });
   }
 
-  // Attach wallet to worker
-  await prisma.worker.update({
-    where: {id: workerId},
-    data: {
-      wallet_address: walletAddress,
+  // Resolve the worker from the wallet address. If no worker exists yet,
+  // create one so the wallet auth flow can issue a token on first connect.
+  let worker = await prisma.worker.findFirst({
+    where: {
+      OR: [
+        { wallet_address: walletAddress },
+        { address: walletAddress },
+      ],
     },
   });
 
+  if (!worker) {
+    worker = await prisma.worker.create({
+      data: {
+        address: walletAddress,
+        wallet_address: walletAddress,
+        pending_amount: 0,
+        locked_amount: 0,
+      },
+    });
+  } else if (worker.wallet_address !== walletAddress) {
+    worker = await prisma.worker.update({
+      where: { id: worker.id },
+      data: {
+        wallet_address: walletAddress,
+      },
+    });
+  }
+
   const token = signToken({
-    workerId,
+    workerId: worker.id,
     walletAddress,
   });
 
