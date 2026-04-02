@@ -51,3 +51,13 @@ export const verifyUser = async (
 
   return res.json() as Promise<VerifyResponse>;
 };
+
+export const getTasks = async () => {
+  const res = await fetch(`${BASE}/tasks`);
+
+  if (!res.ok){ 
+    throw new Error("Failed to fetch tasks");
+  }
+
+  return res.json();
+};
