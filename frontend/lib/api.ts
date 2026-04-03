@@ -61,3 +61,13 @@ export const getTasks = async () => {
 
   return res.json();
 };
+
+export const getTask = async (taskId: number) => {
+  const res = await fetch(`${BASE}/tasks/${taskId}`);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch task");
+  }
+
+  return res.json();
+};
