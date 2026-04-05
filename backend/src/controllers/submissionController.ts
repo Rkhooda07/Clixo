@@ -7,10 +7,14 @@ import prisma from "../prisma.ts";
 */
 export const createSubmission = async (req: Request, res: Response) => {
   try {
-    const { workerId, taskId, optionId } = req.body;
+    const { taskId, optionId } = req.body;
+    const workerId = (req as any).auth?.workerId;
+
+    const parsedTaskId = Number(taskId);
+    const parsedOptionId = Number(optionId);
 
     // Basic sanity check
-    if (!workerId || !taskId || !optionId) {
+    if (!workerId || !parsedTaskId || !parsedOptionId) {
       return res.status(400).json ({
         message: "Missing required fields",
       });
@@ -18,7 +22,7 @@ export const createSubmission = async (req: Request, res: Response) => {
 
     // Check existence of task
     const task = await prisma.task.findUnique({
-      where: {id: taskId },
+      where: {id: parsedTaskId },
     });
 
     if (!task) {
@@ -47,8 +51,8 @@ export const createSubmission = async (req: Request, res: Response) => {
     // Check option belong to task
     const option = await prisma.option.findFirst({
       where: {
-        id: optionId,
-        task_id: taskId,
+        id: parsedOptionId,
+        task_id: parsedTaskId,
       },
     });
 
@@ -62,7 +66,7 @@ export const createSubmission = async (req: Request, res: Response) => {
     const existingSubmission = await prisma.submission.findFirst({
       where: {
         worker_id: workerId,
-        task_id: taskId,
+        task_id: parsedTaskId,
       },
     });
 
@@ -76,8 +80,8 @@ export const createSubmission = async (req: Request, res: Response) => {
     const submission = await prisma.submission.create({
       data: {
         worker_id: workerId,
-        task_id: taskId,
-        option_id: optionId
+        task_id: parsedTaskId,
+        option_id: parsedOptionId
       },
     });
 

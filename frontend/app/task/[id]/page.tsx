@@ -46,7 +46,12 @@ export default function TaskPage() {
     try {
       const token = localStorage.getItem("token");
 
-      await fetch("http://localhost:4000/api/submissions", {
+      if (!token) {
+        alert("Please connect wallet first");
+        return;
+      }
+
+      const res = await fetch("http://localhost:4000/api/submissions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -58,9 +63,19 @@ export default function TaskPage() {
         }),
       });
 
+      const data = await res.json();
+
+      console.log("Submission response:", data);
+
+      if (!res.ok) {
+        alert(data.message || "Submission failed");
+        return;
+      }
+
       alert("Submitted successfully!");
     } catch (err) {
-      console.error(err);
+      console.error("Submission error:", err);
+      alert("Something went wrong");
     }
   };
 

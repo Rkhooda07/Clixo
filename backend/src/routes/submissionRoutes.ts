@@ -4,10 +4,11 @@ import {
   getSubmissionsByTask, 
   getSubmissionsByWorker,
 } from "../controllers/submissionController.ts";
+import { requireAuth } from "../middleware/authMiddleware.ts";
 
 const router = express.Router();
 
-router.post("/", createSubmission);
+router.post("/", requireAuth, createSubmission);
 router.get("/task/:taskId", getSubmissionsByTask);
 router.get("/worker/:workerId", getSubmissionsByWorker);
 
