@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getTask } from "@/lib/api";
 
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
+
 type Task = {
   id: number;
   title: string;
@@ -51,7 +53,7 @@ export default function TaskPage() {
         return;
       }
 
-      const res = await fetch("http://localhost:4000/api/submissions", {
+      const res = await fetch(`${BASE}/submissions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
