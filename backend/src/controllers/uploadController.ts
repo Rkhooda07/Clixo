@@ -51,10 +51,6 @@ export async function uploadFileController(req: Request, res: Response) {
     const taskId = taskIdRaw ? Number(taskIdRaw) : null;
     const optionId = optionIdRaw ? Number(optionIdRaw) : null;
 
-    if (!taskId) {
-      return res.status(400).json({ error: "Missing required form field 'task_id'" });
-    }
-
     // 4. Convert buffer to File object (required by Pinata SDK)
     const fileToUpload = new File([req.file.buffer], originalName, {
       type: req.file.mimetype,
@@ -70,30 +66,32 @@ export async function uploadFileController(req: Request, res: Response) {
     const ipfsUri = `ipfs://${cid}`;
     const gatewayUrl = buildGatewayUrl(cid);
 
-    // 6. Save or update Option in database
-    let optionRecord;
+    // 6. Save or update Option in database (only if taskId is provided)
+    let optionRecord = null;
 
-    if (optionId) {
-      optionRecord = await prisma.option.update({
-        where: { id: optionId },
-        data: {
-          ipfs_cid: cid,
-          ipfs_uri: ipfsUri,
-          gateway_url: gatewayUrl,
-          image_url: req.body.image_url || null,
-        },
-      });
-    } else {
-      optionRecord = await prisma.option.create({
-        data: {
-          ipfs_cid: cid,
-          ipfs_uri: ipfsUri,
-          gateway_url: gatewayUrl,
-          image_url: req.body.image_url || null,
-          option_id: optionId,
-          task: { connect: { id: taskId } },
-        },
-      });
+    if (taskId) {
+      if (optionId) {
+        optionRecord = await prisma.option.update({
+          where: { id: optionId },
+          data: {
+            ipfs_cid: cid,
+            ipfs_uri: ipfsUri,
+            gateway_url: gatewayUrl,
+            image_url: req.body.image_url || null,
+          },
+        });
+      } else {
+        optionRecord = await prisma.option.create({
+          data: {
+            ipfs_cid: cid,
+            ipfs_uri: ipfsUri,
+            gateway_url: gatewayUrl,
+            image_url: req.body.image_url || null,
+            option_id: optionId,
+            task: { connect: { id: taskId } },
+          },
+        });
+      }
     }
 
     // 7. Response

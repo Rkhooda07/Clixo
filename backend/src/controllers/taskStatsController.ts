@@ -31,6 +31,18 @@ export const getTaskStats = async(req: Request, res: Response) => {
       votes: voteMap[opt.id] || 0,
     }));
 
+    // Time-series data: group submissions by date
+    const timeSeriesMap: Record<string, number> = {};
+    submissions.forEach(sub => {
+      const date = sub.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+      timeSeriesMap[date] = (timeSeriesMap[date] || 0) + 1;
+    });
+
+    const timeSeries = Object.entries(timeSeriesMap).map(([date, count]) => ({
+      date,
+      votes: count
+    })).sort((a, b) => a.date.localeCompare(b.date));
+
     let winningOption: number | null = null;
     let maxVotes = 0;
 
@@ -52,6 +64,7 @@ export const getTaskStats = async(req: Request, res: Response) => {
       status: task.status,
       totalSubmissions: submissions.length,
       options: optionStats,
+      timeSeries,
       winningOption,
       rewardPerWorker,
     });

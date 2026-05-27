@@ -96,6 +96,20 @@ export const verifySiweSignature = async (req: Request, res: Response) => {
     });
   }
 
+  // Find or create a corresponding User record so task creation succeeds
+  let user = await prisma.user.findUnique({
+    where: { address: walletAddress },
+  });
+
+  if (!user) {
+    user = await prisma.user.create({
+      data: {
+        address: walletAddress,
+        balance: 0,
+      },
+    });
+  }
+
   const token = signToken({
     workerId: worker.id,
     walletAddress,
@@ -107,5 +121,13 @@ export const verifySiweSignature = async (req: Request, res: Response) => {
   res.json({
     message: "Wallet verified and authenticated",
     token,
+    user: {
+      id: user.id,
+      address: user.address,
+    },
+    worker: {
+      id: worker.id,
+      address: worker.address,
+    },
   });
 };

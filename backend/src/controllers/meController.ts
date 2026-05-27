@@ -5,7 +5,7 @@ import prisma from "../prisma.ts";
 // Shows all tasks created by a user and sub count
 export const getMyTasks = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).auth?.workerId;
+    const userId = (req as any).auth?.workerId; // In Clixo, user_id and workerId are same in JWT if synced
     if (!userId) {
       return res.status(401).json({
         message: "Unauthorized"
@@ -15,7 +15,8 @@ export const getMyTasks = async (req: Request, res: Response) => {
     const tasks = await prisma.task.findMany({
       where: { user_id: userId },
       include: {
-        submissions: true
+        submissions: true,
+        options: true,
       },
       orderBy: {
         createdAt: "desc"
@@ -24,15 +25,22 @@ export const getMyTasks = async (req: Request, res: Response) => {
 
     const formatted = tasks.map(task => ({
       id: task.id,
+      title: task.title,
       status: task.status,
       budget: task.budget,
       fundedAmount: task.fundedAmount,
       deadline: task.deadline,
-      totalSubmissions: task.submissions.length
+      totalSubmissions: task.submissions.length,
+      options: task.options.map(opt => ({
+        id: opt.id,
+        gateway_url: opt.gateway_url,
+        image_url: opt.image_url
+      }))
     }));
 
     res.json({ tasks: formatted });
   } catch (err) {
+    console.error("getMyTasks error:", err);
     res.status(500).json({
       message: "Failed to fetch tasks"
     });
@@ -52,7 +60,12 @@ export const getMySubmissions = async (req: Request, res: Response) => {
     const submissions = await prisma.submission.findMany({
       where: { worker_id: workerId },
       include: {
-        task: true,
+        task: {
+          include: {
+            options: true
+          }
+        },
+        option: true,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -62,11 +75,17 @@ export const getMySubmissions = async (req: Request, res: Response) => {
       optionId: sub.option_id,
       taskStatus: sub.task.status,
       submittedAt: sub.createdAt,
+      taskTitle: sub.task.title,
+      taskBudget: sub.task.budget,
+      optionPickedImage: sub.option.gateway_url || sub.option.image_url,
+      // We can also calculate if they earned something if task is SETTLED
+      earnedEth: sub.task.status === "SETTLED" ? (sub.task.budget * 0.001 / sub.task.budget).toFixed(4) : "0" // Mocked calculation for now
     }));
   
     res.json({ submissions: formatted });
 
   } catch (err) {
+    console.error("getMySubmissions error:", err);
     res.status(500).json({
       message: "Failed to fetch submissions"
     });
