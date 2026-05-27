@@ -1,73 +1,172 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
+import axios from "axios";
+import { Task, TaskStatus, WorkerVoteRecord, PlatformStats } from "@/types";
 
-type ChallengeResponse = {
-  message: string;
-  nonce: string;
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api",
+});
+
+// Attach Authorization Bearer token header from localStorage to every request
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
+
+export const authApi = {
+  getChallenge: (walletAddress: string) =>
+    api.post<{ message: string; nonce: string }>("/auth/challenge", { walletAddress }).then((r) => r.data),
+  verify: (walletAddress: string, signature: string, nonce: string) =>
+    api.post<{
+      message: string;
+      token: string;
+      user: { id: number; address: string };
+      worker: { id: number; address: string };
+    }>("/auth/verify", { walletAddress, signature, nonce }).then((r) => r.data),
 };
 
-type VerifyResponse = {
-  message: string;
-  token: string;
+export const taskApi = {
+  getAll: (status?: TaskStatus) =>
+    api.get<{ tasks: Task[] }>("/tasks", { params: { status } }).then((r) => r.data),
+  getById: (id: number) =>
+    api.get<Task>(`/tasks/${id}`).then((r) => r.data),
+  create: (payload: {
+    title: string;
+    budget: number;
+    deadline: string;
+    options: { ipfs_cid: string; gateway_url: string; ipfs_uri?: string }[];
+    user_id?: number;
+  }) => api.post<{ success: boolean; message: string; task: Task }>("/tasks", payload).then((r) => r.data),
+  fund: (id: number, txHash: string) =>
+    api.post(`/tasks/${id}/fund`, { txHash }).then((r) => r.data),
+  getStats: (id: number) =>
+    api.get(`/tasks/${id}/stats`).then((r) => r.data),
 };
 
-export const getChallenge = async (walletAddress: string) => {
-  const res = await fetch(`${BASE}/auth/challenge`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ walletAddress }),
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => null);
-    throw new Error(error?.message ?? "Failed to get challenge");
-  }
-
-  return res.json() as Promise<ChallengeResponse>;
-}
-
-export const verifyUser = async (
-  walletAddress: string,
-  signature: string,
-  nonce: string
-) => {
-  const res = await fetch(`${BASE}/auth/verify`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      walletAddress,
-      signature,
-      nonce,
-    }),
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => null);
-    throw new Error(error?.message ?? "Verification failed");
-  }
-
-  return res.json() as Promise<VerifyResponse>;
+export const uploadApi = {
+  uploadFile: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return api.post<{
+      ok: boolean;
+      cid: string;
+      ipfs_uri: string;
+      gatewayUrl: string;
+      file_name: string;
+    }>("/upload", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }).then((r) => r.data);
+  },
 };
 
-export const getTasks = async () => {
-  const res = await fetch(`${BASE}/tasks`);
-
-  if (!res.ok){ 
-    throw new Error("Failed to fetch tasks");
-  }
-
-  return res.json();
+export const submissionApi = {
+  submit: (taskId: number, optionId: number) =>
+    api.post("/submissions", { taskId, optionId }).then((r) => r.data),
+  getByTask: (taskId: number) =>
+    api.get(`/submissions/task/${taskId}`).then((r) => r.data),
+  getByWorker: (workerId: number) =>
+    api.get(`/submissions/worker/${workerId}`).then((r) => r.data),
 };
 
-export const getTask = async (taskId: number) => {
-  const res = await fetch(`${BASE}/tasks/${taskId}`);
+export const aggregationApi = {
+  aggregate: (taskId: number) =>
+    api.post<{
+      taskId: number;
+      winningOptionId: number | null;
+      votes: Record<number, number>;
+      totalSubmissions: number;
+    }>(`/task/${taskId}/aggregate`).then((r) => r.data),
+};
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch task");
-  }
+export const rewardApi = {
+  preview: (taskId: number) =>
+    api.post<{
+      taskId: number;
+      totalReward: string;
+      winningOptionId: number;
+      eligibleWorkers: number;
+      rewardPerWorker: string;
+      rewards: { workerId: number; reward: string }[];
+    }>(`/task/${taskId}/rewards/preview`).then((r) => r.data),
+  settle: (taskId: number) =>
+    api.post<{
+      taskId: number;
+      winners: number;
+      rewardPerWorker: number;
+      totalReward: number;
+      status: string;
+    }>(`/task/${taskId}/rewards/settle`).then((r) => r.data),
+};
 
-  return res.json();
+export const payoutApi = {
+  getPreview: () =>
+    api.get<{
+      grossAmount: number;
+      gasFee: number;
+      netAmount: number;
+      ethToReceive: number;
+    }>("/me/payout-preview").then((r) => r.data),
+  withdraw: () =>
+    api.post<{
+      status: string;
+      payoutId: number;
+      grossAmount: number;
+      gasFee: number;
+      netAmount: number;
+      walletAddress: string;
+      txRef: string;
+      message: string;
+    }>("/me/withdraw").then((r) => r.data),
+  getHistory: () =>
+    api.get<{
+      payouts: {
+        id: number;
+        amount: number;
+        gasFee: number;
+        netAmount: number;
+        status: string;
+        txRef: string;
+        createdAt: string;
+      }[];
+    }>("/me/payouts").then((r) => r.data),
+};
+
+export const meApi = {
+  getTasks: () =>
+    api.get<{ tasks: { id: number; status: TaskStatus; budget: number; fundedAmount: number; deadline: string | null; totalSubmissions: number }[] }>("/me/tasks").then((r) => r.data),
+  getSubmissions: () =>
+    api.get<{ submissions: WorkerVoteRecord[] }>("/me/submissions").then((r) => r.data),
+  getEarnings: () =>
+    api.get<{ pending: number; locked: number; totalEarned: number }>("/me/earnings").then((r) => r.data),
+  getFundingHistory: () =>
+    api.get<{ fundings: { credits: number; source: string; txHash: string | null; createdAt: string }[] }>("/me/funding-history").then((r) => r.data),
+};
+
+// Platform-wide stats (calculated in frontend based on tasks or mocked for home page)
+export const statsApi = {
+  get: async (): Promise<PlatformStats> => {
+    // Dynamically calculate from available active tasks
+    try {
+      const data = await taskApi.getAll();
+      const totalTasks = data.tasks.length;
+      const completedTasks = data.tasks.filter((t) => t.status === "COMPLETED" || t.status === "CLOSED" || t.status === "SETTLED");
+      const totalEth = completedTasks.reduce((acc, t) => acc + (t.budget * 0.001), 0);
+      return {
+        totalTasks,
+        totalEthDistributed: totalEth.toFixed(3),
+        totalWorkers: totalTasks * 3 + 2, // approximation
+      };
+    } catch {
+      return {
+        totalTasks: 3,
+        totalEthDistributed: "0.012",
+        totalWorkers: 5,
+      };
+    }
+  },
 };
