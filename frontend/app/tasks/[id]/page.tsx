@@ -3,21 +3,27 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { taskApi } from "@/lib/api";
-import { Task, Thumbnail } from "@/types";
+import { Task } from "@/types";
 import { TaskDetailHeader } from "@/components/tasks/TaskDetailHeader";
 import { WinnerBanner } from "@/components/tasks/WinnerBanner";
 import { ResultsGrid } from "@/components/tasks/ResultsGrid";
 import { VotesOverTimeChart } from "@/components/tasks/VotesOverTimeChart";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { useAccount } from "wagmi";
+
+type TaskStats = {
+  totalSubmissions?: number;
+  winningOption?: number | null;
+  rewardPerWorker?: number;
+  timeSeries?: { date: string; votes: number }[];
+  options?: { optionId: number; votes: number }[];
+};
 
 export default function TaskDetailPage() {
   const params = useParams();
   const taskId = Number(params.id);
-  const { address } = useAccount();
 
   const [task, setTask] = useState<Task | null>(null);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<TaskStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +37,7 @@ export default function TaskDetailPage() {
         
         // Merge stats into task options if needed
         const updatedOptions = taskData.options?.map(opt => {
-          const optStat = statsData.options.find((s: any) => s.optionId === opt.id);
+          const optStat = statsData.options?.find((s: { optionId: number }) => s.optionId === opt.id);
           return {
             ...opt,
             votes: optStat ? optStat.votes : 0
