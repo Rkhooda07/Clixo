@@ -29,7 +29,7 @@ export function MyTasks({ tasks, isLoading }: MyTasksProps) {
       <div className="mt-8">
         <EmptyState
           title="No tasks created yet"
-          description="Create your first thumbnail test to get insights from the community."
+          description="Create your first labeling task to get insights from the community."
           icon={PlusCircle}
           action={
             <Link

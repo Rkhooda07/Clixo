@@ -50,7 +50,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="relative z-10">
               <h4 className="text-white font-bold text-sm mb-1">Creator Hub</h4>
               <p className="text-zinc-400 text-[11px] leading-relaxed">
-                Check your task performance and optimize your thumbnails.
+                Check task performance and optimize your labeling campaigns.
               </p>
               <Link 
                 href="/create-task"

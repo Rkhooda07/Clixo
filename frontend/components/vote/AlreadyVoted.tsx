@@ -34,7 +34,7 @@ export function AlreadyVoted({ votedOption, options, totalVotes }: AlreadyVotedP
           <div className="relative rounded-3xl overflow-hidden border-2 border-emerald-500/30 shadow-2xl shadow-emerald-900/10">
             <img 
               src={votedOption?.gateway_url || votedOption?.image_url || ""} 
-              alt="Your voted thumbnail"
+              alt="Your selected option"
               className="w-full aspect-video object-cover"
             />
             <div className="absolute top-4 left-4 bg-emerald-500 text-black px-3 py-1.5 rounded-full text-xs font-black shadow-lg flex items-center gap-1.5">

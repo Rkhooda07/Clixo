@@ -39,7 +39,7 @@ export function ThumbnailGallery({ options, onVote }: ThumbnailGalleryProps) {
             <div className="aspect-video relative">
               <img
                 src={option.gateway_url || option.image_url || ""}
-                alt="Thumbnail option"
+                alt="Task option"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               

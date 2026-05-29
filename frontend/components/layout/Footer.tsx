@@ -19,7 +19,7 @@ export function Footer() {
             </span>
           </Link>
           <p className="text-zinc-500 text-xs text-center md:text-left">
-            Decentralized video thumbnail testing platform built on Ethereum.
+            Decentralized labeling and opinion platform built on Ethereum.
           </p>
         </div>
 

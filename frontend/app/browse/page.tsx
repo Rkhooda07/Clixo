@@ -72,7 +72,7 @@ export default function BrowsePage() {
               <span>Browse Open Campaigns</span>
             </h1>
             <p className="text-zinc-500 text-xs mt-1">
-              Select open thumbnail tasks, cast your votes, and secure ETH shares.
+              Select open labeling tasks, submit your signal, and secure ETH shares.
             </p>
           </div>
 
@@ -149,7 +149,7 @@ export default function BrowsePage() {
             <EmptyState
               icon={Compass}
               title="No campaigns found"
-              description="There are no active thumbnail testing campaigns matching your search or filters at the moment."
+              description="There are no active labeling campaigns matching your search or filters at the moment."
             />
           </div>
         ) : (

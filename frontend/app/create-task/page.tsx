@@ -53,11 +53,11 @@ export default function CreateTaskPage() {
     }
     if (step === 2) {
       if (thumbnails.length < 2) {
-        toast.error("Please upload at least 2 thumbnail variations.");
+        toast.error("Please upload at least 2 option files.");
         return;
       }
       if (thumbnails.length > 10) {
-        toast.error("You can upload a maximum of 10 thumbnails.");
+        toast.error("You can upload a maximum of 10 option files.");
         return;
       }
     }
@@ -70,7 +70,7 @@ export default function CreateTaskPage() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    setSubmissionProgress("Uploading thumbnails to IPFS...");
+    setSubmissionProgress("Uploading option files to IPFS...");
     const toastId = toast.loading("Creating campaign draft...", { id: "create-campaign" });
 
     try {
@@ -78,7 +78,7 @@ export default function CreateTaskPage() {
       const uploadedOptions: { ipfs_cid: string; gateway_url: string; ipfs_uri: string }[] = [];
 
       for (let i = 0; i < thumbnails.length; i++) {
-        setSubmissionProgress(`Uploading thumbnail #${i + 1} to IPFS...`);
+        setSubmissionProgress(`Uploading option #${i + 1} to IPFS...`);
         const res = await uploadApi.uploadFile(thumbnails[i]);
         if (res.ok) {
           uploadedOptions.push({
@@ -87,7 +87,7 @@ export default function CreateTaskPage() {
             ipfs_uri: res.ipfs_uri,
           });
         } else {
-          throw new Error(`Failed to upload thumbnail #${i + 1}`);
+          throw new Error(`Failed to upload option #${i + 1}`);
         }
       }
 
@@ -218,7 +218,7 @@ export default function CreateTaskPage() {
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value.slice(0, 80))}
-                        placeholder="e.g. Which thumbnail has the highest CTR potential for our tech review?"
+                        placeholder="e.g. Which label, category, design, or option should we choose?"
                         className="bg-zinc-950 border border-zinc-800 focus:border-purple-500/50 rounded-xl px-4 py-3 text-sm text-white focus:outline-none"
                       />
                       <span className="text-[10px] text-zinc-500 self-end font-mono">
@@ -234,7 +234,7 @@ export default function CreateTaskPage() {
                         value={description}
                         onChange={(e) => setDescription(e.target.value.slice(0, 300))}
                         rows={4}
-                        placeholder="Explain the video context, target audience, and thumbnail details so workers can evaluate CTR accurately..."
+                        placeholder="Explain the context, decision criteria, and what workers should consider when labeling or choosing..."
                         className="bg-zinc-950 border border-zinc-800 focus:border-purple-500/50 rounded-xl px-4 py-3 text-sm text-white focus:outline-none resize-none"
                       />
                       <span className="text-[10px] text-zinc-500 self-end font-mono">
@@ -261,7 +261,7 @@ export default function CreateTaskPage() {
                       onClick={handleNext}
                       className="mt-4 bg-purple-700 hover:bg-purple-600 text-white font-bold text-sm py-3 rounded-xl transition-all shadow-[0_0_15px_rgba(124,58,237,0.2)]"
                     >
-                      Next: Upload thumbnails
+                      Next: Upload options
                     </button>
                   </div>
                 )}
@@ -269,7 +269,7 @@ export default function CreateTaskPage() {
                 {/* Step 2: Uploads */}
                 {step === 2 && (
                   <div className="flex flex-col gap-5 animate-in fade-in duration-200">
-                    <h2 className="text-xl font-bold text-white mb-2">Upload Thumbnails</h2>
+                    <h2 className="text-xl font-bold text-white mb-2">Upload Options</h2>
                     
                     <ThumbnailUploader onFilesChange={setThumbnails} />
 
@@ -358,7 +358,7 @@ export default function CreateTaskPage() {
                   </div>
 
                   <div className="flex justify-between items-center border-t border-zinc-900 pt-3">
-                    <span className="text-zinc-500 font-bold uppercase tracking-wider text-[9px]">Thumbnails</span>
+                    <span className="text-zinc-500 font-bold uppercase tracking-wider text-[9px]">Options</span>
                     <span className="text-zinc-300 font-semibold">{thumbnails.length} variations</span>
                   </div>
 
@@ -386,7 +386,7 @@ export default function CreateTaskPage() {
 
               <h2 className="text-2xl font-bold tracking-tight text-white mb-2">🎉 Campaign Created!</h2>
               <p className="text-zinc-400 text-sm mb-8 leading-relaxed max-w-xs mx-auto">
-                Your thumbnail testing campaign has been initialized and funded in the smart escrow contract. Workers can start voting now.
+                Your labeling campaign has been initialized and funded in the smart escrow contract. Workers can start voting now.
               </p>
 
               <div className="flex flex-col gap-3">

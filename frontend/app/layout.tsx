@@ -4,8 +4,8 @@ import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
 export const metadata = {
-  title: "Clixo — Decentralized Thumbnail Testing Platform",
-  description: "Upload thumbnail options, stake ETH as a reward, and let the crowd pick your best-performing thumbnail on the blockchain.",
+  title: "Clixo — Decentralized Labeling Platform",
+  description: "Create labeling and opinion tasks, stake ETH as a reward, and get real human signal on the blockchain.",
 };
 
 export default function RootLayout({

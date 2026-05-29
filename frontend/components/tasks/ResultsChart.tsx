@@ -17,7 +17,7 @@ interface ResultsChartProps {
 }
 
 export function ResultsChart({ thumbnails }: ResultsChartProps) {
-  // Map thumbnails to data format for Recharts
+  // Map options to data format for Recharts
   const totalVotes = thumbnails.reduce((acc, t) => acc + (t.votes || 0), 0);
   
   const data = thumbnails

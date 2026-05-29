@@ -39,12 +39,12 @@ export function WinnerBanner({ winningOption, totalVotes }: WinnerBannerProps) {
         <div className="flex-1 flex flex-col gap-4 text-center md:text-left">
           <div className="flex flex-col gap-1">
             <h2 className="text-2xl font-black text-white tracking-tight flex items-center justify-center md:justify-start gap-3">
-              Most Clickable Thumbnail Identified
+              Strongest Option Identified
               <CheckCircle2 className="w-6 h-6 text-emerald-500" />
             </h2>
             <p className="text-zinc-400 text-sm leading-relaxed max-w-lg">
-              The community has reached consensus. This thumbnail outperformed others by a significant margin. 
-              We recommend using this for your next video upload.
+              The community has reached consensus. This option outperformed others by a significant margin.
+              We recommend using it for your next decision.
             </p>
           </div>
 

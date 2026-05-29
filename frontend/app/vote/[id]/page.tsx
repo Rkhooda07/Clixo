@@ -130,7 +130,7 @@ export default function VotePage() {
             {task.title}
           </h1>
           <p className="text-zinc-400 text-lg max-w-2xl">
-            Pick the thumbnail that you would be most likely to click on YouTube. Your choice helps creators reach more people.
+            Review the instructions and choose the option that best matches the task. Your signal helps the requester reach consensus.
           </p>
         </div>
 

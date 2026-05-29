@@ -27,24 +27,24 @@ export function TaskCard({ task, mode, hasVoted = false, earnedEth, optionPicked
         {mode === "worker-dashboard" && optionPickedImage ? (
           <img
             src={optionPickedImage}
-            alt="Thumbnail voted"
+            alt="Option selected"
             className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
           />
         ) : task.options && task.options.length > 0 && task.options[0].gateway_url ? (
           <img
             src={task.options[0].gateway_url}
-            alt="Thumbnail option"
+            alt="Task option"
             className={`w-full h-full object-cover group-hover:scale-102 transition-transform duration-300 ${
               mode === "browse" && !hasVoted && !isCompleted ? "blur-[6px] brightness-75 scale-105" : ""
             }`}
           />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500">
-            <span className="text-xs font-mono">No thumbnail preview</span>
+            <span className="text-xs font-mono">No option preview</span>
           </div>
         )}
 
-        {/* Thumbnail overlays */}
+        {/* Option overlays */}
         <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-zinc-800/50 px-2.5 py-1 rounded-full text-xs font-semibold text-zinc-300">
           {task.optionsCount || task.options?.length || 0} Options
         </div>

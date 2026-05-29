@@ -19,7 +19,7 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
       const updatedFiles = [...files, ...acceptedFiles];
 
       if (updatedFiles.length > 10) {
-        setError("You can upload a maximum of 10 thumbnails.");
+        setError("You can upload a maximum of 10 option files.");
         return;
       }
 
@@ -67,7 +67,7 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
       {/* Dropzone Area */}
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
           isDragActive
             ? "border-purple-500 bg-purple-950/10"
             : "border-zinc-800 bg-[#111118]/60 hover:border-zinc-700"
@@ -80,10 +80,10 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
           </div>
           <div className="flex flex-col gap-1">
             <p className="text-sm font-semibold text-white">
-              {isDragActive ? "Drop files here" : "Drag & drop thumbnails here"}
+              {isDragActive ? "Drop files here" : "Drag & drop option files here"}
             </p>
             <p className="text-zinc-400 text-xs">
-              Supports JPEG, PNG, WEBP (Min 2, Max 10 thumbnails)
+              Supports JPEG, PNG, WEBP (Min 2, Max 10 option files)
             </p>
           </div>
         </div>
@@ -107,7 +107,7 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
             >
               <img
                 src={preview}
-                alt={`Thumbnail preview ${index + 1}`}
+                alt={`Option preview ${index + 1}`}
                 className="w-full h-full object-cover"
               />
               {/* Hover Delete Action */}
