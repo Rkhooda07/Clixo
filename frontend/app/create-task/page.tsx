@@ -7,7 +7,6 @@ import { ThumbnailUploader } from "@/components/tasks/ThumbnailUploader";
 import { taskApi, uploadApi } from "@/lib/api";
 import axios from "axios";
 import { toast } from "sonner";
-import { useAppStore } from "@/store/useAppStore";
 import { ethers } from "ethers";
 import {
   FileText,
@@ -26,7 +25,6 @@ const ETH_PER_CREDIT = 0.001;
 const FUNDING_GAS_LIMIT = 21000n;
 
 export default function CreateTaskPage() {
-  const { userId } = useAppStore();
   const [step, setStep] = useState(1);
 
   // Form states
@@ -154,7 +152,6 @@ export default function CreateTaskPage() {
         budget: budgetCredits,
         deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
         options: uploadedOptions,
-        user_id: userId || 1, // fallback to 1
       });
 
       if (!taskRes.success) {

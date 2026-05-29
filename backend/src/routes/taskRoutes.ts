@@ -3,11 +3,12 @@ import { createTask } from "../controllers/taskController.ts";
 import { fundTask } from "../controllers/fundingController.ts";
 import { getTaskStats } from "../controllers/taskStatsController.ts";
 import { getTasks, getTasksById } from "../controllers/taskPublicController.ts";
+import { requireAuth } from "../middleware/authMiddleware.ts";
 
 const router = express.Router();
 
 // POST /api/tasks -> create a new task
-router.post("/", createTask);
+router.post("/", requireAuth, createTask);
 
 // Fund a task
 router.post("/:id/fund", fundTask);

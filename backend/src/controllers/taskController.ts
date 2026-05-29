@@ -20,12 +20,27 @@ export async function createTask(req: Request, res: Response) {
       });
     }
 
-    // Extract user_id from authenticated user (Authorization)
-    const userId = req.user?.id || req.body.user_id || 1; // Temporary fallback for dev
-    if (!userId) {
+    const walletAddress = (req as any).auth?.walletAddress;
+    if (!walletAddress) {
       return res.status(400).json({
         success: false,
-        message: "Missing user_id in request body or token.",
+        message: "Missing authenticated wallet address.",
+      });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        address: {
+          equals: walletAddress,
+          mode: "insensitive",
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Authenticated wallet does not have a user record.",
       });
     }
 
@@ -42,7 +57,7 @@ export async function createTask(req: Request, res: Response) {
         deadline: new Date(deadline),
         fundedAmount: 0,
         status: "CREATED",
-        user_id: userId,
+        user_id: user.id,
         options: {
           create: options.map((opt: any) => ({
             ipfs_cid: opt.ipfs_cid,

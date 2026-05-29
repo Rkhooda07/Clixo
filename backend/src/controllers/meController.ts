@@ -12,8 +12,13 @@ export const getMyTasks = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { address: walletAddress },
+    const user = await prisma.user.findFirst({
+      where: {
+        address: {
+          equals: walletAddress,
+          mode: "insensitive",
+        },
+      },
     });
 
     if (!user) {
