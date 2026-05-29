@@ -138,7 +138,7 @@ export const payoutApi = {
 
 export const meApi = {
   getTasks: () =>
-    api.get<{ tasks: { id: number; status: TaskStatus; budget: number; fundedAmount: number; deadline: string | null; totalSubmissions: number }[] }>("/me/tasks").then((r) => r.data),
+    api.get<{ tasks: Task[] }>("/me/tasks").then((r) => r.data),
   getSubmissions: () =>
     api.get<{ submissions: WorkerVoteRecord[] }>("/me/submissions").then((r) => r.data),
   getEarnings: () =>

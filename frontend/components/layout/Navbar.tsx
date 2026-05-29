@@ -4,11 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "../wallet/ConnectButton";
-import { Menu, X, Layers, PlusCircle, LayoutDashboard, Compass } from "lucide-react";
+import { Menu, X, Layers, PlusCircle, LayoutDashboard, Compass, ClipboardList } from "lucide-react";
 
 const navLinks = [
   { label: "Browse Tasks", href: "/browse", icon: Compass },
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "My Tasks", href: "/my-tasks", icon: ClipboardList },
   { label: "Create Task", href: "/create-task", icon: PlusCircle },
 ];
 

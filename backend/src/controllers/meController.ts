@@ -5,15 +5,23 @@ import prisma from "../prisma.ts";
 // Shows all tasks created by a user and sub count
 export const getMyTasks = async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).auth?.workerId; // In Clixo, user_id and workerId are same in JWT if synced
-    if (!userId) {
+    const walletAddress = (req as any).auth?.walletAddress;
+    if (!walletAddress) {
       return res.status(401).json({
         message: "Unauthorized"
       });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { address: walletAddress },
+    });
+
+    if (!user) {
+      return res.json({ tasks: [] });
+    }
+
     const tasks = await prisma.task.findMany({
-      where: { user_id: userId },
+      where: { user_id: user.id },
       include: {
         submissions: true,
         options: true,
@@ -29,12 +37,21 @@ export const getMyTasks = async (req: Request, res: Response) => {
       status: task.status,
       budget: task.budget,
       fundedAmount: task.fundedAmount,
+      createdAt: task.createdAt,
+      updatedAt: task.updatedAt,
+      user_id: task.user_id,
+      signature: task.signature,
+      amount: task.amount,
       deadline: task.deadline,
       totalSubmissions: task.submissions.length,
       options: task.options.map(opt => ({
         id: opt.id,
+        ipfs_cid: opt.ipfs_cid,
+        ipfs_uri: opt.ipfs_uri,
         gateway_url: opt.gateway_url,
-        image_url: opt.image_url
+        image_url: opt.image_url,
+        option_id: opt.option_id,
+        task_id: opt.task_id,
       }))
     }));
 
