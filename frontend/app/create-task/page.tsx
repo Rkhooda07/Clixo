@@ -5,23 +5,26 @@ import Link from "next/link";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
 import { ThumbnailUploader } from "@/components/tasks/ThumbnailUploader";
 import { taskApi, uploadApi } from "@/lib/api";
+import axios from "axios";
 import { toast } from "sonner";
 import { useAppStore } from "@/store/useAppStore";
-import { useWalletUser } from "@/hooks/useWalletUser";
 import { ethers } from "ethers";
 import {
   FileText,
-  Image,
+  Image as ImageIcon,
   Coins,
   CheckCircle,
   Loader2,
-  Calendar,
-  AlertCircle,
 } from "lucide-react";
+
+const SEPOLIA_CHAIN_ID = 11155111;
+const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
+const SERVER_WALLET_ADDRESS =
+  process.env.NEXT_PUBLIC_SERVER_WALLET_ADDRESS ||
+  "0x2a8cAd35800C4322bEC6A8E165DB7a0a18FC746D";
 
 export default function CreateTaskPage() {
   const { userId } = useAppStore();
-  const { address } = useWalletUser();
   const [step, setStep] = useState(1);
 
   // Form states
@@ -68,10 +71,59 @@ export default function CreateTaskPage() {
     setStep(step - 1);
   };
 
+  const ensureSepoliaNetwork = async () => {
+    if (!window.ethereum) {
+      throw new Error("No Ethereum browser extension found.");
+    }
+
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }],
+      });
+    } catch (switchError) {
+      const errorCode =
+        typeof switchError === "object" && switchError !== null && "code" in switchError
+          ? (switchError as { code?: number }).code
+          : undefined;
+
+      if (errorCode !== 4902) {
+        throw switchError;
+      }
+
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [
+          {
+            chainId: SEPOLIA_CHAIN_ID_HEX,
+            chainName: "Sepolia",
+            nativeCurrency: {
+              name: "Sepolia Ether",
+              symbol: "ETH",
+              decimals: 18,
+            },
+            rpcUrls: ["https://rpc.sepolia.org"],
+            blockExplorerUrls: ["https://sepolia.etherscan.io"],
+          },
+        ],
+      });
+    }
+  };
+
+  const getErrorMessage = (err: unknown) => {
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as { message?: string; errors?: string[]; error?: string } | undefined;
+      const details = data?.errors?.length ? `: ${data.errors.join(", ")}` : "";
+      return `${data?.message || data?.error || err.message}${details}`;
+    }
+
+    return err instanceof Error ? err.message : "Failed to create or fund campaign";
+  };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setSubmissionProgress("Uploading option files to IPFS...");
-    const toastId = toast.loading("Creating campaign draft...", { id: "create-campaign" });
+    toast.loading("Creating campaign draft...", { id: "create-campaign" });
 
     try {
       // 1. Upload files first to get Pinata CIDs and Gateway URLs
@@ -118,16 +170,22 @@ export default function CreateTaskPage() {
         throw new Error("No Ethereum browser extension found.");
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum as any);
+      await ensureSepoliaNetwork();
+
+      const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
       const signer = await provider.getSigner();
+      const network = await provider.getNetwork();
+
+      if (Number(network.chainId) !== SEPOLIA_CHAIN_ID) {
+        throw new Error("Please switch your wallet to Sepolia and try again.");
+      }
 
       // We send the funds to the backend server wallet address:
-      const serverWalletAddress = process.env.NEXT_PUBLIC_SERVER_WALLET_ADDRESS || "0x8cb784B156c304291cE896AF7881F627BB4633BE";
       const txValue = ethers.parseEther(rewardEth);
 
       toast.loading("Please confirm the escrow funding transaction in your wallet...", { id: "create-campaign" });
       const tx = await signer.sendTransaction({
-        to: serverWalletAddress,
+        to: SERVER_WALLET_ADDRESS,
         value: txValue,
       });
 
@@ -141,9 +199,9 @@ export default function CreateTaskPage() {
       setCreatedTaskId(taskId);
       toast.success("Campaign created and funded successfully!", { id: "create-campaign" });
       setStep(4); // Success step
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Task creation error:", err);
-      toast.error(err?.message || "Failed to create or fund campaign", { id: "create-campaign" });
+      toast.error(getErrorMessage(err), { id: "create-campaign" });
     } finally {
       setIsSubmitting(false);
     }
@@ -179,7 +237,7 @@ export default function CreateTaskPage() {
                     step >= 2 ? "bg-purple-700 text-white border-purple-500" : "bg-zinc-950 text-zinc-500 border-zinc-800"
                   }`}
                 >
-                  <Image className="w-4 h-4" />
+                  <ImageIcon className="w-4 h-4" />
                 </div>
                 <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider mt-2">Uploads</span>
               </div>

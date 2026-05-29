@@ -9,6 +9,7 @@ const SERVER_WALLET = new ethers.Wallet(
 );
 
 const ETH_PER_CREDIT = 0.001;
+const WEI_PER_CREDIT = ethers.parseEther(ETH_PER_CREDIT.toString());
 
 export async function fundTask (req: Request, res: Response) {
   try {
@@ -167,9 +168,15 @@ export async function fundTask (req: Request, res: Response) {
       });
     }
 
+    if (tx.value % WEI_PER_CREDIT !== 0n) {
+      return res.status(400).json({
+        message: `Deposit amount must be a multiple of ${ETH_PER_CREDIT} ETH`,
+      });
+    }
+
     // Convert eth to credits
     const ethAmount = Number(ethers.formatEther(tx.value));
-    const credits = ethAmount / ETH_PER_CREDIT;
+    const credits = Number(tx.value / WEI_PER_CREDIT);
 
     if (credits <= 0) {
       return res.status(400).json({

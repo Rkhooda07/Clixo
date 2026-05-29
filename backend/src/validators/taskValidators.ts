@@ -57,8 +57,8 @@ export function validateCreateTaskBody(body: any) {
   else if (body.options.length === 0) {
     errors.push("options must contain atleast one element");
   }
-  else if (body.options.length > 7) {
-    errors.push("options cannot contain more than 7 items.");
+  else if (body.options.length > 10) {
+    errors.push("options cannot contain more than 10 items.");
   } else {
     body.options.forEach((opt: any, idx: Number) => {
       const ctx = `options[${idx}]`;
