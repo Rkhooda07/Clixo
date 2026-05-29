@@ -22,6 +22,8 @@ const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
 const SERVER_WALLET_ADDRESS =
   process.env.NEXT_PUBLIC_SERVER_WALLET_ADDRESS ||
   "0x2a8cAd35800C4322bEC6A8E165DB7a0a18FC746D";
+const ETH_PER_CREDIT = 0.001;
+const FUNDING_GAS_LIMIT = 21000n;
 
 export default function CreateTaskPage() {
   const { userId } = useAppStore();
@@ -30,9 +32,8 @@ export default function CreateTaskPage() {
   // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [minVotes, setMinVotes] = useState(20);
+  const [minVotes, setMinVotes] = useState(5);
   const [thumbnails, setThumbnails] = useState<File[]>([]);
-  const [rewardEth, setRewardEth] = useState("0.02");
 
   // Loading states
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,7 +42,8 @@ export default function CreateTaskPage() {
 
   // Simulated USD Estimate
   const ethPrice = 3200; // Mock ETH Price
-  const usdEstimate = Number(rewardEth) ? (Number(rewardEth) * ethPrice).toFixed(2) : "0.00";
+  const rewardEth = (minVotes * ETH_PER_CREDIT).toFixed(3);
+  const usdEstimate = (Number(rewardEth) * ethPrice).toFixed(2);
 
   const handleNext = () => {
     if (step === 1) {
@@ -175,6 +177,7 @@ export default function CreateTaskPage() {
       const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
       const signer = await provider.getSigner();
       const network = await provider.getNetwork();
+      const signerAddress = await signer.getAddress();
 
       if (Number(network.chainId) !== SEPOLIA_CHAIN_ID) {
         throw new Error("Please switch your wallet to Sepolia and try again.");
@@ -182,11 +185,24 @@ export default function CreateTaskPage() {
 
       // We send the funds to the backend server wallet address:
       const txValue = ethers.parseEther(rewardEth);
+      const balance = await provider.getBalance(signerAddress);
+      const feeData = await provider.getFeeData();
+      const maxFeePerGas = feeData.maxFeePerGas ?? feeData.gasPrice ?? 0n;
+      const estimatedGasCost = maxFeePerGas * FUNDING_GAS_LIMIT;
+
+      if (balance < txValue + estimatedGasCost) {
+        throw new Error(
+          `Insufficient Sepolia ETH in ${signerAddress}. Need about ${ethers.formatEther(
+            txValue + estimatedGasCost
+          )} ETH including gas, but this wallet has ${ethers.formatEther(balance)} ETH.`
+        );
+      }
 
       toast.loading("Please confirm the escrow funding transaction in your wallet...", { id: "create-campaign" });
       const tx = await signer.sendTransaction({
         to: SERVER_WALLET_ADDRESS,
         value: txValue,
+        gasLimit: FUNDING_GAS_LIMIT,
       });
 
       setSubmissionProgress("Waiting for transaction confirmation on-chain...");
@@ -365,7 +381,7 @@ export default function CreateTaskPage() {
                             type="number"
                             step="0.001"
                             value={rewardEth}
-                            onChange={(e) => setRewardEth(e.target.value)}
+                            readOnly
                             className="w-full bg-zinc-950 border border-zinc-800 focus:border-purple-500/50 rounded-xl pl-8 pr-4 py-3 text-sm text-white focus:outline-none font-mono"
                           />
                         </div>
@@ -374,7 +390,7 @@ export default function CreateTaskPage() {
                         </div>
                       </div>
                       <span className="text-[10px] text-zinc-500 leading-normal">
-                        Staked pool split equally among winning options voters. (Note: {minVotes} credits will be funded, each equivalent to 0.001 ETH).
+                        Staked pool split equally among winning option voters. {minVotes} credits will be funded, each equivalent to {ETH_PER_CREDIT.toFixed(3)} Sepolia ETH.
                       </span>
                     </div>
 
