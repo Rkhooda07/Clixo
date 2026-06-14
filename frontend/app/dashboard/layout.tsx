@@ -13,6 +13,15 @@ import {
   Wallet
 } from "lucide-react";
 
+const sidebarLinks = [
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { label: "My Tasks", href: "/my-tasks", icon: History },
+  { label: "Create Task", href: "/create-task", icon: PlusCircle },
+  { label: "Browse Tasks", href: "/browse", icon: Compass },
+  { label: "Payouts", href: "/dashboard/payouts", icon: Wallet },
+  { label: "Settings", href: "/dashboard/settings", icon: Settings },
+];
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 

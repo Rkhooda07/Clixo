@@ -12,7 +12,12 @@ export function useWalletUser() {
   const { disconnect } = useDisconnect();
   const { token, walletAddress, setAuth, logout } = useAppStore();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const authAttempted = useRef<string | null>(null);
+
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   const login = async () => {
     if (!address) {
@@ -50,8 +55,8 @@ export function useWalletUser() {
   };
 
   useEffect(() => {
-    // Wait for wagmi to finish initializing
-    if (!isConnecting && !isReconnecting) {
+    // Wait for wagmi and store to finish initializing
+    if (!isConnecting && !isReconnecting && isHydrated) {
       if (isConnected && address) {
         // If we are connected with a DIFFERENT address than the one we have a token for,
         // then we must logout because the session is invalid for this new address.
@@ -60,19 +65,15 @@ export function useWalletUser() {
           authAttempted.current = null;
         }
       }
-      // We NO LONGER logout automatically just because isConnected is false.
-      // This allows the session to persist across page refreshes or minor connection drops.
-      // The UI will still show "Connect Wallet" if isConnected is false, 
-      // but once they reconnect the same wallet, they'll be logged in immediately.
     }
-  }, [isConnected, address, isConnecting, isReconnecting, walletAddress]);
+  }, [isConnected, address, isConnecting, isReconnecting, isHydrated, walletAddress]);
 
   return {
     address,
     isConnected,
     isAuthenticating,
-    isInitializing: isConnecting || isReconnecting,
-    isLogged: !!token && !!address && walletAddress?.toLowerCase() === address?.toLowerCase(),
+    isInitializing: isConnecting || isReconnecting || !isHydrated,
+    isLogged: isHydrated && !!token && !!address && walletAddress?.toLowerCase() === address?.toLowerCase(),
     token,
     login,
     logout: () => {

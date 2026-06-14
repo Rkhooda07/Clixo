@@ -6,7 +6,7 @@ import { ConnectButton } from "./ConnectButton";
 import { ShieldAlert, KeyRound, Loader2 } from "lucide-react";
 
 export function WalletGuard({ children }: { children: React.ReactNode }) {
-  const { isConnected, token, isInitializing } = useWalletUser();
+  const { isConnected, token, isInitializing, address, walletAddress } = useWalletUser();
 
   if (isInitializing) {
     return (
@@ -16,7 +16,8 @@ export function WalletGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isConnected || !token) {
+  // Case 1: No session token at all - must connect and sign
+  if (!token) {
     return (
       <div className="flex-1 min-h-[70vh] w-full flex flex-col items-center justify-center p-6 relative">
         {/* Glow effect */}
@@ -45,6 +46,39 @@ export function WalletGuard({ children }: { children: React.ReactNode }) {
               <span>One wallet = One account. No passwords needed.</span>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Case 2: Has token, but wallet is disconnected (common on page refresh/nav)
+  if (!isConnected) {
+    return (
+      <div className="flex-1 min-h-[70vh] w-full flex flex-col items-center justify-center p-6">
+        <div className="max-w-sm w-full border border-zinc-800 bg-[#111118]/80 backdrop-blur-md rounded-2xl p-8 text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-purple-500 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-white mb-2">Reconnecting Wallet...</h3>
+          <p className="text-zinc-400 text-xs mb-6">
+            We found an active session for <span className="text-purple-400 font-mono">{walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}</span>. 
+            Waiting for your wallet provider to reconnect.
+          </p>
+          <ConnectButton />
+        </div>
+      </div>
+    );
+  }
+
+  // Case 3: Connected but address mismatch (handled by useWalletUser logout, but safety check)
+  if (walletAddress && address && walletAddress.toLowerCase() !== address.toLowerCase()) {
+    return (
+      <div className="flex-1 min-h-[70vh] w-full flex flex-col items-center justify-center p-6">
+        <div className="max-w-sm w-full border border-red-900/30 bg-red-950/10 backdrop-blur-md rounded-2xl p-8 text-center border-dashed">
+          <ShieldAlert className="w-8 h-8 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-white mb-2">Wallet Mismatch</h3>
+          <p className="text-zinc-400 text-xs mb-6">
+            The connected wallet does not match your active session. Please switch back or sign in again.
+          </p>
+          <ConnectButton />
         </div>
       </div>
     );
