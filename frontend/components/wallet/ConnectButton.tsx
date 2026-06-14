@@ -5,7 +5,7 @@ import { useWalletUser } from "@/hooks/useWalletUser";
 import { Loader2, Wallet } from "lucide-react";
 
 export function ConnectButton() {
-  const { isAuthenticating } = useWalletUser();
+  const { isAuthenticating, isLogged, login } = useWalletUser();
 
   return (
     <RainbowConnectButton.Custom>
@@ -51,6 +51,19 @@ export function ConnectButton() {
               className="bg-red-900/30 hover:bg-red-950/40 text-red-400 border border-red-900/50 text-sm font-medium px-4 py-2 rounded-lg"
             >
               Wrong Network
+            </button>
+          );
+        }
+
+        // If connected to wallet but not authenticated with backend
+        if (!isLogged) {
+          return (
+            <button
+              onClick={login}
+              className="flex items-center gap-2 border border-purple-500 bg-purple-950/40 hover:bg-purple-900/60 text-purple-400 text-sm font-bold px-5 py-2 rounded-lg transition-all shadow-[0_0_10px_rgba(124,58,237,0.2)]"
+            >
+              <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+              Sign In
             </button>
           );
         }

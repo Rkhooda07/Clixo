@@ -3,10 +3,18 @@
 import React from "react";
 import { useWalletUser } from "@/hooks/useWalletUser";
 import { ConnectButton } from "./ConnectButton";
-import { ShieldAlert, KeyRound } from "lucide-react";
+import { ShieldAlert, KeyRound, Loader2 } from "lucide-react";
 
 export function WalletGuard({ children }: { children: React.ReactNode }) {
-  const { isConnected, token } = useWalletUser();
+  const { isConnected, token, isInitializing } = useWalletUser();
+
+  if (isInitializing) {
+    return (
+      <div className="flex-1 min-h-[70vh] w-full flex items-center justify-center">
+        <Loader2 className="w-10 h-10 animate-spin text-purple-500" />
+      </div>
+    );
+  }
 
   if (!isConnected || !token) {
     return (
