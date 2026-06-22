@@ -6,16 +6,16 @@ import { Layers, ExternalLink } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-[#0a0a0f] border-t border-zinc-900 mt-auto py-12">
+    <footer className="w-full bg-zinc-900/80 border-t border-zinc-800/50 mt-auto py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
         {/* Brand */}
         <div className="flex flex-col items-center md:items-start gap-2">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-tr from-purple-700 to-cyan-500 shadow-md shadow-purple-900/20">
+            <div className="relative flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-tr from-cyan-600 to-blue-500 shadow-sm shadow-cyan-900/20">
               <Layers className="w-4 h-4 text-white" />
             </div>
             <span className="text-lg font-bold tracking-tight text-white">
-              Clixo<span className="text-purple-500 font-extrabold">.</span>
+              Clixo<span className="text-cyan-400 font-extrabold">.</span>
             </span>
           </Link>
           <p className="text-zinc-500 text-xs text-center md:text-left">
@@ -48,7 +48,7 @@ export function Footer() {
 
         {/* Badge */}
         <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800/80 bg-zinc-900/40 text-xs text-zinc-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
           <span>Built on Ethereum</span>
         </div>
       </div>

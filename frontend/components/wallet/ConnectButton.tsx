@@ -15,7 +15,7 @@ export function ConnectButton() {
 
         if (!ready) {
           return (
-            <div className="w-[140px] h-[38px] bg-zinc-800 animate-pulse rounded-lg" />
+            <div className="w-[140px] h-[36px] bg-zinc-800 animate-pulse rounded-lg" />
           );
         }
 
@@ -23,9 +23,9 @@ export function ConnectButton() {
           return (
             <button
               disabled
-              className="flex items-center gap-2 border border-purple-500/30 bg-purple-950/20 text-purple-400 text-sm font-medium px-4 py-2 rounded-lg font-mono"
+              className="flex items-center gap-2 border border-cyan-500/30 bg-cyan-950/20 text-cyan-400 text-sm font-medium px-4 py-2 rounded-lg font-mono"
             >
-              <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+              <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
               Authenticating...
             </button>
           );
@@ -35,7 +35,7 @@ export function ConnectButton() {
           return (
             <button
               onClick={openConnectModal}
-              className="relative group overflow-hidden bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white text-sm font-semibold px-5 py-2 rounded-lg transition-all shadow-[0_0_15px_rgba(124,58,237,0.3)] hover:shadow-[0_0_20px_rgba(124,58,237,0.5)] flex items-center gap-2"
+              className="relative group overflow-hidden bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:from-cyan-700 active:to-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-all shadow-sm flex items-center gap-2"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
               <Wallet className="w-4 h-4" />
@@ -60,7 +60,7 @@ export function ConnectButton() {
           return (
             <button
               onClick={login}
-              className="flex items-center gap-2 border border-purple-500 bg-purple-950/40 hover:bg-purple-900/60 text-purple-400 text-sm font-bold px-5 py-2 rounded-lg transition-all shadow-[0_0_10px_rgba(124,58,237,0.2)]"
+              className="flex items-center gap-2 border border-cyan-500 bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-400 text-sm font-bold px-4 py-2 rounded-lg transition-all shadow-sm"
             >
               <span className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
               Sign In
@@ -71,12 +71,12 @@ export function ConnectButton() {
         return (
           <button
             onClick={openAccountModal}
-            className="flex items-center gap-2 border border-zinc-800 bg-zinc-950/60 hover:bg-zinc-900/60 text-zinc-300 hover:text-white text-sm font-medium px-4 py-2 rounded-lg font-mono transition-colors shadow-inner"
+            className="flex items-center gap-2 border border-zinc-800 bg-zinc-950/60 hover:bg-zinc-900/60 text-zinc-300 hover:text-white text-sm font-medium px-4 py-2 rounded-lg font-mono transition-colors shadow-sm"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span>{account.displayName}</span>
             <span className="text-zinc-600">|</span>
-            <span className="text-purple-400 font-mono text-xs">{account.displayBalance}</span>
+            <span className="text-cyan-400 font-mono text-xs">{account.displayBalance}</span>
           </button>
         );
       }}
