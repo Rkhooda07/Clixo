@@ -7,10 +7,12 @@ import { Task, Thumbnail } from "@/types";
 import { ThumbnailGallery } from "@/components/vote/ThumbnailGallery";
 import { AlreadyVoted } from "@/components/vote/AlreadyVoted";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
-import { ShieldAlert, Info } from "lucide-react";
+import { ChevronDown } from "lucide-react";
+
+const mono = "JetBrains Mono, monospace";
+const geist = "Geist, system-ui, sans-serif";
 
 export default function VotePage() {
   const params = useParams();
@@ -22,8 +24,10 @@ export default function VotePage() {
   const [stats, setStats] = useState<any>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [votedOptionId, setVotedOptionId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreator, setIsCreator] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contextOpen, setContextOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -35,24 +39,19 @@ export default function VotePage() {
           meApi.getSubmissions(),
         ]);
 
-        // Check if already voted
-        const previousVote = mySubs.submissions.find((s: any) => s.taskId === taskId);
+        const previousVote = mySubs.submissions.find(
+          (s: any) => s.taskId === taskId,
+        );
         if (previousVote) {
           setHasVoted(true);
           setVotedOptionId(previousVote.optionId);
         }
 
-        // Check if creator (In Clixo, address sync is handled by backend, but we can do a simple check)
-        // Ideally the taskData should return creator address or we check user_id
-        // For now, let's assume we can't fully check without more backend info, or we just rely on backend error if they try to vote.
-
-        // Merge stats
-        const updatedOptions = taskData.options?.map(opt => {
-          const optStat = statsData.options.find((s: any) => s.optionId === opt.id);
-          return {
-            ...opt,
-            votes: optStat ? optStat.votes : 0
-          };
+        const updatedOptions = taskData.options?.map((opt: Thumbnail) => {
+          const optStat = statsData.options.find(
+            (s: any) => s.optionId === opt.id,
+          );
+          return { ...opt, votes: optStat ? optStat.votes : 0 };
         });
 
         setTask({ ...taskData, options: updatedOptions });
@@ -68,97 +67,480 @@ export default function VotePage() {
     if (taskId) fetchData();
   }, [taskId, address]);
 
-  const handleVote = async (optionId: number) => {
+  const handleVote = async () => {
+    if (selectedId === null || isSubmitting) return;
+    setIsSubmitting(true);
     try {
-      await submissionApi.submit(taskId, optionId);
-      toast.success("Vote recorded successfully!");
+      await submissionApi.submit(taskId, selectedId);
+      toast.success("Vote recorded.");
       setHasVoted(true);
-      setVotedOptionId(optionId);
-      
-      // Refresh stats
+      setVotedOptionId(selectedId);
+
       const statsData = await taskApi.getStats(taskId);
       setStats(statsData);
-      
-      // Update task options with new votes
       if (task?.options) {
-        const updatedOptions = task.options.map(opt => {
-          const optStat = statsData.options.find((s: any) => s.optionId === opt.id);
+        const updatedOptions = task.options.map((opt) => {
+          const optStat = statsData.options.find(
+            (s: any) => s.optionId === opt.id,
+          );
           return { ...opt, votes: optStat ? optStat.votes : 0 };
         });
         setTask({ ...task, options: updatedOptions });
       }
     } catch (err: any) {
-      const msg = err.response?.data?.message || "Failed to submit vote";
-      toast.error(msg);
+      toast.error(err.response?.data?.message || "Failed to submit vote");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  /* ── Loading ──────────────────────────────────────────────────────────── */
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col gap-8">
-        <Skeleton className="h-12 w-3/4 rounded-xl" />
-        <Skeleton className="h-6 w-1/2 rounded-lg" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-          <Skeleton className="aspect-video rounded-3xl" />
-          <Skeleton className="aspect-video rounded-3xl" />
-        </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "calc(100dvh - 52px)",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: mono,
+            fontSize: "11px",
+            color: "var(--text-3)",
+            letterSpacing: "0.06em",
+          }}
+        >
+          Loading...
+        </span>
       </div>
     );
   }
 
+  /* ── Not found ────────────────────────────────────────────────────────── */
   if (!task) {
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-zinc-500">Task not found.</p>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "calc(100dvh - 52px)",
+        }}
+      >
+        <p style={{ fontFamily: mono, fontSize: "12px", color: "var(--text-3)" }}>
+          Task not found.
+        </p>
       </div>
     );
   }
 
-  const isCompleted = task.status === "COMPLETED" || task.status === "CLOSED" || task.status === "SETTLED";
-  const votedOption = task.options?.find(opt => opt.id === votedOptionId);
+  const isCompleted =
+    task.status === "COMPLETED" ||
+    task.status === "CLOSED" ||
+    task.status === "SETTLED";
 
-  return (
-    <WalletGuard>
-      <div className="max-w-5xl mx-auto px-4 py-12 flex flex-col gap-12 animate-in fade-in duration-700">
-        {/* Header */}
-        <div className="flex flex-col items-center text-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/30 border border-purple-500/20 text-purple-400 text-[10px] font-black uppercase tracking-widest">
-            <Info className="w-3.5 h-3.5" />
-            Consensus Mission #{task.id}
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight max-w-3xl">
-            {task.title}
-          </h1>
-          <p className="text-zinc-400 text-lg max-w-2xl">
-            Review the instructions and choose the option that best matches the task. Your signal helps the requester reach consensus.
-          </p>
-        </div>
+  const votedOption = task.options?.find((opt) => opt.id === votedOptionId);
+  const rewardEth = (task.budget * 0.001).toFixed(3);
+  const votes = task.totalSubmissions ?? 0;
+  const maxVotes = task.budget ?? 20;
+  const progressPct = maxVotes > 0 ? Math.min(100, (votes / maxVotes) * 100) : 0;
 
-        {isCompleted ? (
-          <div className="bg-amber-950/10 border border-amber-500/20 rounded-3xl p-8 flex flex-col items-center text-center gap-4">
-            <ShieldAlert className="w-12 h-12 text-amber-500" />
-            <div className="flex flex-col gap-2">
-              <h2 className="text-2xl font-bold text-white">Voting is Closed</h2>
-              <p className="text-zinc-400 max-w-md">
-                This mission has been completed and consensus has been reached. You can view the final results on the dashboard.
-              </p>
-            </div>
-            <button 
-              onClick={() => router.push(`/tasks/${taskId}`)}
-              className="mt-4 px-8 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-bold transition-all border border-zinc-800"
+  /* ── Closed ───────────────────────────────────────────────────────────── */
+  if (isCompleted) {
+    return (
+      <WalletGuard>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "calc(100dvh - 52px)",
+            padding: "40px",
+          }}
+        >
+          <div style={{ maxWidth: "480px", textAlign: "center" }}>
+            <div
+              style={{
+                fontFamily: mono,
+                fontSize: "10px",
+                color: "var(--text-3)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                marginBottom: "20px",
+              }}
             >
-              View Final Standings
+              Task #{task.id} · Closed
+            </div>
+            <h2
+              style={{
+                fontFamily: geist,
+                fontSize: "24px",
+                fontWeight: 500,
+                color: "var(--text-1)",
+                letterSpacing: "-0.02em",
+                marginBottom: "12px",
+              }}
+            >
+              Voting is Closed
+            </h2>
+            <p
+              style={{
+                fontFamily: "Inter, system-ui, sans-serif",
+                fontSize: "13px",
+                color: "var(--text-2)",
+                lineHeight: 1.6,
+                marginBottom: "28px",
+              }}
+            >
+              This task has been completed and consensus has been reached. View
+              the final standings below.
+            </p>
+            <button
+              onClick={() => router.push(`/tasks/${taskId}`)}
+              style={{
+                background: "var(--surface-2)",
+                border: "1px solid var(--line)",
+                borderRadius: "5px",
+                color: "var(--text-1)",
+                fontFamily: geist,
+                fontSize: "13px",
+                fontWeight: 500,
+                padding: "10px 24px",
+                cursor: "pointer",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              View Results →
             </button>
           </div>
-        ) : hasVoted ? (
-          <AlreadyVoted 
-            votedOption={votedOption} 
-            options={task.options || []} 
-            totalVotes={stats?.totalSubmissions || 0} 
+        </div>
+      </WalletGuard>
+    );
+  }
+
+  /* ── Already voted ────────────────────────────────────────────────────── */
+  if (hasVoted) {
+    return (
+      <WalletGuard>
+        <AlreadyVoted
+          votedOption={votedOption}
+          options={task.options || []}
+          totalVotes={stats?.totalSubmissions || 0}
+        />
+      </WalletGuard>
+    );
+  }
+
+  /* ── Shared sub-elements ──────────────────────────────────────────────── */
+  const taskContextBlock = (
+    <>
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: "10px",
+          color: "var(--text-3)",
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          marginBottom: "12px",
+        }}
+      >
+        Task #{task.id}
+      </div>
+
+      <h1
+        style={{
+          fontFamily: geist,
+          fontSize: "20px",
+          fontWeight: 500,
+          color: "var(--text-1)",
+          letterSpacing: "-0.02em",
+          lineHeight: 1.25,
+          marginBottom: "16px",
+        }}
+      >
+        {task.title}
+      </h1>
+
+      <div
+        style={{
+          height: "1px",
+          background: "var(--line)",
+          marginBottom: "20px",
+        }}
+      />
+
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: "10px",
+          color: "var(--text-3)",
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          marginBottom: "6px",
+        }}
+      >
+        Reward
+      </div>
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: "24px",
+          color: "var(--amber)",
+          letterSpacing: "-0.01em",
+          marginBottom: "28px",
+        }}
+      >
+        Ξ {rewardEth} ETH
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontFamily: mono,
+          fontSize: "10px",
+          color: "var(--text-3)",
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          marginBottom: "8px",
+        }}
+      >
+        <span>Votes Needed</span>
+        <span>
+          {votes} / {maxVotes}
+        </span>
+      </div>
+      <div
+        style={{
+          height: "2px",
+          background: "var(--line)",
+          borderRadius: "1px",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            height: "100%",
+            width: `${progressPct}%`,
+            background: "var(--text-2)",
+            transition: "width 0.4s ease-out",
+          }}
+        />
+      </div>
+    </>
+  );
+
+  const submitBlock = (
+    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+      <button
+        onClick={handleVote}
+        disabled={selectedId === null || isSubmitting}
+        style={{
+          width: "100%",
+          height: "44px",
+          borderRadius: "5px",
+          fontFamily: geist,
+          fontSize: "13px",
+          fontWeight: 600,
+          letterSpacing: "-0.01em",
+          cursor: selectedId === null || isSubmitting ? "not-allowed" : "pointer",
+          transition: "background 0.1s, color 0.1s, border-color 0.1s",
+          border: `1px solid ${selectedId !== null && !isSubmitting ? "var(--text-1)" : "var(--line)"}`,
+          background: selectedId !== null && !isSubmitting ? "var(--text-1)" : "var(--surface-2)",
+          color: selectedId !== null && !isSubmitting ? "var(--ink)" : "var(--text-3)",
+        }}
+      >
+        {isSubmitting
+          ? "Submitting..."
+          : selectedId === null
+            ? "Select a thumbnail to vote"
+            : "Submit Vote"}
+      </button>
+      <p
+        style={{
+          fontFamily: mono,
+          fontSize: "10px",
+          color: "var(--text-3)",
+          lineHeight: 1.5,
+          textAlign: "center",
+          margin: 0,
+        }}
+      >
+        Your vote is recorded on-chain. You'll earn ETH when this task closes.
+      </p>
+    </div>
+  );
+
+  /* ── Voting UI ────────────────────────────────────────────────────────── */
+  return (
+    <WalletGuard>
+      {/* Desktop layout (md+) ────────────────────────────────────────────── */}
+      <div className="hidden md:flex" style={{ minHeight: "calc(100dvh - 52px)" }}>
+        {/* Left 60%: thumbnail grid */}
+        <div
+          style={{
+            flex: "0 0 60%",
+            padding: "40px",
+            overflowY: "auto",
+            display: "flex",
+            alignItems: "flex-start",
+          }}
+        >
+          <div style={{ width: "100%" }}>
+            <ThumbnailGallery
+              options={task.options || []}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+            />
+          </div>
+        </div>
+
+        {/* Right 40%: context + submit */}
+        <div
+          style={{
+            flex: "0 0 40%",
+            position: "sticky",
+            top: "52px",
+            height: "calc(100dvh - 52px)",
+            background: "var(--surface-1)",
+            borderLeft: "1px solid var(--line)",
+            padding: "32px 24px",
+            display: "flex",
+            flexDirection: "column",
+            overflowY: "auto",
+          }}
+        >
+          <div style={{ flex: 1 }}>{taskContextBlock}</div>
+          <div>{submitBlock}</div>
+        </div>
+      </div>
+
+      {/* Mobile layout ────────────────────────────────────────────────────── */}
+      <div className="md:hidden" style={{ paddingBottom: "88px" }}>
+        {/* Accordion: task context */}
+        <div style={{ borderBottom: "1px solid var(--line)" }}>
+          <button
+            onClick={() => setContextOpen((v) => !v)}
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "14px 16px",
+              background: "var(--surface-1)",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            <div>
+              <span
+                style={{
+                  fontFamily: mono,
+                  fontSize: "10px",
+                  color: "var(--text-3)",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  display: "block",
+                  marginBottom: "2px",
+                }}
+              >
+                Task #{task.id} · Ξ {rewardEth} ETH
+              </span>
+              <span
+                style={{
+                  fontFamily: geist,
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  color: "var(--text-1)",
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                {task.title}
+              </span>
+            </div>
+            <ChevronDown
+              size={16}
+              color="var(--text-3)"
+              style={{
+                flexShrink: 0,
+                marginLeft: "12px",
+                transform: contextOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.2s",
+              }}
+            />
+          </button>
+
+          {contextOpen && (
+            <div
+              style={{
+                padding: "0 16px 16px",
+                background: "var(--surface-1)",
+              }}
+            >
+              <div
+                style={{
+                  fontFamily: mono,
+                  fontSize: "10px",
+                  color: "var(--text-3)",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  marginBottom: "8px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                }}
+              >
+                <span>Votes</span>
+                <span>
+                  {votes} / {maxVotes}
+                </span>
+              </div>
+              <div
+                style={{
+                  height: "2px",
+                  background: "var(--line)",
+                  borderRadius: "1px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${progressPct}%`,
+                    background: "var(--text-2)",
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Thumbnails */}
+        <div style={{ padding: "16px" }}>
+          <ThumbnailGallery
+            options={task.options || []}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
           />
-        ) : (
-          <ThumbnailGallery options={task.options || []} onVote={handleVote} />
-        )}
+        </div>
+
+        {/* Fixed bottom submit */}
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "12px 16px",
+            background: "var(--ink)",
+            borderTop: "1px solid var(--line)",
+          }}
+        >
+          {submitBlock}
+        </div>
       </div>
     </WalletGuard>
   );
