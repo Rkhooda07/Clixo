@@ -1,108 +1,241 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ConnectButton } from "../wallet/ConnectButton";
-import { Menu, X, Layers, PlusCircle, LayoutDashboard, Compass, ClipboardList } from "lucide-react";
+import { X } from "lucide-react";
 
 const navLinks = [
-  { label: "Browse Tasks", href: "/browse", icon: Compass },
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "My Tasks", href: "/my-tasks", icon: ClipboardList },
-  { label: "Create Task", href: "/create-task", icon: PlusCircle },
+  { label: "Browse Tasks", href: "/browse" },
+  { label: "Dashboard", href: "/dashboard" },
 ];
+
+function HamburgerLines() {
+  return (
+    <svg width="18" height="13" viewBox="0 0 18 13" fill="none" aria-hidden="true">
+      <line x1="0" y1="1" x2="18" y2="1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="0" y1="6.5" x2="18" y2="6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="0" y1="12" x2="18" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+const wordmark: React.CSSProperties = {
+  fontFamily: "Geist, system-ui, sans-serif",
+  fontWeight: 600,
+  fontSize: "15px",
+  letterSpacing: "0.08em",
+  color: "var(--text-1)",
+  textDecoration: "none",
+};
 
 export function Navbar() {
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [drawerOpen]);
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-zinc-900/80 backdrop-blur-md border-b border-zinc-800/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-blue-500 shadow-sm shadow-cyan-900/30 group-hover:scale-105 transition-transform duration-200">
-                <Layers className="w-4.5 h-4.5 text-white" />
-              </div>
-              <span className="text-lg font-bold tracking-tight font-sans text-white">
-                Clixo<span className="text-cyan-400 font-black">.</span>
-              </span>
-            </Link>
-          </div>
+    <>
+      <nav
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 50,
+          width: "100%",
+          background: "var(--ink)",
+          borderBottom: "1px solid var(--line)",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
+            padding: "0 24px",
+            height: "52px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Wordmark */}
+          <Link href="/" prefetch={false} style={wordmark}>
+            CLIXO
+          </Link>
 
-          {/* Desktop Nav Links */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Center nav — desktop only */}
+          <div className="hidden md:flex" style={{ alignItems: "center", gap: "2px" }}>
             {navLinks.map((link) => {
-              const Icon = link.icon;
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-lg transition-colors duration-150 ${
-                    isActive
-                      ? "text-cyan-400 bg-cyan-900/20 border border-cyan-500/20"
-                      : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 border border-transparent"
-                  }`}
+                  prefetch={false}
+                  style={{
+                    color: isActive ? "var(--text-1)" : "var(--text-2)",
+                    fontSize: "13px",
+                    textDecoration: "none",
+                    padding: "5px 10px",
+                    borderRadius: "4px",
+                    transition: "color 100ms",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-1)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLAnchorElement).style.color = isActive
+                      ? "var(--text-1)"
+                      : "var(--text-2)";
+                  }}
                 >
-                  <Icon className="w-4 h-4" />
                   {link.label}
                 </Link>
               );
             })}
           </div>
 
-          {/* Wallet and Mobile Menu Trigger */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:block">
-              <ConnectButton />
+          {/* Right: hamburger (mobile) + wallet */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div className="md:hidden">
+              <button
+                onClick={() => setDrawerOpen(true)}
+                aria-label="Open navigation"
+                aria-expanded={drawerOpen}
+                style={{
+                  color: "var(--text-2)",
+                  background: "none",
+                  border: "none",
+                  padding: "6px",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <HamburgerLines />
+              </button>
             </div>
 
-            <button
-              onClick={() => setMobileMenuOpen((open) => !open)}
-              className="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800/50 md:hidden transition-colors border border-zinc-700/30"
-              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={mobileMenuOpen}
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+            <ConnectButton />
           </div>
+        </div>
+      </nav>
+
+      {/* Overlay */}
+      <div
+        onClick={() => setDrawerOpen(false)}
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 49,
+          background: "rgba(12, 12, 14, 0.75)",
+          opacity: drawerOpen ? 1 : 0,
+          pointerEvents: drawerOpen ? "auto" : "none",
+          transition: "opacity 250ms",
+        }}
+      />
+
+      {/* Drawer panel */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+        aria-hidden={!drawerOpen}
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: "280px",
+          background: "var(--surface-1)",
+          borderLeft: "1px solid var(--line)",
+          zIndex: 50,
+          display: "flex",
+          flexDirection: "column",
+          padding: "0",
+          transform: drawerOpen ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 250ms cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      >
+        {/* Drawer header */}
+        <div
+          style={{
+            height: "52px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 20px",
+            borderBottom: "1px solid var(--line)",
+            flexShrink: 0,
+          }}
+        >
+          <span style={wordmark}>CLIXO</span>
+          <button
+            onClick={() => setDrawerOpen(false)}
+            aria-label="Close navigation"
+            style={{
+              color: "var(--text-3)",
+              background: "none",
+              border: "none",
+              padding: "4px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Drawer links */}
+        <nav style={{ padding: "12px", flexGrow: 1 }}>
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                prefetch={false}
+                onClick={() => setDrawerOpen(false)}
+                style={{
+                  display: "block",
+                  color: isActive ? "var(--text-1)" : "var(--text-2)",
+                  fontSize: "14px",
+                  textDecoration: "none",
+                  padding: "10px 12px",
+                  borderRadius: "5px",
+                  background: isActive ? "var(--surface-2)" : "transparent",
+                }}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Drawer wallet */}
+        <div
+          style={{
+            padding: "16px 20px",
+            borderTop: "1px solid var(--line)",
+            flexShrink: 0,
+          }}
+        >
+          <ConnectButton />
         </div>
       </div>
-
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t border-zinc-800 bg-zinc-900/95 backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200">
-          <div className="px-3 pt-2 pb-4 space-y-1">
-            {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 text-base font-semibold px-4 py-3 rounded-xl transition-colors ${
-                    isActive
-                      ? "text-cyan-400 bg-cyan-900/40 border border-cyan-500/30"
-                      : "text-zinc-400 hover:text-white hover:bg-zinc-800/50 border border-transparent"
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {link.label}
-                </Link>
-              );
-            })}
-            <div className="pt-3 pb-1 border-t border-zinc-800 flex justify-center">
-              <ConnectButton />
-            </div>
-          </div>
-        </div>
-      )}
-    </nav>
+    </>
   );
 }
+
 export default Navbar;
