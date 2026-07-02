@@ -133,6 +133,106 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── How It Works ─────────────────────────────────────────────────── */}
+      <section style={{ padding: "96px 0", background: "var(--ink)" }}>
+        <div
+          style={{
+            maxWidth: "1280px",
+            margin: "0 auto",
+            padding: "0 40px",
+          }}
+        >
+          {/* Eyebrow */}
+          <div
+            style={{
+              fontFamily: "JetBrains Mono, monospace",
+              fontSize: "10px",
+              color: "var(--text-3)",
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              marginBottom: "48px",
+            }}
+          >
+            Process
+          </div>
+
+          {/* 3-column grid */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr 1fr",
+            }}
+          >
+            {[
+              {
+                n: "01",
+                title: "Upload",
+                body: "Upload 2 to 10 thumbnail options. Add context so voters understand what the video is about. Stake ETH as the reward.",
+              },
+              {
+                n: "02",
+                title: "Vote",
+                body: "Workers browse open tasks and pick the thumbnail they'd click on. No vote counts shown until after they submit — no anchoring bias.",
+              },
+              {
+                n: "03",
+                title: "Earn",
+                body: "Task closes when minimum votes are hit. The creator sees ranked results. Workers split the staked ETH proportionally.",
+              },
+            ].map((step, i) => (
+              <div
+                key={step.n}
+                style={{
+                  padding: "0 40px",
+                  borderLeft: i > 0 ? "1px solid var(--line)" : "none",
+                }}
+              >
+                {/* Step number */}
+                <div
+                  style={{
+                    fontFamily: "JetBrains Mono, monospace",
+                    fontSize: "11px",
+                    color: "var(--text-3)",
+                    marginBottom: "24px",
+                  }}
+                >
+                  {step.n}
+                </div>
+
+                {/* Title */}
+                <h3
+                  style={{
+                    fontFamily: "Geist, system-ui, sans-serif",
+                    fontSize: "18px",
+                    fontWeight: 500,
+                    color: "var(--text-1)",
+                    letterSpacing: "-0.02em",
+                    marginBottom: "8px",
+                    marginTop: 0,
+                  }}
+                >
+                  {step.title}
+                </h3>
+
+                {/* Description */}
+                <p
+                  style={{
+                    fontFamily: "Inter, system-ui, sans-serif",
+                    fontSize: "13px",
+                    color: "var(--text-2)",
+                    lineHeight: 1.7,
+                    maxWidth: "200px",
+                    margin: 0,
+                  }}
+                >
+                  {step.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
