@@ -2,54 +2,67 @@
 
 import React from "react";
 import Link from "next/link";
-import { Layers, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-zinc-900/80 border-t border-zinc-800/50 mt-auto py-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+    <footer
+      style={{ borderTop: "1px solid var(--line)" }}
+      className="w-full py-8"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center md:items-start justify-between gap-6">
         {/* Brand */}
-        <div className="flex flex-col items-center md:items-start gap-2">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="relative flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-tr from-cyan-600 to-blue-500 shadow-sm shadow-cyan-900/20">
-              <Layers className="w-4 h-4 text-white" />
-            </div>
-            <span className="text-lg font-bold tracking-tight text-white">
-              Clixo<span className="text-cyan-400 font-extrabold">.</span>
+        <div className="flex flex-col gap-2">
+          <Link href="/" className="flex items-center gap-2">
+            <div
+              style={{ background: "var(--text-1)", borderRadius: "3px" }}
+              className="w-[15px] h-[15px]"
+            />
+            <span
+              style={{
+                fontFamily: "Geist, system-ui, sans-serif",
+                fontWeight: 500,
+                letterSpacing: "-0.02em",
+                color: "var(--text-1)",
+                fontSize: "13px",
+              }}
+            >
+              Clixo
             </span>
           </Link>
-          <p className="text-zinc-500 text-xs text-center md:text-left">
-            Decentralized labeling and opinion platform built on Ethereum.
+          <p style={{ color: "var(--text-3)", fontSize: "12px" }}>
+            Decentralized thumbnail testing on Ethereum.
           </p>
         </div>
 
         {/* Links */}
-        <div className="flex flex-wrap items-center justify-center gap-6">
+        <div className="flex items-center gap-6">
           <a
             href="https://sepolia.etherscan.io"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+            style={{ color: "var(--text-3)", fontSize: "12px" }}
+            className="flex items-center gap-1 hover:text-[var(--text-2)] transition-colors"
           >
-            <span>Smart Contract (Sepolia Etherscan)</span>
-            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Sepolia Etherscan</span>
+            <ExternalLink className="w-3 h-3" />
           </a>
-          <span className="text-zinc-800">|</span>
           <a
             href="https://github.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+            style={{ color: "var(--text-3)", fontSize: "12px" }}
+            className="flex items-center gap-1 hover:text-[var(--text-2)] transition-colors"
           >
-            <ExternalLink className="w-3.5 h-3.5" />
-            <span>GitHub Repository</span>
+            <span>GitHub</span>
+            <ExternalLink className="w-3 h-3" />
           </a>
         </div>
 
-        {/* Badge */}
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-800/80 bg-zinc-900/40 text-xs text-zinc-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" />
-          <span>Built on Ethereum</span>
+        {/* Network status */}
+        <div className="flex items-center gap-2" style={{ color: "var(--text-3)", fontSize: "12px" }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--green)" }} />
+          <span>Sepolia Testnet</span>
         </div>
       </div>
     </footer>
