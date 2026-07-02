@@ -22,19 +22,21 @@ export function TaskCard({ task, mode, hasVoted = false, earnedEth, optionPicked
       {/* Header Image Area */}
       <div className="relative aspect-video rounded-lg overflow-hidden bg-zinc-800 border border-zinc-700/30 select-none">
         {mode === "worker-dashboard" && optionPickedImage ? (
-          <img
+          <Image
             src={optionPickedImage}
             alt="Option selected"
+            fill
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : task.options && task.options.length > 0 && task.options[0].gateway_url ? (
-          <img
-            src={task.options[0].gateway_url}
-            alt="Task option"
-            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
-              mode === "browse" && !hasVoted && !isCompleted ? "blur-[2px] brightness-90" : ""
-            }`}
-          />
+          <Image
+              src={task.options[0].gateway_url}
+              alt="Task option"
+              fill
+              className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ${
+                mode === "browse" && !hasVoted && !isCompleted ? "blur-[2px] brightness-90" : ""
+              }`}
+            />
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500">
             <span className="text-xs font-mono">No option preview</span>

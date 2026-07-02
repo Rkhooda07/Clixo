@@ -24,9 +24,10 @@ export function WinnerBanner({ winningOption, totalVotes }: WinnerBannerProps) {
         <div className="relative shrink-0 group">
           <div className="absolute -inset-1.5 bg-gradient-to-tr from-amber-600 to-amber-400 rounded-2xl blur opacity-25 group-hover:opacity-50 transition-opacity" />
           <div className="relative aspect-video w-64 md:w-80 rounded-2xl overflow-hidden border border-amber-500/30">
-            <img 
-              src={winningOption.gateway_url || winningOption.image_url || ""} 
-              alt="Winning Option" 
+            <Image
+              src={winningOption.gateway_url || winningOption.image_url || ""}
+              alt="Winning Option"
+              fill
               className="w-full h-full object-cover"
             />
             <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500 text-black text-xs font-black shadow-lg">

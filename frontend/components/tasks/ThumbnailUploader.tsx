@@ -3,6 +3,7 @@
 import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { UploadCloud, X, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 interface ThumbnailUploaderProps {
   onFilesChange: (files: File[]) => void;
@@ -105,10 +106,11 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
               key={index}
               className="group relative aspect-video border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950"
             >
-              <img
+              <Image
                 src={preview}
                 alt={`Option preview ${index + 1}`}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
               {/* Hover Delete Action */}
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">

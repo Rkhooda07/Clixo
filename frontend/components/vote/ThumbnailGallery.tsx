@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Thumbnail } from "@/types";
 import { Check, Loader2 } from "lucide-react";
+import Image from "next/image";
 
 interface ThumbnailGalleryProps {
   options: Thumbnail[];
@@ -37,10 +38,11 @@ export function ThumbnailGallery({ options, onVote }: ThumbnailGalleryProps) {
             }`}
           >
             <div className="aspect-video relative">
-              <img
+              <Image
                 src={option.gateway_url || option.image_url || ""}
                 alt="Task option"
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
               
               {selectedId === option.id && (

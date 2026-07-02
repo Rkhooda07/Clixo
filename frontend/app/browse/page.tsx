@@ -1,44 +1,40 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskCardSkeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { taskApi, meApi } from "@/lib/api";
-import { Task } from "@/types";
 import { Compass, Search, Filter } from "lucide-react";
 import { useWalletUser } from "@/hooks/useWalletUser";
 
 export default function BrowsePage() {
   const { isConnected, token } = useWalletUser();
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [votedTaskIds, setVotedTaskIds] = useState<Set<number>>(new Set());
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "highest" | "needed" | "newest">("all");
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const data = await taskApi.getAll();
-      setTasks(data.tasks);
+  // Fetch all tasks using React Query
+  const { data: tasksData, isLoading: isTasksLoading } = useQuery({
+    queryKey: ["tasks"],
+    queryFn: () => taskApi.getAll(),
+  });
 
-      // If connected, fetch their worker submissions to see what they already voted on
-      if (isConnected && token) {
-        const subData = await meApi.getSubmissions();
-        const votedIds = new Set(subData.submissions.map((sub) => sub.taskId));
-        setVotedTaskIds(votedIds);
-      }
-    } catch (err) {
-      console.error("Browse fetch error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Fetch worker submissions using React Query if wallet is connected
+  const { data: submissionsData, isLoading: isSubmissionsLoading } = useQuery({
+    queryKey: ["submissions", token],
+    queryFn: () => meApi.getSubmissions(),
+    enabled: !!isConnected && !!token,
+  });
 
-  useEffect(() => {
-    fetchData();
-  }, [isConnected, token]);
+  const tasks = tasksData?.tasks || [];
+  
+  const votedTaskIds = React.useMemo(() => {
+    if (!submissionsData?.submissions) return new Set<number>();
+    return new Set(submissionsData.submissions.map((sub) => sub.taskId));
+  }, [submissionsData]);
+
+  const loading = isTasksLoading || (isConnected && token && isSubmissionsLoading);
 
   // Filters and Sorting
   const filteredTasks = tasks

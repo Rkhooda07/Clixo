@@ -1,55 +1,56 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
 import { StatsRow } from "@/components/dashboard/StatsRow";
 import { ActivityTabs } from "@/components/dashboard/ActivityTabs";
 import { MyTasks } from "@/components/dashboard/MyTasks";
 import { MyWork } from "@/components/dashboard/MyWork";
 import { meApi } from "@/lib/api";
-import { Task, WorkerVoteRecord, TaskStatus } from "@/types";
+import { Task } from "@/types";
 import { useAccount } from "wagmi";
 
 export default function DashboardPage() {
   const { address } = useAccount();
   const [activeTab, setActiveTab] = useState<"my-tasks" | "my-work">("my-tasks");
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [submissions, setSubmissions] = useState<WorkerVoteRecord[]>([]);
-  const [earnings, setEarnings] = useState({ pending: 0, locked: 0, totalEarned: 0 });
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      setIsLoading(true);
-      try {
-        const [tasksData, subsData, earningsData] = await Promise.all([
-          meApi.getTasks(),
-          meApi.getSubmissions(),
-          meApi.getEarnings(),
-        ]);
+  // 1. Fetch user tasks using React Query
+  const { data: tasksData, isLoading: isTasksLoading } = useQuery({
+    queryKey: ["my-tasks", address],
+    queryFn: () => meApi.getTasks(),
+    enabled: !!address,
+  });
 
-        // Map backend tasks to frontend Task type
-        const mappedTasks: Task[] = tasksData.tasks.map((t: any) => ({
-          ...t,
-          createdAt: new Date().toISOString(), // Fallback
-          updatedAt: new Date().toISOString(), // Fallback
-          user_id: 0, // Fallback
-          signature: null,
-          amount: null,
-        }));
+  // 2. Fetch user submissions using React Query
+  const { data: subsData, isLoading: isSubsLoading } = useQuery({
+    queryKey: ["my-submissions", address],
+    queryFn: () => meApi.getSubmissions(),
+    enabled: !!address,
+  });
 
-        setTasks(mappedTasks);
-        setSubmissions(subsData.submissions);
-        setEarnings(earningsData);
-      } catch (err) {
-        console.error("Dashboard data fetch failed:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // 3. Fetch user earnings using React Query
+  const { data: earningsData, isLoading: isEarningsLoading } = useQuery({
+    queryKey: ["my-earnings", address],
+    queryFn: () => meApi.getEarnings(),
+    enabled: !!address,
+  });
 
-    fetchDashboardData();
-  }, [address]);
+  const rawTasks = tasksData?.tasks || [];
+  const tasks = React.useMemo(() => {
+    return rawTasks.map((t: any) => ({
+      ...t,
+      createdAt: new Date().toISOString(), // Fallback
+      updatedAt: new Date().toISOString(), // Fallback
+      user_id: 0, // Fallback
+      signature: null,
+      amount: null,
+    }));
+  }, [rawTasks]);
+
+  const submissions = subsData?.submissions || [];
+  const earnings = earningsData || { pending: 0, locked: 0, totalEarned: 0 };
+  const isLoading = isTasksLoading || isSubsLoading || isEarningsLoading;
 
   const ethSpent = tasks.reduce((acc, t) => acc + (t.fundedAmount || 0), 0) * 0.001;
 

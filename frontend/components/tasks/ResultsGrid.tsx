@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Thumbnail } from "@/types";
 
 interface ResultsGridProps {
@@ -34,10 +35,11 @@ export function ResultsGrid({ options, totalVotes }: ResultsGridProps) {
               }`}
             >
               <div className="relative aspect-video rounded-xl overflow-hidden border border-zinc-800/50">
-                <img 
-                  src={option.gateway_url || option.image_url || ""} 
-                  alt={`Option ${index + 1}`} 
-                  className="w-full h-full object-cover"
+                <Image
+                  src={option.gateway_url || option.image_url || ""}
+                  alt={`Option ${index + 1}`}
+                  fill
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-black shadow-lg ${
                   index === 0 ? "bg-amber-500 text-black" : "bg-black/60 text-white backdrop-blur-md"
