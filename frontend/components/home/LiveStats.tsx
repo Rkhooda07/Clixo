@@ -1,63 +1,108 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { statsApi } from "@/lib/api";
-import { PlatformStats } from "@/types";
 
-const INITIAL_STATS: PlatformStats = {
-  totalTasks: 0,
-  totalEthDistributed: "0.000",
-  totalWorkers: 0,
+function useCountUp(target: number, duration = 1200) {
+  const [value, setValue] = useState(0);
+  const raf = useRef<number>(0);
+
+  useEffect(() => {
+    if (target === 0) return;
+    cancelAnimationFrame(raf.current);
+    let start: number | null = null;
+
+    function easeOut(t: number) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function step(ts: number) {
+      if (start === null) start = ts;
+      const t = Math.min((ts - start) / duration, 1);
+      setValue(Math.round(target * easeOut(t)));
+      if (t < 1) raf.current = requestAnimationFrame(step);
+    }
+
+    raf.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf.current);
+  }, [target, duration]);
+
+  return value;
+}
+
+function useCountUpFloat(target: number, decimals = 1, duration = 1200) {
+  const [value, setValue] = useState(0);
+  const raf = useRef<number>(0);
+
+  useEffect(() => {
+    if (target === 0) return;
+    cancelAnimationFrame(raf.current);
+    let start: number | null = null;
+
+    function easeOut(t: number) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    function step(ts: number) {
+      if (start === null) start = ts;
+      const t = Math.min((ts - start) / duration, 1);
+      setValue(parseFloat((target * easeOut(t)).toFixed(decimals)));
+      if (t < 1) raf.current = requestAnimationFrame(step);
+    }
+
+    raf.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf.current);
+  }, [target, decimals, duration]);
+
+  return value;
+}
+
+const divider: React.CSSProperties = {
+  width: "1px",
+  height: "10px",
+  background: "var(--line)",
+  margin: "0 20px",
+  flexShrink: 0,
+};
+
+const statStyle: React.CSSProperties = {
+  fontFamily: "JetBrains Mono, monospace",
+  fontSize: "10px",
+  color: "var(--text-3)",
+  letterSpacing: "0.02em",
+  whiteSpace: "nowrap",
 };
 
 export function LiveStats() {
-  const [stats, setStats] = useState<PlatformStats>(INITIAL_STATS);
+  const [tasks, setTasks] = useState(0);
+  const [eth, setEth] = useState(0);
+  const [workers, setWorkers] = useState(0);
 
   useEffect(() => {
     let active = true;
-
     statsApi
       .get()
-      .then((nextStats) => {
-        if (active) {
-          setStats(nextStats);
-        }
+      .then((s) => {
+        if (!active) return;
+        setTasks(s.totalTasks);
+        setEth(parseFloat(s.totalEthDistributed));
+        setWorkers(s.totalWorkers);
       })
       .catch(console.error);
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
-  return (
-    <div className="w-full max-w-3xl border border-zinc-800/80 bg-[#111118]/60 backdrop-blur-md rounded-2xl p-6 md:p-8 grid grid-cols-3 gap-6 shadow-2xl relative">
-      <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+  const animTasks = useCountUp(tasks);
+  const animEth = useCountUpFloat(eth);
+  const animWorkers = useCountUp(workers);
 
-      <div className="flex flex-col items-center">
-        <span className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight font-mono mb-1">
-          {stats.totalTasks}
-        </span>
-        <span className="text-[10px] sm:text-xs text-zinc-500 font-bold uppercase tracking-wider">
-          Tasks Run
-        </span>
-      </div>
-      <div className="flex flex-col items-center border-x border-zinc-900">
-        <span className="text-2xl sm:text-4xl font-extrabold text-purple-400 tracking-tight font-mono mb-1">
-          Ξ {stats.totalEthDistributed}
-        </span>
-        <span className="text-[10px] sm:text-xs text-zinc-500 font-bold uppercase tracking-wider">
-          ETH Earned
-        </span>
-      </div>
-      <div className="flex flex-col items-center">
-        <span className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight font-mono mb-1">
-          {stats.totalWorkers}
-        </span>
-        <span className="text-[10px] sm:text-xs text-zinc-500 font-bold uppercase tracking-wider">
-          Active Workers
-        </span>
-      </div>
+  return (
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <span style={statStyle}>{animTasks.toLocaleString()} tasks created</span>
+      <span style={divider} aria-hidden="true" />
+      <span style={statStyle}>{animEth.toFixed(1)} ETH distributed</span>
+      <span style={divider} aria-hidden="true" />
+      <span style={statStyle}>{animWorkers.toLocaleString()} workers</span>
     </div>
   );
 }
