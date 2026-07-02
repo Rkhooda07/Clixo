@@ -15,21 +15,18 @@ export default function DashboardPage() {
   const { address } = useAccount();
   const [activeTab, setActiveTab] = useState<"my-tasks" | "my-work">("my-tasks");
 
-  // 1. Fetch user tasks using React Query
   const { data: tasksData, isLoading: isTasksLoading } = useQuery({
     queryKey: ["my-tasks", address],
     queryFn: () => meApi.getTasks(),
     enabled: !!address,
   });
 
-  // 2. Fetch user submissions using React Query
   const { data: subsData, isLoading: isSubsLoading } = useQuery({
     queryKey: ["my-submissions", address],
     queryFn: () => meApi.getSubmissions(),
     enabled: !!address,
   });
 
-  // 3. Fetch user earnings using React Query
   const { data: earningsData, isLoading: isEarningsLoading } = useQuery({
     queryKey: ["my-earnings", address],
     queryFn: () => meApi.getEarnings(),
@@ -40,11 +37,11 @@ export default function DashboardPage() {
   const tasks = React.useMemo(() => {
     return rawTasks.map((t: any) => ({
       ...t,
-      createdAt: new Date().toISOString(), // Fallback
-      updatedAt: new Date().toISOString(), // Fallback
-      user_id: 0, // Fallback
-      signature: null,
-      amount: null,
+      createdAt: t.createdAt ?? new Date().toISOString(),
+      updatedAt: t.updatedAt ?? new Date().toISOString(),
+      user_id: t.user_id ?? 0,
+      signature: t.signature ?? null,
+      amount: t.amount ?? null,
     }));
   }, [rawTasks]);
 
@@ -52,46 +49,43 @@ export default function DashboardPage() {
   const earnings = earningsData || { pending: 0, locked: 0, totalEarned: 0 };
   const isLoading = isTasksLoading || isSubsLoading || isEarningsLoading;
 
-  const ethSpent = tasks.reduce((acc, t) => acc + (t.fundedAmount || 0), 0) * 0.001;
+  const ethSpent = tasks.reduce((acc: number, t: Task) => acc + (t.fundedAmount || 0), 0) * 0.001;
 
   return (
     <WalletGuard>
-      <div className="flex flex-col gap-8 animate-in fade-in duration-500">
-        {/* Header */}
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">
-            Dashboard
-          </h1>
-          <p className="text-zinc-400 text-sm">
-            Welcome back! Monitor your tasks and worker performance.
-          </p>
+      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+
+        {/* Stats row */}
+        <div style={{ padding: "32px 40px 24px" }}>
+          <StatsRow
+            stats={{
+              ethBalance: "0.000",
+              tasksCreated: tasks.length,
+              ethSpent: ethSpent.toFixed(3),
+              ethEarned: (earnings.totalEarned * 0.001).toFixed(3),
+            }}
+          />
         </div>
 
-        {/* Stats Section */}
-        <StatsRow 
-          stats={{
-            tasksCreated: tasks.length,
-            ethSpent: ethSpent.toFixed(3),
-            ethEarned: (earnings.totalEarned * 0.001).toFixed(3),
-            ethBalance: "0.000", // Would need real wallet balance if possible
+        {/* Subnav */}
+        <div
+          style={{
+            padding: "0 40px",
+            borderBottom: "1px solid var(--line)",
           }}
-        />
+        >
+          <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        </div>
 
-        {/* Activity Section */}
-        <div className="flex flex-col gap-4">
-          <ActivityTabs 
-            activeTab={activeTab} 
-            onTabChange={setActiveTab}
-            myTasksCount={tasks.length}
-            myWorkCount={submissions.length}
-          />
-
+        {/* Table content */}
+        <div style={{ padding: "24px 40px", overflowX: "auto" }}>
           {activeTab === "my-tasks" ? (
             <MyTasks tasks={tasks} isLoading={isLoading} />
           ) : (
             <MyWork submissions={submissions} isLoading={isLoading} />
           )}
         </div>
+
       </div>
     </WalletGuard>
   );
