@@ -2,28 +2,30 @@
 
 import React, { useCallback, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { UploadCloud, X, AlertCircle } from "lucide-react";
+import { X } from "lucide-react";
 import Image from "next/image";
 
 interface ThumbnailUploaderProps {
   onFilesChange: (files: File[]) => void;
 }
 
+const mono = "JetBrains Mono, monospace";
+const inter = "Inter, system-ui, sans-serif";
+
 export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [dropHovered, setDropHovered] = useState(false);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       setError(null);
       const updatedFiles = [...files, ...acceptedFiles];
-
       if (updatedFiles.length > 10) {
-        setError("You can upload a maximum of 10 option files.");
+        setError("Maximum 10 option files.");
         return;
       }
-
       setFiles(updatedFiles);
       onFilesChange(updatedFiles);
     },
@@ -32,21 +34,15 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
 
   const removeFile = (index: number) => {
     setError(null);
-    const updatedFiles = files.filter((_, i) => i !== index);
-    
-    // Revoke object URL to avoid memory leaks
     URL.revokeObjectURL(previews[index]);
-    
+    const updatedFiles = files.filter((_, i) => i !== index);
     setFiles(updatedFiles);
     onFilesChange(updatedFiles);
   };
 
   useEffect(() => {
-    // Generate object URLs for previewing images
     const objectUrls = files.map((file) => URL.createObjectURL(file));
     setPreviews(objectUrls);
-
-    // Cleanup URLs on unmount
     return () => {
       objectUrls.forEach((url) => URL.revokeObjectURL(url));
     };
@@ -59,75 +55,166 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
       "image/png": [".png"],
       "image/webp": [".webp"],
     },
-    minSize: 0,
     multiple: true,
   });
 
   return (
-    <div className="w-full flex flex-col gap-4">
-      {/* Dropzone Area */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      {/* Dropzone */}
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
-          isDragActive
-            ? "border-purple-500 bg-purple-950/10"
-            : "border-zinc-800 bg-[#111118]/60 hover:border-zinc-700"
-        }`}
+        onMouseEnter={() => setDropHovered(true)}
+        onMouseLeave={() => setDropHovered(false)}
+        style={{
+          border: `1px dashed ${isDragActive ? "var(--text-3)" : dropHovered ? "var(--text-3)" : "var(--line)"}`,
+          borderRadius: "5px",
+          padding: "32px 24px",
+          textAlign: "center",
+          cursor: "pointer",
+          background: isDragActive ? "var(--surface-2)" : "transparent",
+          transition: "border-color 0.1s, background 0.1s",
+        }}
       >
         <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center gap-3">
-          <div className="p-3 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-400">
-            <UploadCloud className="w-6 h-6" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <p className="text-sm font-semibold text-white">
-              {isDragActive ? "Drop files here" : "Drag & drop option files here"}
-            </p>
-            <p className="text-zinc-400 text-xs">
-              Supports JPEG, PNG, WEBP (Min 2, Max 10 option files)
-            </p>
-          </div>
+        <div
+          style={{
+            fontFamily: inter,
+            fontSize: "13px",
+            color: "var(--text-2)",
+            marginBottom: "4px",
+          }}
+        >
+          {isDragActive ? "Drop files here" : "Drag & drop image files here"}
+        </div>
+        <div
+          style={{
+            fontFamily: mono,
+            fontSize: "10px",
+            color: "var(--text-3)",
+            letterSpacing: "0.04em",
+          }}
+        >
+          JPEG · PNG · WEBP — min 2, max 10 files
         </div>
       </div>
 
-      {/* Validation Error */}
+      {/* Error */}
       {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-900/10 border border-red-900/30 text-red-400 rounded-lg text-xs font-semibold">
-          <AlertCircle className="w-4 h-4 text-red-400" />
-          <span>{error}</span>
+        <div
+          style={{
+            fontFamily: mono,
+            fontSize: "11px",
+            color: "var(--red)",
+            padding: "8px 12px",
+            border: "1px solid var(--red)",
+            borderRadius: "5px",
+            letterSpacing: "0.02em",
+            opacity: 0.85,
+          }}
+        >
+          {error}
         </div>
       )}
 
-      {/* Preview Grid */}
+      {/* Preview grid */}
       {previews.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+            gap: "10px",
+          }}
+        >
           {previews.map((preview, index) => (
-            <div
+            <PreviewItem
               key={index}
-              className="group relative aspect-video border border-zinc-800 rounded-xl overflow-hidden bg-zinc-950"
-            >
-              <Image
-                src={preview}
-                alt={`Option preview ${index + 1}`}
-                fill
-                className="object-cover"
-              />
-              {/* Hover Delete Action */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <button
-                  type="button"
-                  onClick={() => removeFile(index)}
-                  className="p-2 rounded-full bg-red-600 hover:bg-red-500 text-white transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="absolute bottom-2 left-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-semibold text-zinc-300">
-                Option #{index + 1}
-              </div>
-            </div>
+              src={preview}
+              index={index}
+              onRemove={removeFile}
+            />
           ))}
         </div>
+      )}
+    </div>
+  );
+}
+
+function PreviewItem({
+  src,
+  index,
+  onRemove,
+}: {
+  src: string;
+  index: number;
+  onRemove: (i: number) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      style={{ position: "relative", aspectRatio: "16 / 9" }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "3px",
+          overflow: "hidden",
+          border: "1px solid var(--line)",
+        }}
+      >
+        <Image
+          src={src}
+          alt={`Option ${index + 1}`}
+          fill
+          style={{ objectFit: "cover" }}
+        />
+      </div>
+
+      {/* Index label */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "5px",
+          left: "6px",
+          fontFamily: "JetBrains Mono, monospace",
+          fontSize: "9px",
+          color: "var(--text-3)",
+          letterSpacing: "0.04em",
+          background: "rgba(12,12,14,0.7)",
+          padding: "2px 5px",
+          borderRadius: "2px",
+        }}
+      >
+        {index + 1}
+      </div>
+
+      {/* Remove button — appears on hover */}
+      {hovered && (
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          style={{
+            position: "absolute",
+            top: "5px",
+            right: "5px",
+            width: "20px",
+            height: "20px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "var(--ink)",
+            border: "1px solid var(--line)",
+            borderRadius: "3px",
+            cursor: "pointer",
+            color: "var(--text-2)",
+            padding: 0,
+          }}
+        >
+          <X size={11} />
+        </button>
       )}
     </div>
   );

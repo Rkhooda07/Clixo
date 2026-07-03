@@ -2,25 +2,69 @@
 
 import React from "react";
 
-export function Skeleton({ className }: { className?: string }) {
+export function Skeleton({ style }: { style?: React.CSSProperties }) {
   return (
-    <div className={`animate-pulse bg-zinc-800/50 rounded ${className}`} />
+    <div
+      style={{
+        background: "var(--surface-2)",
+        borderRadius: "3px",
+        ...style,
+      }}
+    />
   );
 }
 
 export function TaskCardSkeleton() {
   return (
-    <div className="border border-zinc-800/50 bg-zinc-900/30 rounded-lg p-4 flex flex-col gap-4">
-      <Skeleton className="w-full aspect-video rounded-lg" />
-      <div className="flex justify-between items-start gap-2">
-        <Skeleton className="h-5 w-2/3" />
-        <Skeleton className="h-4 w-16 rounded-full" />
-      </div>
-      <Skeleton className="h-3 w-full" />
-      <Skeleton className="h-3 w-4/5" />
-      <div className="border-t border-zinc-800 pt-3 mt-2 flex items-center justify-between">
-        <Skeleton className="h-4 w-20" />
-        <Skeleton className="h-7 w-20 rounded-lg" />
+    <div
+      style={{
+        background: "var(--surface-1)",
+        border: "1px solid var(--line)",
+        borderRadius: "6px",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      {/* Thumbnail */}
+      <div style={{ aspectRatio: "16 / 9", background: "var(--surface-2)" }} />
+
+      {/* Body */}
+      <div
+        style={{
+          padding: "16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+        }}
+      >
+        {/* Status + reward row */}
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <Skeleton style={{ width: "40px", height: "10px" }} />
+          <Skeleton style={{ width: "64px", height: "10px" }} />
+        </div>
+
+        {/* Title */}
+        <Skeleton style={{ width: "80%", height: "16px" }} />
+        <Skeleton style={{ width: "55%", height: "16px" }} />
+
+        {/* Divider */}
+        <div style={{ height: "1px", background: "var(--line-subtle)" }} />
+
+        {/* Meta */}
+        <Skeleton style={{ width: "120px", height: "10px" }} />
+
+        {/* Progress bar */}
+        <div
+          style={{
+            height: "2px",
+            background: "var(--surface-2)",
+            borderRadius: "1px",
+          }}
+        />
+
+        {/* Button */}
+        <Skeleton style={{ width: "100%", height: "34px", borderRadius: "5px" }} />
       </div>
     </div>
   );

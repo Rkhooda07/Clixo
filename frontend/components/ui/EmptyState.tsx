@@ -1,28 +1,42 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { LucideIcon } from "lucide-react";
 
 interface EmptyStateProps {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  action?: React.ReactNode;
+  message: string;
+  action?: { label: string; href: string };
 }
 
-export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
+const mono = "JetBrains Mono, monospace";
+const inter = "Inter, system-ui, sans-serif";
+
+export function EmptyState({ message, action }: EmptyStateProps) {
   return (
-    <div className="border border-dashed border-zinc-800 bg-zinc-900/30 rounded-lg p-6 text-center flex flex-col items-center justify-center gap-3 min-h-[200px]">
-      <div className="p-2 rounded-full bg-zinc-800/50 text-zinc-400 border border-zinc-700/30">
-        <Icon className="w-6 h-6" />
-      </div>
-      <h3 className="text-base font-semibold text-white">{title}</h3>
-      <p className="text-zinc-400 text-sm max-w-xs mx-auto leading-relaxed">{description}</p>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+        padding: "48px 24px",
+        fontFamily: mono,
+        fontSize: "11px",
+        color: "var(--text-3)",
+      }}
+    >
+      <span>{message}</span>
       {action && (
-        <div className="mt-2">
-          {action}
-        </div>
+        <a
+          href={action.href}
+          style={{
+            fontFamily: inter,
+            fontSize: "13px",
+            color: "var(--text-2)",
+            textDecoration: "none",
+          }}
+        >
+          {action.label} →
+        </a>
       )}
     </div>
   );

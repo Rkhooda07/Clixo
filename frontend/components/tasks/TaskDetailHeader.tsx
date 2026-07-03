@@ -54,7 +54,7 @@ export function TaskDetailHeader({ task, isOwner }: TaskDetailHeaderProps) {
                 letterSpacing: "0.04em",
               }}
             >
-              {task.status}
+              {isOpen ? "OPEN" : isCompleted ? "CLOSED" : task.status}
             </span>
           </div>
           <h1
@@ -180,7 +180,7 @@ export function TaskDetailHeader({ task, isOwner }: TaskDetailHeaderProps) {
           >
             Created
           </span>
-          <span style={{ fontFamily: inter, fontSize: "13px", color: "var(--text-2)" }}>
+          <span style={{ fontFamily: mono, fontSize: "14px", color: "var(--text-2)" }}>
             {new Date(task.createdAt).toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",

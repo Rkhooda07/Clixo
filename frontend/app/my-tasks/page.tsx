@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart3, PlusCircle } from "lucide-react";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskCardSkeleton } from "@/components/ui/Skeleton";
@@ -10,88 +9,81 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { meApi } from "@/lib/api";
 import { Task } from "@/types";
 
+const mono = "JetBrains Mono, monospace";
+const geist = "Geist, system-ui, sans-serif";
+const inter = "Inter, system-ui, sans-serif";
+
 export default function MyTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-
     const fetchTasks = async () => {
       setIsLoading(true);
       try {
         const data = await meApi.getTasks();
-        if (active) {
-          setTasks(data.tasks);
-        }
+        if (active) setTasks(data.tasks);
       } catch (err) {
         console.error("Failed to fetch created tasks:", err);
-        if (active) {
-          setTasks([]);
-        }
+        if (active) setTasks([]);
       } finally {
-        if (active) {
-          setIsLoading(false);
-        }
+        if (active) setIsLoading(false);
       }
     };
-
     fetchTasks();
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, []);
 
   return (
     <WalletGuard>
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col gap-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-          <div className="flex flex-col gap-2">
-            <div className="inline-flex items-center gap-2 text-purple-400 text-xs font-bold uppercase tracking-widest">
-              <BarChart3 className="w-4 h-4" />
-              Creator Analytics
+      <main
+        className="px-4 md:px-10"
+        style={{ maxWidth: "1280px", margin: "0 auto", paddingTop: "40px", paddingBottom: "48px" }}
+      >
+        <div style={{ marginBottom: "32px", display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "16px" }}>
+          <div>
+            <div style={{ fontFamily: mono, fontSize: "10px", color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "8px" }}>
+              Creator
             </div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">
-              My Created Tasks
+            <h1 style={{ fontFamily: geist, fontSize: "22px", fontWeight: 500, color: "var(--text-1)", letterSpacing: "-0.02em", margin: 0 }}>
+              My Tasks
             </h1>
-            <p className="text-zinc-400 text-sm max-w-2xl">
-              Review only the campaigns created by your connected wallet. Open any task to view its analytics page.
-            </p>
           </div>
 
           <Link
             href="/create-task"
-            className="inline-flex items-center justify-center gap-2 bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors shadow-[0_0_15px_rgba(124,58,237,0.25)]"
+            style={{
+              fontFamily: geist,
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "var(--ink)",
+              background: "var(--text-1)",
+              border: "1px solid var(--text-1)",
+              borderRadius: "5px",
+              padding: "10px 18px",
+              textDecoration: "none",
+              letterSpacing: "-0.01em",
+              flexShrink: 0,
+            }}
           >
-            <PlusCircle className="w-4 h-4" />
-            Create Task
+            Create Task →
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
             <TaskCardSkeleton />
             <TaskCardSkeleton />
             <TaskCardSkeleton />
           </div>
         ) : tasks.length === 0 ? (
           <EmptyState
-            icon={BarChart3}
-            title="No created tasks yet"
-            description="Create your first labeling task to start collecting worker signal and analytics."
-            action={
-              <Link
-                href="/create-task"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-700 hover:bg-purple-600 text-white rounded-xl text-sm font-bold transition-colors"
-              >
-                <PlusCircle className="w-4 h-4" />
-                Create Task
-              </Link>
-            }
+            message="No tasks yet."
+            action={{ label: "Create one", href: "/create-task" }}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
             {tasks.map((task) => (
               <TaskCard key={task.id} task={task} mode="creator-dashboard" />
             ))}
