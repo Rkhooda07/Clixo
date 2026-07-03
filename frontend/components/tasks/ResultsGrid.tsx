@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { Thumbnail } from "@/types";
 
@@ -9,71 +9,141 @@ interface ResultsGridProps {
   totalVotes: number;
 }
 
-export function ResultsGrid({ options, totalVotes }: ResultsGridProps) {
-  // Sort options by votes descending
-  const sortedOptions = [...options].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+const mono = "JetBrains Mono, monospace";
+
+const TH_STYLE: React.CSSProperties = {
+  fontFamily: mono,
+  fontSize: "10px",
+  color: "var(--text-3)",
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  fontWeight: 400,
+  textAlign: "left",
+  padding: "10px 12px",
+  borderBottom: "1px solid var(--line)",
+};
+
+function ResultRow({
+  option,
+  rank,
+  totalVotes,
+  isWinner,
+}: {
+  option: Thumbnail;
+  rank: number;
+  totalVotes: number;
+  isWinner: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const votes = option.votes || 0;
+  const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+  const src = option.gateway_url || option.image_url || "";
 
   return (
-    <div className="flex flex-col gap-4">
-      <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-        Individual Standing
-      </h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedOptions.map((option, index) => {
-          const votePercentage = totalVotes > 0 
-            ? Math.round(((option.votes || 0) / totalVotes) * 100) 
-            : 0;
-            
-          return (
-            <div 
-              key={option.id} 
-              className={`relative border rounded-2xl p-4 flex flex-col gap-4 transition-all duration-300 ${
-                index === 0 
-                  ? "bg-amber-950/10 border-amber-500/30 shadow-lg shadow-amber-900/5" 
-                  : "bg-zinc-900/40 border-zinc-800/80"
-              }`}
-            >
-              <div className="relative aspect-video rounded-xl overflow-hidden border border-zinc-800/50">
-                <Image
-                  src={option.gateway_url || option.image_url || ""}
-                  alt={`Option ${index + 1}`}
-                  fill
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[10px] font-black shadow-lg ${
-                  index === 0 ? "bg-amber-500 text-black" : "bg-black/60 text-white backdrop-blur-md"
-                }`}>
-                  RANK #{index + 1}
-                </div>
-              </div>
+    <tr
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: hovered ? "var(--surface-2)" : "transparent",
+        borderBottom: "1px solid var(--line-subtle)",
+        transition: "background 0.1s",
+      }}
+    >
+      <td style={{ padding: "0 12px", height: "64px", verticalAlign: "middle", width: "48px" }}>
+        <span style={{ fontFamily: mono, fontSize: "11px", color: "var(--text-3)" }}>
+          #{rank}
+        </span>
+      </td>
 
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-zinc-400">Vote Distribution</span>
-                  <span className={`text-sm font-black font-mono ${index === 0 ? "text-amber-500" : "text-white"}`}>
-                    {votePercentage}%
-                  </span>
-                </div>
-                
-                <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
-                  <div 
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      index === 0 ? "bg-amber-500" : "bg-purple-600"
-                    }`}
-                    style={{ width: `${votePercentage}%` }}
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                  <span>{option.votes || 0} Votes</span>
-                  <span>{totalVotes} Total</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      <td style={{ padding: "0 12px", height: "64px", verticalAlign: "middle", width: "104px" }}>
+        <div
+          style={{
+            width: "80px",
+            height: "45px",
+            borderRadius: "2px",
+            overflow: "hidden",
+            position: "relative",
+            background: "var(--surface-2)",
+            flexShrink: 0,
+          }}
+        >
+          {src ? (
+            <Image
+              src={src}
+              alt={`Option ${rank}`}
+              width={80}
+              height={45}
+              style={{ objectFit: "cover", display: "block" }}
+            />
+          ) : (
+            <div style={{ width: "100%", height: "100%", background: "var(--surface-2)" }} />
+          )}
+        </div>
+      </td>
+
+      <td style={{ padding: "0 12px", height: "64px", verticalAlign: "middle" }}>
+        <span style={{ fontFamily: mono, fontSize: "13px", color: "var(--text-1)" }}>
+          {votes}
+        </span>
+      </td>
+
+      <td style={{ padding: "0 12px", height: "64px", verticalAlign: "middle", width: "64px" }}>
+        <span style={{ fontFamily: mono, fontSize: "12px", color: "var(--text-2)" }}>
+          {pct}%
+        </span>
+      </td>
+
+      <td style={{ padding: "0 12px 0 0", height: "64px", verticalAlign: "middle" }}>
+        <div
+          style={{
+            width: "200px",
+            height: "3px",
+            background: "var(--line)",
+            borderRadius: "1px",
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              height: "100%",
+              width: `${pct}%`,
+              background: isWinner ? "var(--text-1)" : "var(--line)",
+              borderRadius: "1px",
+              transition: "width 0.4s ease-out",
+            }}
+          />
+        </div>
+      </td>
+    </tr>
+  );
+}
+
+export function ResultsGrid({ options, totalVotes }: ResultsGridProps) {
+  const sorted = [...options].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+  const winnerId = sorted[0]?.id;
+
+  return (
+    <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <thead>
+        <tr>
+          {["Rank", "Thumbnail", "Votes", "%", "Distribution"].map((h) => (
+            <th key={h} style={TH_STYLE}>
+              {h}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {sorted.map((option, i) => (
+          <ResultRow
+            key={option.id}
+            option={option}
+            rank={i + 1}
+            totalVotes={totalVotes}
+            isWinner={option.id === winnerId}
+          />
+        ))}
+      </tbody>
+    </table>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Trophy, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
 import { Thumbnail } from "@/types";
 
 interface WinnerBannerProps {
@@ -9,58 +9,71 @@ interface WinnerBannerProps {
   totalVotes: number;
 }
 
+const mono = "JetBrains Mono, monospace";
+
 export function WinnerBanner({ winningOption, totalVotes }: WinnerBannerProps) {
-  const votePercentage = totalVotes > 0 
-    ? Math.round(((winningOption.votes || 0) / totalVotes) * 100) 
-    : 0;
+  const votes = winningOption.votes || 0;
+  const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
+  const src = winningOption.gateway_url || winningOption.image_url || "";
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-amber-500/30 bg-[#111118]/80 p-6 shadow-2xl shadow-amber-900/10">
-      {/* Decorative background effects */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 blur-[80px] -z-10" />
-      <div className="absolute -bottom-10 -left-10 w-48 h-48 bg-purple-500/5 blur-[60px] -z-10" />
-      
-      <div className="flex flex-col md:flex-row items-center gap-8">
-        <div className="relative shrink-0 group">
-          <div className="absolute -inset-1.5 bg-gradient-to-tr from-amber-600 to-amber-400 rounded-2xl blur opacity-25 group-hover:opacity-50 transition-opacity" />
-          <div className="relative aspect-video w-64 md:w-80 rounded-2xl overflow-hidden border border-amber-500/30">
-            <Image
-              src={winningOption.gateway_url || winningOption.image_url || ""}
-              alt="Winning Option"
-              fill
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500 text-black text-xs font-black shadow-lg">
-              <Trophy className="w-3.5 h-3.5" />
-              <span>WINNER</span>
-            </div>
-          </div>
-        </div>
+    <div
+      style={{
+        background: "var(--surface-1)",
+        border: "1px solid var(--line)",
+        borderRadius: "6px",
+        padding: "40px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "20px",
+      }}
+    >
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: "10px",
+          color: "var(--text-3)",
+          letterSpacing: "0.15em",
+          textTransform: "uppercase",
+        }}
+      >
+        Winner
+      </div>
 
-        <div className="flex-1 flex flex-col gap-4 text-center md:text-left">
-          <div className="flex flex-col gap-1">
-            <h2 className="text-2xl font-black text-white tracking-tight flex items-center justify-center md:justify-start gap-3">
-              Strongest Option Identified
-              <CheckCircle2 className="w-6 h-6 text-emerald-500" />
-            </h2>
-            <p className="text-zinc-400 text-sm leading-relaxed max-w-lg">
-              The community has reached consensus. This option outperformed others by a significant margin.
-              We recommend using it for your next decision.
-            </p>
-          </div>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "480px",
+          position: "relative",
+          aspectRatio: "16 / 9",
+          border: "1px solid var(--text-1)",
+          borderRadius: "3px",
+          overflow: "hidden",
+        }}
+      >
+        {src ? (
+          <Image
+            src={src}
+            alt="Winning thumbnail"
+            fill
+            sizes="(max-width: 768px) 100vw, 480px"
+            style={{ objectFit: "cover" }}
+          />
+        ) : (
+          <div style={{ width: "100%", height: "100%", background: "var(--surface-2)" }} />
+        )}
+      </div>
 
-          <div className="flex items-center justify-center md:justify-start gap-8 mt-2">
-            <div>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Community Confidence</p>
-              <p className="text-3xl font-black text-amber-500 font-mono">{votePercentage}%</p>
-            </div>
-            <div className="w-px h-10 bg-zinc-800" />
-            <div>
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-0.5">Total Consensus Votes</p>
-              <p className="text-3xl font-black text-white font-mono">{winningOption.votes || 0}</p>
-            </div>
-          </div>
-        </div>
+      <div
+        style={{
+          fontFamily: mono,
+          fontSize: "13px",
+          color: "var(--amber)",
+          letterSpacing: "0.02em",
+        }}
+      >
+        Ξ {votes} votes — {pct}%
       </div>
     </div>
   );
