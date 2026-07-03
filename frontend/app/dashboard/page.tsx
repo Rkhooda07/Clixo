@@ -10,6 +10,7 @@ import { MyWork } from "@/components/dashboard/MyWork";
 import { meApi } from "@/lib/api";
 import { Task } from "@/types";
 import { useAccount } from "wagmi";
+import { PageTransition } from "@/components/ui/PageTransition";
 
 export default function DashboardPage() {
   const { address } = useAccount();
@@ -53,7 +54,7 @@ export default function DashboardPage() {
 
   return (
     <WalletGuard>
-      <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageTransition style={{ display: "flex", flexDirection: "column", flex: 1 }}>
 
         {/* Stats row */}
         <div style={{ padding: "32px 40px 24px" }}>
@@ -86,7 +87,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-      </div>
+      </PageTransition>
     </WalletGuard>
   );
 }

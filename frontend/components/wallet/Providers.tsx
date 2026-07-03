@@ -23,7 +23,45 @@ export function Providers({ children }: { children: React.ReactNode }) {
           })}
         >
           {children}
-          <Toaster position="bottom-right" richColors theme="dark" />
+          <Toaster
+            position="bottom-right"
+            icons={{
+              success: (
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--green)",
+                    display: "inline-block",
+                    flexShrink: 0,
+                  }}
+                />
+              ),
+              error: (
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    background: "var(--red)",
+                    display: "inline-block",
+                    flexShrink: 0,
+                  }}
+                />
+              ),
+            }}
+            toastOptions={{
+              style: {
+                background: "var(--surface-2)",
+                border: "1px solid var(--line)",
+                color: "var(--text-1)",
+                fontFamily: "JetBrains Mono, monospace",
+                fontSize: "12px",
+                borderRadius: "5px",
+              },
+            }}
+          />
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

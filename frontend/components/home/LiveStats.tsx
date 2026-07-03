@@ -3,12 +3,22 @@
 import { useEffect, useState, useRef } from "react";
 import { statsApi } from "@/lib/api";
 
-function useCountUp(target: number, duration = 1200) {
+function useCountUp(target: number, started: boolean, duration = 1200) {
   const [value, setValue] = useState(0);
   const raf = useRef<number>(0);
 
   useEffect(() => {
-    if (target === 0) return;
+    if (!started || target === 0) return;
+
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReduced) {
+      setValue(target);
+      return;
+    }
+
     cancelAnimationFrame(raf.current);
     let start: number | null = null;
 
@@ -25,17 +35,32 @@ function useCountUp(target: number, duration = 1200) {
 
     raf.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf.current);
-  }, [target, duration]);
+  }, [target, duration, started]);
 
   return value;
 }
 
-function useCountUpFloat(target: number, decimals = 1, duration = 1200) {
+function useCountUpFloat(
+  target: number,
+  started: boolean,
+  decimals = 1,
+  duration = 1200
+) {
   const [value, setValue] = useState(0);
   const raf = useRef<number>(0);
 
   useEffect(() => {
-    if (target === 0) return;
+    if (!started || target === 0) return;
+
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReduced) {
+      setValue(target);
+      return;
+    }
+
     cancelAnimationFrame(raf.current);
     let start: number | null = null;
 
@@ -52,7 +77,7 @@ function useCountUpFloat(target: number, decimals = 1, duration = 1200) {
 
     raf.current = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf.current);
-  }, [target, decimals, duration]);
+  }, [target, decimals, duration, started]);
 
   return value;
 }
@@ -77,6 +102,8 @@ export function LiveStats() {
   const [tasks, setTasks] = useState(0);
   const [eth, setEth] = useState(0);
   const [workers, setWorkers] = useState(0);
+  const [started, setStarted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -89,15 +116,35 @@ export function LiveStats() {
         setWorkers(s.totalWorkers);
       })
       .catch(console.error);
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const animTasks = useCountUp(tasks);
-  const animEth = useCountUpFloat(eth);
-  const animWorkers = useCountUp(workers);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setStarted(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const animTasks = useCountUp(tasks, started);
+  const animEth = useCountUpFloat(eth, started);
+  const animWorkers = useCountUp(workers, started);
 
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
+    <div ref={containerRef} style={{ display: "flex", alignItems: "center" }}>
       <span style={statStyle}>{animTasks.toLocaleString()} tasks created</span>
       <span style={divider} aria-hidden="true" />
       <span style={statStyle}>{animEth.toFixed(1)} ETH distributed</span>

@@ -10,6 +10,7 @@ import { WalletGuard } from "@/components/wallet/WalletGuard";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
+import { PageTransition } from "@/components/ui/PageTransition";
 
 const mono = "JetBrains Mono, monospace";
 const geist = "Geist, system-ui, sans-serif";
@@ -347,7 +348,7 @@ export default function VotePage() {
           fontWeight: 600,
           letterSpacing: "-0.01em",
           cursor: selectedId === null || isSubmitting ? "not-allowed" : "pointer",
-          transition: "background 0.1s, color 0.1s, border-color 0.1s",
+          transition: "background 150ms, color 150ms, border-color 150ms",
           border: `1px solid ${selectedId !== null && !isSubmitting ? "var(--text-1)" : "var(--line)"}`,
           background: selectedId !== null && !isSubmitting ? "var(--text-1)" : "var(--surface-2)",
           color: selectedId !== null && !isSubmitting ? "var(--ink)" : "var(--text-3)",
@@ -377,6 +378,7 @@ export default function VotePage() {
   /* ── Voting UI ────────────────────────────────────────────────────────── */
   return (
     <WalletGuard>
+      <PageTransition>
       {/* Desktop layout (md+) ────────────────────────────────────────────── */}
       <div className="hidden md:flex" style={{ minHeight: "calc(100dvh - 52px)" }}>
         {/* Left 60%: thumbnail grid */}
@@ -527,20 +529,23 @@ export default function VotePage() {
           />
         </div>
 
-        {/* Fixed bottom submit */}
-        <div
-          style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: "12px 16px",
-            background: "var(--ink)",
-            borderTop: "1px solid var(--line)",
-          }}
-        >
-          {submitBlock}
-        </div>
+      </div>
+      </PageTransition>
+
+      {/* Fixed bottom submit — outside PageTransition (position:fixed, not part of stagger) */}
+      <div
+        className="md:hidden"
+        style={{
+          position: "fixed",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: "12px 16px",
+          background: "var(--ink)",
+          borderTop: "1px solid var(--line)",
+        }}
+      >
+        {submitBlock}
       </div>
     </WalletGuard>
   );

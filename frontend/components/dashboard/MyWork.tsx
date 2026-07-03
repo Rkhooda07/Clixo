@@ -58,7 +58,7 @@ function WorkRow({ sub }: { sub: WorkerVoteRecord }) {
       style={{
         background: hovered ? "var(--surface-2)" : "transparent",
         borderBottom: "1px solid var(--line-subtle)",
-        transition: "background 0.1s",
+        transition: "background 80ms",
       }}
     >
       {/* Task Title */}

@@ -46,7 +46,7 @@ function ResultRow({
       style={{
         background: hovered ? "var(--surface-2)" : "transparent",
         borderBottom: "1px solid var(--line-subtle)",
-        transition: "background 0.1s",
+        transition: "background 80ms",
       }}
     >
       <td style={{ padding: "0 12px", height: "64px", verticalAlign: "middle", width: "48px" }}>

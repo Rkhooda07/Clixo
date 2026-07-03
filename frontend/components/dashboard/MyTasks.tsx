@@ -51,7 +51,7 @@ function TaskRow({ task }: { task: Task }) {
       style={{
         background: hovered ? "var(--surface-2)" : "transparent",
         borderBottom: "1px solid var(--line-subtle)",
-        transition: "background 0.1s",
+        transition: "background 80ms",
       }}
     >
       {/* Title */}

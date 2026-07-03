@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { taskApi, meApi } from "@/lib/api";
 import { Compass, Search, Filter } from "lucide-react";
 import { useWalletUser } from "@/hooks/useWalletUser";
+import { PageTransition } from "@/components/ui/PageTransition";
 
 export default function BrowsePage() {
   const { isConnected, token } = useWalletUser();
@@ -59,7 +60,7 @@ export default function BrowsePage() {
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-[#0a0a0f] text-zinc-100">
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 flex flex-col">
+      <PageTransition className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-1 flex flex-col" style={{ display: "flex", flexDirection: "column" }}>
         {/* Header Title */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 select-none">
           <div>
@@ -160,7 +161,7 @@ export default function BrowsePage() {
             ))}
           </div>
         )}
-      </main>
+      </PageTransition>
     </div>
   );
 }

@@ -14,10 +14,12 @@ interface ThumbnailGalleryProps {
 function ThumbnailItem({
   option,
   isSelected,
+  hasAnySelection,
   onClick,
 }: {
   option: Thumbnail;
   isSelected: boolean;
+  hasAnySelection: boolean;
   onClick: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -37,7 +39,7 @@ function ThumbnailItem({
           isSelected ? "var(--text-1)" : hovered ? "var(--text-3)" : "var(--line)"
         }`,
         cursor: "pointer",
-        transition: "border-color 0.1s",
+        transition: isSelected ? "none" : "border-color 0.1s",
         flexShrink: 0,
       }}
     >
@@ -49,8 +51,8 @@ function ThumbnailItem({
           sizes="(max-width: 768px) 50vw, 30vw"
           style={{
             objectFit: "cover",
-            filter: isSelected || hovered ? "brightness(1.0)" : "brightness(0.85)",
-            transition: "filter 0.15s",
+            filter: isSelected || hovered || !hasAnySelection ? "brightness(1.0)" : "brightness(0.75)",
+            transition: "filter 150ms ease",
           }}
         />
       ) : (
@@ -116,6 +118,7 @@ export function ThumbnailGallery({
           key={option.id}
           option={option}
           isSelected={selectedId === option.id}
+          hasAnySelection={selectedId !== null}
           onClick={() => onSelect(option.id)}
         />
       ))}
