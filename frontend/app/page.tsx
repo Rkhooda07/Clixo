@@ -242,6 +242,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Value Props ──────────────────────────────────────────────────── */}
+      <ValueProps />
     </div>
   );
 }
@@ -413,5 +416,147 @@ function MiniResultsCard() {
         </span>
       </div>
     </div>
+  );
+}
+
+const CARDS = [
+  {
+    eyebrow: "FOR CREATORS",
+    title: "Know before you publish.",
+    body: "Upload your thumbnail options, stake a small ETH reward, and get real crowd signal in hours — not after you've published and lost momentum.",
+    bullets: [
+      "Real human votes, not algorithmic guesses",
+      "Results before you upload, not after",
+      "Keep full creative control",
+    ],
+    cta: { label: "Create a Task →", href: "/create-task" },
+  },
+  {
+    eyebrow: "FOR WORKERS",
+    title: "Vote. Earn. Repeat.",
+    body: "Browse open tasks from creators. Pick the thumbnail you'd genuinely click on. Earn ETH when the task closes — no staking, no lock-ups.",
+    bullets: [
+      "No minimum commitment",
+      "Earn ETH for honest votes",
+      "Instant payout when tasks close",
+    ],
+    cta: { label: "Browse Open Tasks →", href: "/browse" },
+  },
+] as const;
+
+function ValueProps() {
+  return (
+    <section
+      style={{
+        padding: "0 80px 96px",
+        background: "var(--ink)",
+      }}
+    >
+      <div
+        className="grid grid-cols-1 md:grid-cols-2"
+        style={{ gap: "24px" }}
+      >
+        {CARDS.map((card) => (
+          <div
+            key={card.eyebrow}
+            style={{
+              background: "var(--surface-1)",
+              border: "1px solid var(--line)",
+              borderRadius: "6px",
+              padding: "32px",
+            }}
+          >
+            {/* Eyebrow */}
+            <div
+              style={{
+                fontFamily: mono,
+                fontSize: "10px",
+                color: "var(--text-3)",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+              }}
+            >
+              {card.eyebrow}
+            </div>
+
+            {/* Title */}
+            <h3
+              style={{
+                fontFamily: geist,
+                fontSize: "22px",
+                fontWeight: 500,
+                color: "var(--text-1)",
+                letterSpacing: "-0.02em",
+                marginTop: "8px",
+                marginBottom: 0,
+              }}
+            >
+              {card.title}
+            </h3>
+
+            {/* Body */}
+            <p
+              style={{
+                fontFamily: inter,
+                fontSize: "13px",
+                color: "var(--text-2)",
+                lineHeight: 1.7,
+                marginTop: "12px",
+                marginBottom: 0,
+              }}
+            >
+              {card.body}
+            </p>
+
+            {/* Bullets */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
+                marginTop: "20px",
+              }}
+            >
+              {card.bullets.map((b) => (
+                <div
+                  key={b}
+                  style={{
+                    fontFamily: inter,
+                    fontSize: "12px",
+                    color: "var(--text-2)",
+                    display: "flex",
+                    gap: "8px",
+                  }}
+                >
+                  <span style={{ color: "var(--text-3)", flexShrink: 0 }}>—</span>
+                  <span>{b}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA */}
+            <div style={{ marginTop: "28px" }}>
+              <Link
+                href={card.cta.href}
+                className="transition-opacity hover:opacity-85"
+                style={{
+                  display: "inline-block",
+                  background: "var(--text-1)",
+                  color: "var(--ink)",
+                  fontFamily: geist,
+                  fontSize: "13px",
+                  fontWeight: 600,
+                  padding: "10px 20px",
+                  borderRadius: "5px",
+                  textDecoration: "none",
+                }}
+              >
+                {card.cta.label}
+              </Link>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

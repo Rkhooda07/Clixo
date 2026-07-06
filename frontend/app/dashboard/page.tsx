@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
 import { StatsRow } from "@/components/dashboard/StatsRow";
 import { ActivityTabs } from "@/components/dashboard/ActivityTabs";
@@ -15,9 +16,17 @@ import { PageTransition } from "@/components/ui/PageTransition";
 
 const geist = "Geist, system-ui, sans-serif";
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { address } = useAccount();
-  const [activeTab, setActiveTab] = useState<"my-tasks" | "my-work">("my-tasks");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab: "my-tasks" | "my-work" =
+    tabParam === "work" ? "my-work" : "my-tasks";
+
+  function setActiveTab(tab: "my-tasks" | "my-work") {
+    router.push(`/dashboard?tab=${tab === "my-work" ? "work" : "tasks"}`);
+  }
 
   const { data: tasksData, isLoading: isTasksLoading } = useQuery({
     queryKey: ["my-tasks", address],
@@ -57,6 +66,7 @@ export default function DashboardPage() {
 
   return (
     <WalletGuard>
+
       <PageTransition style={{ display: "flex", flexDirection: "column", flex: 1 }}>
 
         {/* Stats row */}
@@ -122,5 +132,13 @@ export default function DashboardPage() {
 
       </PageTransition>
     </WalletGuard>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardContent />
+    </Suspense>
   );
 }
