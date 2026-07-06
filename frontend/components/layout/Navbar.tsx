@@ -72,7 +72,7 @@ export function Navbar() {
           </Link>
 
           {/* Center nav — desktop only */}
-          <div className="hidden md:flex" style={{ alignItems: "center", gap: "2px" }}>
+          <div className="hidden md:flex" style={{ alignItems: "stretch", gap: "2px" }}>
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -81,20 +81,26 @@ export function Navbar() {
                   href={link.href}
                   prefetch={false}
                   style={{
+                    display: "flex",
+                    alignItems: "center",
+                    alignSelf: "stretch",
                     color: isActive ? "var(--text-1)" : "var(--text-2)",
                     fontSize: "13px",
                     textDecoration: "none",
-                    padding: "5px 10px",
-                    borderRadius: "4px",
-                    transition: "color 100ms",
+                    padding: "0 10px",
+                    borderBottom: `2px solid ${isActive ? "var(--text-1)" : "transparent"}`,
+                    transition: "color 100ms, border-color 100ms",
+                    letterSpacing: "-0.01em",
                   }}
                   onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.color = "var(--text-1)";
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.color = "var(--text-1)";
+                    if (!isActive) el.style.borderBottomColor = "var(--text-3)";
                   }}
                   onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLAnchorElement).style.color = isActive
-                      ? "var(--text-1)"
-                      : "var(--text-2)";
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.color = isActive ? "var(--text-1)" : "var(--text-2)";
+                    if (!isActive) el.style.borderBottomColor = "transparent";
                   }}
                 >
                   {link.label}
