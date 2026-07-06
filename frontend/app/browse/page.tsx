@@ -192,13 +192,19 @@ export default function BrowsePage() {
             gap: "8px",
           }}
         >
-          <span>No tasks found.</span>
-          <Link
-            href="/create-task"
-            style={{ color: "var(--text-2)", textDecoration: "none" }}
-          >
-            Create one →
-          </Link>
+          {searchQuery || activeFilter !== "all" ? (
+            <span>No tasks match your search.</span>
+          ) : (
+            <>
+              <span>No open tasks yet.</span>
+              <Link
+                href="/create-task"
+                style={{ color: "var(--text-2)", textDecoration: "none" }}
+              >
+                Create one →
+              </Link>
+            </>
+          )}
         </div>
       ) : (
         <div
