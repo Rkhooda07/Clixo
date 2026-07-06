@@ -10,9 +10,9 @@ export default function LandingPage() {
     <div style={{ background: "var(--ink)" }}>
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section
+        className="min-h-0 md:min-h-[calc(100dvh-52px)]"
         style={{
           position: "relative",
-          minHeight: "calc(100dvh - 52px)",
           display: "flex",
           flexDirection: "column",
         }}
@@ -21,7 +21,7 @@ export default function LandingPage() {
         <div className="flex-1 flex flex-col md:flex-row md:items-center">
 
           {/* Left: headline content */}
-          <div className="flex-1 flex flex-col justify-center px-6 md:flex-none md:w-1/2 md:pl-[14%] md:pr-16">
+          <div className="flex-1 flex flex-col justify-center pt-12 pb-12 md:pb-0 px-6 md:flex-none md:w-1/2 md:pl-[14%] md:pr-16">
             {/* 1. Label */}
             <div
               style={{

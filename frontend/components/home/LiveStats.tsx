@@ -144,7 +144,10 @@ export function LiveStats() {
   const animWorkers = useCountUp(workers, started);
 
   return (
-    <div ref={containerRef} style={{ display: "flex", alignItems: "center" }}>
+    <div
+      ref={containerRef}
+      style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px 0" }}
+    >
       <span style={statStyle}>{animTasks.toLocaleString()} tasks created</span>
       <span style={divider} aria-hidden="true" />
       <span style={statStyle}>{animEth.toFixed(1)} ETH distributed</span>
