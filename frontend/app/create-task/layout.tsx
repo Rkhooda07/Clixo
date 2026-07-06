@@ -1,8 +1,8 @@
 export const metadata = {
-  title: "Dashboard — Clixo",
+  title: "Create Task — Clixo",
 };
 
-export default function DashboardLayout({
+export default function CreateTaskLayout({
   children,
 }: {
   children: React.ReactNode;

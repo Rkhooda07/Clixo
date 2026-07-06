@@ -1,8 +1,8 @@
 export const metadata = {
-  title: "Dashboard — Clixo",
+  title: "Browse Tasks — Clixo",
 };
 
-export default function DashboardLayout({
+export default function BrowseLayout({
   children,
 }: {
   children: React.ReactNode;
