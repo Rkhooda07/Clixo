@@ -107,11 +107,8 @@ export function ThumbnailGallery({
 
   return (
     <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: `repeat(${cols}, 1fr)`,
-        gap: "8px",
-      }}
+      className={cols === 3 ? "grid grid-cols-2 md:grid-cols-3" : "grid grid-cols-2"}
+      style={{ gap: "8px" }}
     >
       {options.map((option) => (
         <ThumbnailItem
