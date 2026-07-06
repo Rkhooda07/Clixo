@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
 import { StatsRow } from "@/components/dashboard/StatsRow";
@@ -11,6 +12,8 @@ import { meApi } from "@/lib/api";
 import { Task } from "@/types";
 import { useAccount } from "wagmi";
 import { PageTransition } from "@/components/ui/PageTransition";
+
+const geist = "Geist, system-ui, sans-serif";
 
 export default function DashboardPage() {
   const { address } = useAccount();
@@ -73,9 +76,39 @@ export default function DashboardPage() {
           style={{
             padding: "0 40px",
             borderBottom: "1px solid var(--line)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
           }}
         >
           <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          <Link
+            href="/create-task"
+            style={{
+              fontFamily: geist,
+              fontSize: "12px",
+              fontWeight: 500,
+              color: "var(--text-2)",
+              textDecoration: "none",
+              letterSpacing: "-0.01em",
+              padding: "6px 10px",
+              border: "1px solid var(--line)",
+              borderRadius: "5px",
+              transition: "border-color 0.1s, color 0.1s",
+            }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLAnchorElement;
+              el.style.borderColor = "var(--text-3)";
+              el.style.color = "var(--text-1)";
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLAnchorElement;
+              el.style.borderColor = "var(--line)";
+              el.style.color = "var(--text-2)";
+            }}
+          >
+            New Task →
+          </Link>
         </div>
 
         {/* Table content */}

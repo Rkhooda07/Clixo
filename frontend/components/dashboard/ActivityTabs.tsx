@@ -37,6 +37,20 @@ export function ActivityTabs({ activeTab, onTabChange }: ActivityTabsProps) {
               letterSpacing: "-0.01em",
               transition: "color 0.1s, border-color 0.1s",
             }}
+            onMouseEnter={(e) => {
+              const el = e.currentTarget as HTMLButtonElement;
+              if (!isActive) {
+                el.style.color = "var(--text-1)";
+                el.style.borderBottomColor = "var(--text-3)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              const el = e.currentTarget as HTMLButtonElement;
+              if (!isActive) {
+                el.style.color = "var(--text-2)";
+                el.style.borderBottomColor = "transparent";
+              }
+            }}
           >
             {tab.label}
           </button>
