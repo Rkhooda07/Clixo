@@ -95,12 +95,11 @@ export function TaskDetailHeader({ task, isOwner }: TaskDetailHeaderProps) {
         </div>
       </div>
 
-      {/* Stats row */}
+      {/* Stats row — 2×2 grid on mobile, single row on desktop */}
       <div
+        className="grid grid-cols-2 md:flex md:items-center"
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "32px",
+          gap: "20px",
           borderTop: "1px solid var(--line)",
           paddingTop: "16px",
         }}
@@ -122,7 +121,7 @@ export function TaskDetailHeader({ task, isOwner }: TaskDetailHeaderProps) {
           </span>
         </div>
 
-        <div style={{ width: "1px", height: "32px", background: "var(--line)" }} />
+        <div className="hidden md:block" style={{ width: "1px", height: "32px", background: "var(--line)" }} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
           <span
@@ -141,7 +140,7 @@ export function TaskDetailHeader({ task, isOwner }: TaskDetailHeaderProps) {
           </span>
         </div>
 
-        <div style={{ width: "1px", height: "32px", background: "var(--line)" }} />
+        <div className="hidden md:block" style={{ width: "1px", height: "32px", background: "var(--line)" }} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
           <span
@@ -166,7 +165,7 @@ export function TaskDetailHeader({ task, isOwner }: TaskDetailHeaderProps) {
           </span>
         </div>
 
-        <div style={{ width: "1px", height: "32px", background: "var(--line)" }} />
+        <div className="hidden md:block" style={{ width: "1px", height: "32px", background: "var(--line)" }} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
           <span
