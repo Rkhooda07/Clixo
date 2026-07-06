@@ -11,6 +11,7 @@ import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { PageWrapper } from "@/components/layout/PageWrapper";
 
 const mono = "JetBrains Mono, monospace";
 const geist = "Geist, system-ui, sans-serif";
@@ -352,13 +353,24 @@ export default function VotePage() {
           border: `1px solid ${selectedId !== null && !isSubmitting ? "var(--text-1)" : "var(--line)"}`,
           background: selectedId !== null && !isSubmitting ? "var(--text-1)" : "var(--surface-2)",
           color: selectedId !== null && !isSubmitting ? "var(--ink)" : "var(--text-3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          pointerEvents: isSubmitting ? "none" : "auto",
+          opacity: isSubmitting ? 0.6 : 1,
         }}
       >
-        {isSubmitting
-          ? "Submitting..."
-          : selectedId === null
-            ? "Select a thumbnail to vote"
-            : "Submit Vote"}
+        {isSubmitting ? (
+          <>
+            <span className="btn-spinner" />
+            <span>...</span>
+          </>
+        ) : selectedId === null ? (
+          "Select a thumbnail to vote"
+        ) : (
+          "Submit Vote"
+        )}
       </button>
       <p
         style={{
@@ -521,13 +533,13 @@ export default function VotePage() {
         </div>
 
         {/* Thumbnails */}
-        <div style={{ padding: "16px" }}>
+        <PageWrapper style={{ paddingTop: "16px", paddingBottom: "16px" }}>
           <ThumbnailGallery
             options={task.options || []}
             selectedId={selectedId}
             onSelect={setSelectedId}
           />
-        </div>
+        </PageWrapper>
 
       </div>
       </PageTransition>

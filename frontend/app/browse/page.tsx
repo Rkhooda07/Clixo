@@ -7,6 +7,7 @@ import { TaskCardSkeleton } from "@/components/ui/Skeleton";
 import { taskApi, meApi } from "@/lib/api";
 import { useWalletUser } from "@/hooks/useWalletUser";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { PageWrapper } from "@/components/layout/PageWrapper";
 import Link from "next/link";
 
 const mono = "JetBrains Mono, monospace";
@@ -66,9 +67,9 @@ export default function BrowsePage() {
     });
 
   return (
+    <PageWrapper style={{ display: "flex", flexDirection: "column", flex: 1 }}>
     <PageTransition
       style={{ display: "flex", flexDirection: "column", flex: 1 }}
-      className="px-4 md:px-10"
     >
       {/* Header */}
       <div
@@ -226,6 +227,7 @@ export default function BrowsePage() {
         </div>
       )}
     </PageTransition>
+    </PageWrapper>
   );
 }
 

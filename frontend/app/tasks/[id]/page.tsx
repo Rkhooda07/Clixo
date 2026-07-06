@@ -9,6 +9,7 @@ import { WinnerBanner } from "@/components/tasks/WinnerBanner";
 import { ResultsGrid } from "@/components/tasks/ResultsGrid";
 import { VotesOverTimeChart } from "@/components/tasks/VotesOverTimeChart";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { PageWrapper } from "@/components/layout/PageWrapper";
 
 const mono = "JetBrains Mono, monospace";
 
@@ -111,7 +112,8 @@ export default function TaskDetailPage() {
   const winningOption = task.options?.find((opt) => opt.id === winningOptionId);
 
   return (
-    <div className="px-4 md:px-10" style={{ maxWidth: "900px", margin: "0 auto" }}>
+    <PageWrapper>
+    <div style={{ maxWidth: "900px", margin: "0 auto" }}>
     <PageTransition
       style={{
         paddingTop: "40px",
@@ -149,5 +151,6 @@ export default function TaskDetailPage() {
       <VotesOverTimeChart data={stats?.timeSeries || []} />
     </PageTransition>
     </div>
+    </PageWrapper>
   );
 }

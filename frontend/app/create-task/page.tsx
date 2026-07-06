@@ -8,6 +8,7 @@ import { taskApi, uploadApi } from "@/lib/api";
 import axios from "axios";
 import { toast } from "sonner";
 import { ethers } from "ethers";
+import { PageWrapper } from "@/components/layout/PageWrapper";
 
 const mono = "JetBrains Mono, monospace";
 const geist = "Geist, system-ui, sans-serif";
@@ -102,16 +103,18 @@ function StyledTextarea({ value, onChange, rows = 4, placeholder }: {
   );
 }
 
-function PrimaryButton({ onClick, disabled, children }: {
+function PrimaryButton({ onClick, disabled, loading, children }: {
   onClick?: () => void;
   disabled?: boolean;
+  loading?: boolean;
   children: React.ReactNode;
 }) {
   const [hovered, setHovered] = useState(false);
+  const isDisabled = disabled || loading;
   return (
     <button
       onClick={onClick}
-      disabled={disabled}
+      disabled={isDisabled}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
@@ -120,16 +123,27 @@ function PrimaryButton({ onClick, disabled, children }: {
         fontFamily: geist,
         fontSize: "13px",
         fontWeight: 500,
-        background: disabled ? "var(--surface-2)" : hovered ? "var(--surface-2)" : "var(--text-1)",
-        color: disabled ? "var(--text-3)" : hovered ? "var(--text-1)" : "var(--ink)",
-        border: `1px solid ${disabled ? "var(--line)" : hovered ? "var(--text-1)" : "var(--text-1)"}`,
+        background: isDisabled ? "var(--surface-2)" : hovered ? "var(--surface-2)" : "var(--text-1)",
+        color: isDisabled ? "var(--text-3)" : hovered ? "var(--text-1)" : "var(--ink)",
+        border: `1px solid ${isDisabled ? "var(--line)" : hovered ? "var(--text-1)" : "var(--text-1)"}`,
         borderRadius: "5px",
-        cursor: disabled ? "not-allowed" : "pointer",
+        cursor: isDisabled ? "not-allowed" : "pointer",
         transition: "background 150ms, color 150ms",
         letterSpacing: "-0.01em",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px",
+        pointerEvents: loading ? "none" : undefined,
+        opacity: loading ? 0.6 : undefined,
       }}
     >
-      {children}
+      {loading ? (
+        <>
+          <span className="btn-spinner" />
+          <span>...</span>
+        </>
+      ) : children}
     </button>
   );
 }
@@ -354,7 +368,8 @@ export default function CreateTaskPage() {
 
   return (
     <WalletGuard>
-      <div className="px-4 md:px-10" style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "40px", paddingBottom: "48px" }}>
+      <PageWrapper>
+      <div style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "40px", paddingBottom: "48px" }}>
 
         {step < 4 && (
           <>
@@ -596,51 +611,24 @@ export default function CreateTaskPage() {
                       </div>
                     </div>
 
-                    {isSubmitting ? (
+                    {isSubmitting && (
                       <div
                         style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          gap: "8px",
-                          padding: "16px 0",
+                          fontFamily: mono,
+                          fontSize: "10px",
+                          color: "var(--text-3)",
+                          letterSpacing: "0.08em",
                         }}
                       >
-                        <div
-                          style={{
-                            fontFamily: mono,
-                            fontSize: "10px",
-                            color: "var(--text-3)",
-                            letterSpacing: "0.08em",
-                          }}
-                        >
-                          {submissionProgress}
-                        </div>
-                        <div
-                          style={{
-                            height: "2px",
-                            background: "var(--line)",
-                            borderRadius: "1px",
-                            overflow: "hidden",
-                          }}
-                        >
-                          <div
-                            style={{
-                              height: "100%",
-                              width: "40%",
-                              background: "var(--text-2)",
-                              animation: "none",
-                            }}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ display: "flex", gap: "10px" }}>
-                        <SecondaryButton onClick={handleBack}>Back</SecondaryButton>
-                        <PrimaryButton onClick={handleSubmit}>
-                          Confirm &amp; Pay →
-                        </PrimaryButton>
+                        {submissionProgress}
                       </div>
                     )}
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <SecondaryButton onClick={handleBack}>Back</SecondaryButton>
+                      <PrimaryButton onClick={handleSubmit} loading={isSubmitting}>
+                        Confirm &amp; Pay →
+                      </PrimaryButton>
+                    </div>
                   </>
                 )}
               </div>
@@ -810,6 +798,7 @@ export default function CreateTaskPage() {
           </div>
         )}
       </div>
+      </PageWrapper>
     </WalletGuard>
   );
 }

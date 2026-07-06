@@ -13,6 +13,7 @@ import { meApi } from "@/lib/api";
 import { Task } from "@/types";
 import { useAccount } from "wagmi";
 import { PageTransition } from "@/components/ui/PageTransition";
+import { PageWrapper } from "@/components/layout/PageWrapper";
 
 const geist = "Geist, system-ui, sans-serif";
 
@@ -70,7 +71,7 @@ function DashboardContent() {
       <PageTransition style={{ display: "flex", flexDirection: "column", flex: 1 }}>
 
         {/* Stats row */}
-        <div className="px-4 md:px-10" style={{ paddingTop: "32px", paddingBottom: "24px" }}>
+        <PageWrapper style={{ paddingTop: "32px", paddingBottom: "24px" }}>
           <StatsRow
             stats={{
               ethBalance: "0.000",
@@ -79,11 +80,10 @@ function DashboardContent() {
               ethEarned: (earnings.totalEarned * 0.001).toFixed(3),
             }}
           />
-        </div>
+        </PageWrapper>
 
         {/* Subnav */}
-        <div
-          className="px-4 md:px-10"
+        <PageWrapper
           style={{
             borderBottom: "1px solid var(--line)",
             display: "flex",
@@ -119,16 +119,16 @@ function DashboardContent() {
           >
             New Task →
           </Link>
-        </div>
+        </PageWrapper>
 
         {/* Table content */}
-        <div className="px-4 md:px-10" style={{ paddingTop: "24px", paddingBottom: "24px", overflowX: "auto" }}>
+        <PageWrapper style={{ paddingTop: "24px", paddingBottom: "24px", overflowX: "auto" }}>
           {activeTab === "my-tasks" ? (
             <MyTasks tasks={tasks} isLoading={isLoading} />
           ) : (
             <MyWork submissions={submissions} isLoading={isLoading} />
           )}
-        </div>
+        </PageWrapper>
 
       </PageTransition>
     </WalletGuard>

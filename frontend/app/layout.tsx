@@ -1,6 +1,7 @@
 import { Providers } from "@/components/wallet/Providers";
 import { Navbar } from "@/components/layout/Navbar";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
@@ -26,6 +27,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <Providers>
+          <ScrollToTop />
           <div className="min-h-screen flex flex-col">
             <Navbar />
             <Breadcrumb />
