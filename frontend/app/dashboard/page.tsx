@@ -60,7 +60,7 @@ export default function DashboardPage() {
       <PageTransition style={{ display: "flex", flexDirection: "column", flex: 1 }}>
 
         {/* Stats row */}
-        <div style={{ padding: "32px 40px 24px" }}>
+        <div className="px-4 md:px-10" style={{ paddingTop: "32px", paddingBottom: "24px" }}>
           <StatsRow
             stats={{
               ethBalance: "0.000",
@@ -73,8 +73,8 @@ export default function DashboardPage() {
 
         {/* Subnav */}
         <div
+          className="px-4 md:px-10"
           style={{
-            padding: "0 40px",
             borderBottom: "1px solid var(--line)",
             display: "flex",
             alignItems: "center",
@@ -112,7 +112,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Table content */}
-        <div style={{ padding: "24px 40px", overflowX: "auto" }}>
+        <div className="px-4 md:px-10" style={{ paddingTop: "24px", paddingBottom: "24px", overflowX: "auto" }}>
           {activeTab === "my-tasks" ? (
             <MyTasks tasks={tasks} isLoading={isLoading} />
           ) : (

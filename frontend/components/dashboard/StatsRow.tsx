@@ -17,16 +17,15 @@ interface StatCellProps {
   label: string;
   value: string;
   isEth?: boolean;
-  noBorder?: boolean;
+  borderLeft?: boolean;
 }
 
-function StatCell({ label, value, isEth = false, noBorder = false }: StatCellProps) {
+function StatCell({ label, value, isEth = false, borderLeft = false }: StatCellProps) {
   return (
     <div
       style={{
         padding: "20px 24px",
-        borderLeft: noBorder ? "none" : "1px solid var(--line)",
-        flex: 1,
+        borderLeft: borderLeft ? "1px solid var(--line)" : "none",
       }}
     >
       <div
@@ -60,33 +59,24 @@ export function StatsRow({ stats }: StatsRowProps) {
   return (
     <div
       style={{
-        display: "flex",
         background: "var(--surface-1)",
         border: "1px solid var(--line)",
         borderRadius: "6px",
         overflow: "hidden",
       }}
     >
-      <StatCell
-        label="ETH Balance"
-        value={`Ξ ${stats.ethBalance ?? "0.000"}`}
-        isEth
-        noBorder
-      />
-      <StatCell
-        label="Tasks Created"
-        value={String(stats.tasksCreated ?? 0)}
-      />
-      <StatCell
-        label="ETH Spent"
-        value={`Ξ ${stats.ethSpent ?? "0.000"}`}
-        isEth
-      />
-      <StatCell
-        label="ETH Earned"
-        value={`Ξ ${stats.ethEarned ?? "0.000"}`}
-        isEth
-      />
+      {/* Desktop: 4 columns in one row | Mobile: 2×2 grid with row divider */}
+      <div className="grid grid-cols-2 md:grid-cols-4">
+        <StatCell label="ETH Balance" value={`Ξ ${stats.ethBalance ?? "0.000"}`} isEth />
+        <StatCell label="Tasks Created" value={String(stats.tasksCreated ?? 0)} borderLeft />
+        {/* Row divider — mobile only, sits between the two rows in the 2-col grid */}
+        <div
+          className="col-span-2 md:hidden"
+          style={{ height: "1px", background: "var(--line)" }}
+        />
+        <StatCell label="ETH Spent" value={`Ξ ${stats.ethSpent ?? "0.000"}`} isEth />
+        <StatCell label="ETH Earned" value={`Ξ ${stats.ethEarned ?? "0.000"}`} isEth borderLeft />
+      </div>
     </div>
   );
 }
