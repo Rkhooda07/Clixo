@@ -11,6 +11,8 @@ const navLinks = [
   { label: "Dashboard", href: "/dashboard" },
 ];
 
+const createTaskLink = { label: "Create Task", href: "/create-task" };
+
 function HamburgerLines() {
   return (
     <svg width="18" height="13" viewBox="0 0 18 13" fill="none" aria-hidden="true">
@@ -107,6 +109,44 @@ export function Navbar() {
                 </Link>
               );
             })}
+
+            {/* Create Task — separated by a left border to mark it as an action */}
+            {(() => {
+              const isActive = pathname === createTaskLink.href;
+              return (
+                <Link
+                  href={createTaskLink.href}
+                  prefetch={false}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    alignSelf: "stretch",
+                    color: isActive ? "var(--text-1)" : "var(--text-2)",
+                    fontSize: "13px",
+                    textDecoration: "none",
+                    paddingRight: "10px",
+                    paddingLeft: "28px",
+                    marginLeft: "8px",
+                    borderLeft: "1px solid var(--line)",
+                    borderBottom: `2px solid ${isActive ? "var(--text-1)" : "transparent"}`,
+                    transition: "color 100ms, border-color 100ms",
+                    letterSpacing: "-0.01em",
+                  }}
+                  onMouseEnter={(e) => {
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.color = "var(--text-1)";
+                    if (!isActive) el.style.borderBottomColor = "var(--text-3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    const el = e.currentTarget as HTMLAnchorElement;
+                    el.style.color = isActive ? "var(--text-1)" : "var(--text-2)";
+                    if (!isActive) el.style.borderBottomColor = "transparent";
+                  }}
+                >
+                  {createTaskLink.label}
+                </Link>
+              );
+            })()}
           </div>
 
           {/* Right: hamburger (mobile) + wallet */}
@@ -205,7 +245,7 @@ export function Navbar() {
 
         {/* Drawer links */}
         <nav style={{ padding: "12px", flexGrow: 1 }}>
-          {navLinks.map((link) => {
+          {[...navLinks, createTaskLink].map((link) => {
             const isActive = pathname === link.href;
             return (
               <Link
