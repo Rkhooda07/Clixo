@@ -1,5 +1,6 @@
 import { Providers } from "@/components/wallet/Providers";
 import { Navbar } from "@/components/layout/Navbar";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
@@ -27,6 +28,7 @@ export default function RootLayout({
         <Providers>
           <div className="min-h-screen flex flex-col">
             <Navbar />
+            <Breadcrumb />
             <main className="flex-1 w-full flex flex-col">
               {children}
             </main>
