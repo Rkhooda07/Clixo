@@ -509,7 +509,7 @@ export default function CreateTaskPage() {
                     <div style={{ display: "flex", gap: "10px" }}>
                       <SecondaryButton onClick={handleBack}>Back</SecondaryButton>
                       <PrimaryButton onClick={handleNext}>
-                        Next: Set reward →
+                        Next: Review &amp; confirm →
                       </PrimaryButton>
                     </div>
                   </>
