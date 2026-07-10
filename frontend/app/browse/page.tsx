@@ -197,12 +197,12 @@ export default function BrowsePage() {
             <span>No tasks match your search.</span>
           ) : (
             <>
-              <span>No open tasks yet.</span>
+              <span>No tasks open right now.</span>
               <Link
                 href="/create-task"
                 style={{ color: "var(--text-2)", textDecoration: "none" }}
               >
-                Create one →
+                Check back soon or post one →
               </Link>
             </>
           )}

@@ -10,8 +10,8 @@ interface ActivityTabsProps {
 const geist = "Geist, system-ui, sans-serif";
 
 const TABS: { id: "my-tasks" | "my-work"; label: string }[] = [
-  { id: "my-tasks", label: "My Tasks" },
-  { id: "my-work", label: "My Work" },
+  { id: "my-tasks", label: "Posted Tasks" },
+  { id: "my-work", label: "My Opinions" },
 ];
 
 export function ActivityTabs({ activeTab, onTabChange }: ActivityTabsProps) {

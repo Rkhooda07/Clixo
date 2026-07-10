@@ -126,7 +126,7 @@ export function ResultsGrid({ options, totalVotes }: ResultsGridProps) {
     <table style={{ width: "100%", borderCollapse: "collapse" }}>
       <thead>
         <tr>
-          {["Rank", "Thumbnail", "Votes", "%", "Distribution"].map((h) => (
+          {["Rank", "Option", "Opinions", "%", "Distribution"].map((h) => (
             <th key={h} style={TH_STYLE}>
               {h}
             </th>

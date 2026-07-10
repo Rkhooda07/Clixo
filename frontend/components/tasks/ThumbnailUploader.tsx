@@ -84,7 +84,7 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
             marginBottom: "4px",
           }}
         >
-          {isDragActive ? "Drop files here" : "Drag & drop image files here"}
+          {isDragActive ? "Drop files here" : "Drop your option images here or click to browse"}
         </div>
         <div
           style={{
@@ -94,7 +94,7 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
             letterSpacing: "0.04em",
           }}
         >
-          JPEG · PNG · WEBP — min 2, max 10 files
+          2 to 10 options · JPG, PNG, or WebP
         </div>
       </div>
 

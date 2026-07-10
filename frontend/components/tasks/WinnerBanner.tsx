@@ -38,7 +38,7 @@ export function WinnerBanner({ winningOption, totalVotes }: WinnerBannerProps) {
           textTransform: "uppercase",
         }}
       >
-        Winner
+        Top Pick
       </div>
 
       <div
@@ -55,7 +55,7 @@ export function WinnerBanner({ winningOption, totalVotes }: WinnerBannerProps) {
         {src ? (
           <Image
             src={src}
-            alt="Winning thumbnail"
+            alt="Winning option"
             fill
             sizes="(max-width: 768px) 100vw, 480px"
             style={{ objectFit: "cover" }}
@@ -73,7 +73,7 @@ export function WinnerBanner({ winningOption, totalVotes }: WinnerBannerProps) {
           letterSpacing: "0.02em",
         }}
       >
-        Ξ {votes} votes — {pct}%
+        Ξ {votes} opinions — {pct}%
       </div>
     </div>
   );

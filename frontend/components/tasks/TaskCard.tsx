@@ -229,7 +229,7 @@ export function TaskCard({
             marginBottom: "8px",
           }}
         >
-          {optionCount} options · {votes}/{maxVotes} votes
+          {optionCount} options · {votes}/{maxVotes} opinions
         </div>
 
         {/* Progress bar */}
@@ -259,13 +259,13 @@ export function TaskCard({
               {hasVoted ? (
                 <ActionButton
                   href={`/tasks/${task.id}`}
-                  label="Voted ✓"
+                  label="Answered ✓"
                   disabled
                 />
               ) : (
                 <ActionButton
                   href={isCompleted ? `/tasks/${task.id}` : `/vote/${task.id}`}
-                  label={isCompleted ? "View Results →" : "Vote Now →"}
+                  label={isCompleted ? "View Results →" : "Give Opinion →"}
                 />
               )}
             </>

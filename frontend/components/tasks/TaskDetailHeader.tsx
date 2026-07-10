@@ -133,7 +133,7 @@ export function TaskDetailHeader({ task, isOwner }: TaskDetailHeaderProps) {
               textTransform: "uppercase",
             }}
           >
-            Total Votes
+            Total Contributors
           </span>
           <span style={{ fontFamily: mono, fontSize: "14px", color: "var(--text-1)" }}>
             {task.totalSubmissions || 0}

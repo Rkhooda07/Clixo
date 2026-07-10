@@ -1,8 +1,8 @@
 export const metadata = {
-  title: "Post a Task — Clixo",
+  title: "Task Results — Clixo",
 };
 
-export default function CreateTaskLayout({
+export default function TaskResultsLayout({
   children,
 }: {
   children: React.ReactNode;

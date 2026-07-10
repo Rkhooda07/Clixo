@@ -47,7 +47,7 @@ export default function MyTasksPage() {
               Creator
             </div>
             <h1 style={{ fontFamily: geist, fontSize: "22px", fontWeight: 500, color: "var(--text-1)", letterSpacing: "-0.02em", margin: 0 }}>
-              My Tasks
+              Posted Tasks
             </h1>
           </div>
 
@@ -67,7 +67,7 @@ export default function MyTasksPage() {
               flexShrink: 0,
             }}
           >
-            Create Task →
+            Post a Task →
           </Link>
         </div>
 
@@ -79,8 +79,8 @@ export default function MyTasksPage() {
           </div>
         ) : tasks.length === 0 ? (
           <EmptyState
-            message="No tasks yet."
-            action={{ label: "Create one", href: "/create-task" }}
+            message="You haven't posted any tasks yet."
+            action={{ label: "Post your first task →", href: "/create-task" }}
           />
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>

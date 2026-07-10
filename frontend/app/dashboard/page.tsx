@@ -117,7 +117,7 @@ function DashboardContent() {
               el.style.color = "var(--text-2)";
             }}
           >
-            New Task →
+            Post a Task →
           </Link>
         </PageWrapper>
 

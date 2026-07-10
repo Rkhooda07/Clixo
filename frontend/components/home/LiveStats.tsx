@@ -148,11 +148,11 @@ export function LiveStats() {
       ref={containerRef}
       style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px 0" }}
     >
-      <span style={statStyle}>{animTasks.toLocaleString()} tasks created</span>
+      <span style={statStyle}>{animTasks.toLocaleString()} tasks posted</span>
       <span style={divider} aria-hidden="true" />
-      <span style={statStyle}>{animEth.toFixed(1)} ETH distributed</span>
+      <span style={statStyle}>{animEth.toFixed(1)} ETH paid out</span>
       <span style={divider} aria-hidden="true" />
-      <span style={statStyle}>{animWorkers.toLocaleString()} workers</span>
+      <span style={statStyle}>{animWorkers.toLocaleString()} contributors</span>
     </div>
   );
 }

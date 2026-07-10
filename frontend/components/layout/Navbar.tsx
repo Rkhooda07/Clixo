@@ -11,7 +11,7 @@ const navLinks = [
   { label: "Dashboard", href: "/dashboard" },
 ];
 
-const createTaskLink = { label: "Create Task", href: "/create-task" };
+const createTaskLink = { label: "Post a Task", href: "/create-task" };
 
 function HamburgerLines() {
   return (

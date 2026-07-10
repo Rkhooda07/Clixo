@@ -68,13 +68,13 @@ export function StatsRow({ stats }: StatsRowProps) {
       {/* Desktop: 4 columns in one row | Mobile: 2×2 grid with row divider */}
       <div className="grid grid-cols-2 md:grid-cols-4">
         <StatCell label="ETH Balance" value={`Ξ ${stats.ethBalance ?? "0.000"}`} isEth />
-        <StatCell label="Tasks Created" value={String(stats.tasksCreated ?? 0)} borderLeft />
+        <StatCell label="Tasks Posted" value={String(stats.tasksCreated ?? 0)} borderLeft />
         {/* Row divider — mobile only, sits between the two rows in the 2-col grid */}
         <div
           className="col-span-2 md:hidden"
           style={{ height: "1px", background: "var(--line)" }}
         />
-        <StatCell label="ETH Spent" value={`Ξ ${stats.ethSpent ?? "0.000"}`} isEth />
+        <StatCell label="ETH Staked" value={`Ξ ${stats.ethSpent ?? "0.000"}`} isEth />
         <StatCell label="ETH Earned" value={`Ξ ${stats.ethEarned ?? "0.000"}`} isEth borderLeft />
       </div>
     </div>

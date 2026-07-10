@@ -12,15 +12,18 @@ import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { PageWrapper } from "@/components/layout/PageWrapper";
+import { useAppStore } from "@/store/useAppStore";
 
 const mono = "JetBrains Mono, monospace";
 const geist = "Geist, system-ui, sans-serif";
+const inter = "Inter, system-ui, sans-serif";
 
 export default function VotePage() {
   const params = useParams();
   const router = useRouter();
   const taskId = Number(params.id);
   const { address } = useAccount();
+  const { userId } = useAppStore();
 
   const [task, setTask] = useState<Task | null>(null);
   const [stats, setStats] = useState<any>(null);
@@ -74,7 +77,7 @@ export default function VotePage() {
     setIsSubmitting(true);
     try {
       await submissionApi.submit(taskId, selectedId);
-      toast.success("Vote recorded.");
+      toast.success("Opinion submitted. You'll earn ETH when this task closes.");
       setHasVoted(true);
       setVotedOptionId(selectedId);
 
@@ -90,7 +93,13 @@ export default function VotePage() {
         setTask({ ...task, options: updatedOptions });
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to submit vote");
+      let errMsg = err.response?.data?.message || "Failed to submit opinion";
+      if (errMsg === "Task creator cannot vote on their own task.") {
+        errMsg = "You posted this task, so you can't answer it.";
+      } else if (errMsg === "You've already voted on this task." || errMsg === "Worker has already submitted for this task") {
+        errMsg = "You've already answered this task.";
+      }
+      toast.error(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -143,6 +152,8 @@ export default function VotePage() {
     task.status === "COMPLETED" ||
     task.status === "CLOSED" ||
     task.status === "SETTLED";
+
+  const isCreator = userId !== null && task.user_id === userId;
 
   const votedOption = task.options?.find((opt) => opt.id === votedOptionId);
   const rewardEth = (task.budget * 0.001).toFixed(3);
@@ -223,6 +234,78 @@ export default function VotePage() {
     );
   }
 
+  /* ── Creator blocked ──────────────────────────────────────────────────── */
+  if (isCreator) {
+    return (
+      <WalletGuard>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "calc(100dvh - 52px)",
+            padding: "40px",
+          }}
+        >
+          <div style={{ maxWidth: "480px", textAlign: "center" }}>
+            <div
+              style={{
+                fontFamily: mono,
+                fontSize: "10px",
+                color: "var(--text-3)",
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                marginBottom: "20px",
+              }}
+            >
+              Task #{task.id} · Creator
+            </div>
+            <h2
+              style={{
+                fontFamily: geist,
+                fontSize: "24px",
+                fontWeight: 500,
+                color: "var(--text-1)",
+                letterSpacing: "-0.02em",
+                marginBottom: "12px",
+              }}
+            >
+              You posted this task.
+            </h2>
+            <p
+              style={{
+                fontFamily: "Inter, system-ui, sans-serif",
+                fontSize: "13px",
+                color: "var(--text-2)",
+                lineHeight: 1.6,
+                marginBottom: "28px",
+              }}
+            >
+              Task creators can't answer their own tasks.
+            </p>
+            <button
+              onClick={() => router.push(`/tasks/${taskId}`)}
+              style={{
+                background: "var(--surface-2)",
+                border: "1px solid var(--line)",
+                borderRadius: "5px",
+                color: "var(--text-1)",
+                fontFamily: geist,
+                fontSize: "13px",
+                fontWeight: 500,
+                padding: "10px 24px",
+                cursor: "pointer",
+                letterSpacing: "-0.01em",
+              }}
+            >
+              View Results →
+            </button>
+          </div>
+        </div>
+      </WalletGuard>
+    );
+  }
+
   /* ── Already voted ────────────────────────────────────────────────────── */
   if (hasVoted) {
     return (
@@ -249,7 +332,7 @@ export default function VotePage() {
           marginBottom: "12px",
         }}
       >
-        Task #{task.id}
+        OPEN FOR OPINIONS
       </div>
 
       <h1
@@ -310,7 +393,7 @@ export default function VotePage() {
           marginBottom: "8px",
         }}
       >
-        <span>Votes Needed</span>
+        <span>Opinions Needed</span>
         <span>
           {votes} / {maxVotes}
         </span>
@@ -367,9 +450,9 @@ export default function VotePage() {
             <span>...</span>
           </>
         ) : selectedId === null ? (
-          "Select a thumbnail to vote"
+          "Select an option to continue"
         ) : (
-          "Submit Vote"
+          "Submit Opinion"
         )}
       </button>
       <p
@@ -382,7 +465,7 @@ export default function VotePage() {
           margin: 0,
         }}
       >
-        Your vote is recorded on-chain. You'll earn ETH when this task closes.
+        Your opinion has been recorded on-chain. You'll earn ETH when this task closes.
       </p>
     </div>
   );
@@ -404,6 +487,16 @@ export default function VotePage() {
           }}
         >
           <div style={{ width: "100%" }}>
+            <div
+              style={{
+                fontFamily: inter,
+                fontSize: "11px",
+                color: "var(--text-3)",
+                marginBottom: "16px",
+              }}
+            >
+              Select the option you'd choose. Your vote is anonymous and permanent.
+            </div>
             <ThumbnailGallery
               options={task.options || []}
               selectedId={selectedId}
@@ -507,7 +600,7 @@ export default function VotePage() {
                   justifyContent: "space-between",
                 }}
               >
-                <span>Votes</span>
+                <span>Opinions Needed</span>
                 <span>
                   {votes} / {maxVotes}
                 </span>
@@ -534,6 +627,16 @@ export default function VotePage() {
 
         {/* Thumbnails */}
         <PageWrapper style={{ paddingTop: "16px", paddingBottom: "16px" }}>
+          <div
+            style={{
+              fontFamily: inter,
+              fontSize: "11px",
+              color: "var(--text-3)",
+              marginBottom: "16px",
+            }}
+          >
+            Select the option you'd choose. Your vote is anonymous and permanent.
+          </div>
           <ThumbnailGallery
             options={task.options || []}
             selectedId={selectedId}

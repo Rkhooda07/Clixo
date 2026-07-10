@@ -214,12 +214,12 @@ export function MyWork({ submissions, isLoading }: MyWorkProps) {
                 color: "var(--text-3)",
               }}
             >
-              No votes yet.{" "}
+              You haven't answered any tasks yet.{" "}
               <Link
                 href="/browse"
                 style={{ color: "var(--text-2)", textDecoration: "none" }}
               >
-                Browse tasks →
+                Browse open tasks →
               </Link>
             </td>
           </tr>

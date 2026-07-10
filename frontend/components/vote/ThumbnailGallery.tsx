@@ -46,7 +46,7 @@ function ThumbnailItem({
       {src ? (
         <Image
           src={src}
-          alt="Thumbnail option"
+          alt="Option image"
           fill
           sizes="(max-width: 768px) 50vw, 30vw"
           style={{

@@ -31,7 +31,7 @@ export function Footer() {
             </span>
           </Link>
           <p style={{ color: "var(--text-3)", fontSize: "12px" }}>
-            Decentralized thumbnail testing on Ethereum.
+            Decentralised opinion market on Ethereum.
           </p>
         </div>
 

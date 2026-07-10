@@ -51,7 +51,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       </div>
       {payload.map((entry: { value: number; color?: string }, i: number) => (
         <div key={i} style={{ color: entry.color, lineHeight: 1.6 }}>
-          {entry.value} votes
+          {entry.value} opinions
         </div>
       ))}
     </div>
@@ -80,7 +80,7 @@ export function VotesOverTimeChart({ data }: VotesOverTimeChartProps) {
             letterSpacing: "0.06em",
           }}
         >
-          No voting activity recorded yet.
+          No activity recorded yet.
         </span>
       </div>
     );
@@ -105,7 +105,7 @@ export function VotesOverTimeChart({ data }: VotesOverTimeChartProps) {
           marginBottom: "20px",
         }}
       >
-        Vote Timeline
+        Opinions Over Time
       </div>
 
       <div style={{ height: "200px" }}>

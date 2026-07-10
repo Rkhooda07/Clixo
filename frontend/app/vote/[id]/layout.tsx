@@ -1,8 +1,8 @@
 export const metadata = {
-  title: "Post a Task — Clixo",
+  title: "Give Your Opinion — Clixo",
 };
 
-export default function CreateTaskLayout({
+export default function VoteLayout({
   children,
 }: {
   children: React.ReactNode;

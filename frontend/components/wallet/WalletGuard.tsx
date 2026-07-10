@@ -113,7 +113,7 @@ export function WalletGuard({ children }: { children: React.ReactNode }) {
     return (
       <AuthPrompt
         title="Connect your wallet to continue."
-        body="Clixo uses your Ethereum wallet to identify you. Connect and sign to manage tasks or submit votes."
+        body="Clixo uses your Ethereum wallet to identify you. Connect and sign to post tasks or share your opinion."
       >
         <ConnectButton />
       </AuthPrompt>

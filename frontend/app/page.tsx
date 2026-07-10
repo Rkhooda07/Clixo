@@ -35,7 +35,7 @@ export default function LandingPage() {
                 marginBottom: "28px",
               }}
             >
-              Thumbnail Testing · Powered by Ethereum
+              Opinion Market · Powered by Ethereum
             </div>
 
             {/* 2. Headline */}
@@ -50,10 +50,10 @@ export default function LandingPage() {
               }}
             >
               <span style={{ color: "var(--text-1)", display: "block" }}>
-                Which thumbnail
+                What does the crowd
               </span>
               <span style={{ color: "var(--text-2)", display: "block" }}>
-                actually works?
+                actually think?
               </span>
             </h1>
 
@@ -68,7 +68,7 @@ export default function LandingPage() {
                 lineHeight: 1.6,
               }}
             >
-              Upload options. Stake ETH. Get real votes. Know before you publish.
+              Post anything that needs real opinions. Stake ETH. Get answers from real people who get paid to give a damn.
             </p>
 
             {/* 4. CTAs */}
@@ -96,7 +96,7 @@ export default function LandingPage() {
                   display: "inline-block",
                 }}
               >
-                Create a Task
+                Post a Task
               </Link>
 
               <Link
@@ -110,7 +110,7 @@ export default function LandingPage() {
                   display: "inline-block",
                 }}
               >
-                Browse Tasks →
+                Start Earning →
               </Link>
             </div>
 
@@ -174,18 +174,18 @@ export default function LandingPage() {
             {[
               {
                 n: "01",
-                title: "Upload",
-                body: "Upload 2 to 10 thumbnail options. Add context so voters understand what the video is about. Stake ETH as the reward.",
+                title: "Post",
+                body: "Write your question or upload your options — images, concepts, ideas, designs. Add context so voters understand what they're judging. Set your ETH reward.",
               },
               {
                 n: "02",
                 title: "Vote",
-                body: "Workers browse open tasks and pick the thumbnail they'd click on. No vote counts shown until after they submit — no anchoring bias.",
+                body: "Contributors browse open tasks and share their honest opinion. No results shown before they vote — every answer is independent.",
               },
               {
                 n: "03",
                 title: "Earn",
-                body: "Task closes when minimum votes are hit. The creator sees ranked results. Workers split the staked ETH proportionally.",
+                body: "Task closes when the vote target is hit. The task poster sees ranked results and the winning option. Contributors split the ETH reward.",
               },
             ].map((step, i) => (
               <div
@@ -290,7 +290,7 @@ function MiniResultsCard() {
           lineHeight: 1.3,
         }}
       >
-        Which thumbnail gets more clicks?
+        What does the crowd think?
       </div>
 
       {/* Options */}
@@ -306,7 +306,7 @@ function MiniResultsCard() {
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                {/* Thumbnail placeholder */}
+                {/* Option placeholder */}
                 <div
                   style={{
                     width: "36px",
@@ -336,7 +336,7 @@ function MiniResultsCard() {
                     letterSpacing: "0.06em",
                   }}
                 >
-                  WINNER
+                  TOP PICK
                 </span>
               ) : (
                 <span
@@ -375,7 +375,7 @@ function MiniResultsCard() {
                 marginTop: "4px",
               }}
             >
-              {opt.votes} votes
+              {opt.votes} opinions
             </div>
           </div>
         ))}
@@ -421,26 +421,26 @@ function MiniResultsCard() {
 
 const CARDS = [
   {
-    eyebrow: "FOR CREATORS",
-    title: "Know before you publish.",
-    body: "Upload your thumbnail options, stake a small ETH reward, and get real crowd signal in hours — not after you've published and lost momentum.",
+    eyebrow: "POST A TASK",
+    title: "Stop guessing what people want.",
+    body: "Post your question, upload your options, and get real crowd opinions in hours. Works for product ideas, creative decisions, startup validation — anything that needs honest human judgment.",
     bullets: [
-      "Real human votes, not algorithmic guesses",
-      "Results before you upload, not after",
-      "Keep full creative control",
+      "Real opinions, not algorithmic predictions",
+      "Know before you build, launch, or publish",
+      "Any question, any format, any industry",
     ],
-    cta: { label: "Create a Task →", href: "/create-task" },
+    cta: { label: "Post a Task →", href: "/create-task" },
   },
   {
-    eyebrow: "FOR WORKERS",
-    title: "Vote. Earn. Repeat.",
-    body: "Browse open tasks from creators. Pick the thumbnail you'd genuinely click on. Earn ETH when the task closes — no staking, no lock-ups.",
+    eyebrow: "EARN ETH",
+    title: "Get paid for your opinion.",
+    body: "Browse open tasks. Give your honest take. Earn ETH when the task closes — no staking, no lock-ups, no crypto expertise required. Just your judgment.",
     bullets: [
-      "No minimum commitment",
-      "Earn ETH for honest votes",
-      "Instant payout when tasks close",
+      "No minimum time commitment",
+      "Earn ETH for every opinion you give",
+      "Paid out automatically on task close",
     ],
-    cta: { label: "Browse Open Tasks →", href: "/browse" },
+    cta: { label: "Browse Tasks →", href: "/browse" },
   },
 ] as const;
 

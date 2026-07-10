@@ -450,32 +450,32 @@ export default function CreateTaskPage() {
                         letterSpacing: "-0.01em",
                       }}
                     >
-                      Campaign Details
+                      Task Details
                     </div>
 
                     <div>
-                      <FieldLabel>Title</FieldLabel>
+                      <FieldLabel>What's your question or decision?</FieldLabel>
                       <StyledInput
                         value={title}
                         onChange={(e) => setTitle(e.target.value.slice(0, 80))}
-                        placeholder="Which thumbnail should we use for this video?"
+                        placeholder="e.g. Which logo feels more trustworthy?"
                       />
                       <CharCount current={title.length} max={80} />
                     </div>
 
                     <div>
-                      <FieldLabel>Context for voters</FieldLabel>
+                      <FieldLabel>Give people context</FieldLabel>
                       <StyledTextarea
                         value={description}
                         onChange={(e) => setDescription(e.target.value.slice(0, 300))}
                         rows={4}
-                        placeholder="Describe the video topic and what workers should consider when choosing..."
+                        placeholder="What should contributors know before giving their opinion? The more context, the better the answers."
                       />
                       <CharCount current={description.length} max={300} />
                     </div>
 
                     <div>
-                      <FieldLabel>Minimum voters required</FieldLabel>
+                      <FieldLabel>How many opinions do you need?</FieldLabel>
                       <StyledInput
                         type="number"
                         value={minVotes}
@@ -494,12 +494,12 @@ export default function CreateTaskPage() {
                           lineHeight: 1.5,
                         }}
                       >
-                        5–500 voters. More voters produce a stronger signal.
+                        5–500 opinions. More opinions produce a stronger signal.
                       </div>
                     </div>
 
                     <PrimaryButton onClick={handleNext}>
-                      Next: Upload options →
+                      Next: Add your options →
                     </PrimaryButton>
                   </>
                 )}
@@ -516,8 +516,19 @@ export default function CreateTaskPage() {
                         letterSpacing: "-0.01em",
                       }}
                     >
-                      Upload Options
+                      Add your options
                     </div>
+                    <p
+                      style={{
+                        fontFamily: inter,
+                        fontSize: "13px",
+                        color: "var(--text-2)",
+                        lineHeight: 1.5,
+                        margin: "4px 0 16px 0",
+                      }}
+                    >
+                      Upload images, screenshots, mockups — or skip to Step 3 if your options are text-based.
+                    </p>
 
                     <ThumbnailUploader onFilesChange={setThumbnails} />
 
@@ -542,11 +553,11 @@ export default function CreateTaskPage() {
                         letterSpacing: "-0.01em",
                       }}
                     >
-                      Confirm &amp; Stake
+                      Set your reward
                     </div>
 
                     <div>
-                      <FieldLabel>Sepolia ETH reward pool</FieldLabel>
+                      <FieldLabel>ETH reward for contributors</FieldLabel>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <div style={{ position: "relative", flex: 1 }}>
                           <span
@@ -607,7 +618,7 @@ export default function CreateTaskPage() {
                           lineHeight: 1.5,
                         }}
                       >
-                        {minVotes} credits × {ETH_PER_CREDIT.toFixed(3)} ETH. Split equally among winning-option voters at close.
+                        {minVotes} opinions × {ETH_PER_CREDIT.toFixed(3)} ETH. Split equally among winning-option contributors at close.
                       </div>
                     </div>
 
@@ -626,7 +637,7 @@ export default function CreateTaskPage() {
                     <div style={{ display: "flex", gap: "10px" }}>
                       <SecondaryButton onClick={handleBack}>Back</SecondaryButton>
                       <PrimaryButton onClick={handleSubmit} loading={isSubmitting}>
-                        Confirm &amp; Pay →
+                        Post Task &amp; Stake ETH
                       </PrimaryButton>
                     </div>
                   </>
@@ -658,7 +669,7 @@ export default function CreateTaskPage() {
                       marginBottom: "16px",
                     }}
                   >
-                    Summary
+                    Task summary
                   </div>
 
                   <div
@@ -691,7 +702,7 @@ export default function CreateTaskPage() {
                       </span>
                     </SummaryRow>
 
-                    <SummaryRow label="Voters">
+                    <SummaryRow label="Opinions">
                       <span style={{ fontFamily: mono, fontSize: "12px", color: "var(--text-2)" }}>
                         {minVotes}
                       </span>
@@ -729,7 +740,7 @@ export default function CreateTaskPage() {
                 marginBottom: "16px",
               }}
             >
-              Campaign Created
+              Task Posted
             </div>
 
             <h2
@@ -742,7 +753,7 @@ export default function CreateTaskPage() {
                 marginBottom: "12px",
               }}
             >
-              Your campaign is live.
+              Task posted.
             </h2>
 
             <p
@@ -754,7 +765,7 @@ export default function CreateTaskPage() {
                 marginBottom: "32px",
               }}
             >
-              Funded and active. Workers can start voting now. You'll see results as votes come in.
+              Contributors can now give their opinions and earn your staked ETH reward.
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -774,7 +785,7 @@ export default function CreateTaskPage() {
                   letterSpacing: "-0.01em",
                 }}
               >
-                View Results →
+                View Task →
               </Link>
               <Link
                 href="/dashboard"
@@ -792,7 +803,7 @@ export default function CreateTaskPage() {
                   letterSpacing: "-0.01em",
                 }}
               >
-                Dashboard
+                Back to Dashboard →
               </Link>
             </div>
           </div>

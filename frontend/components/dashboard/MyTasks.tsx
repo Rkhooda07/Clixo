@@ -152,7 +152,7 @@ export function MyTasks({ tasks, isLoading }: MyTasksProps) {
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
           <tr>
-            {["Title", "Thumbnails", "Status", "Progress", "Reward", "Action"].map((h) => (
+            {["Title", "Options", "Status", "Progress", "Reward", "Action"].map((h) => (
               <th key={h} style={TH_STYLE}>{h}</th>
             ))}
           </tr>
@@ -183,7 +183,7 @@ export function MyTasks({ tasks, isLoading }: MyTasksProps) {
     <table style={{ width: "100%", borderCollapse: "collapse" }}>
       <thead>
         <tr>
-          {["Title", "Thumbnails", "Status", "Progress", "Reward", "Action"].map((h) => (
+          {["Title", "Options", "Status", "Progress", "Reward", "Action"].map((h) => (
             <th key={h} style={TH_STYLE}>{h}</th>
           ))}
         </tr>
@@ -202,12 +202,12 @@ export function MyTasks({ tasks, isLoading }: MyTasksProps) {
                 color: "var(--text-3)",
               }}
             >
-              No tasks yet.{" "}
+              You haven't posted any tasks yet.{" "}
               <Link
                 href="/create-task"
                 style={{ color: "var(--text-2)", textDecoration: "none" }}
               >
-                Create one →
+                Post your first task →
               </Link>
             </td>
           </tr>

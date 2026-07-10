@@ -45,7 +45,7 @@ export function AlreadyVoted({
             marginBottom: "10px",
           }}
         >
-          Vote Recorded
+          Opinion Recorded
         </div>
         <h2
           style={{
@@ -57,7 +57,7 @@ export function AlreadyVoted({
             margin: 0,
           }}
         >
-          Your vote is locked in.
+          You've already answered this task.
         </h2>
         <p
           style={{
@@ -68,7 +68,7 @@ export function AlreadyVoted({
             lineHeight: 1.6,
           }}
         >
-          You'll earn ETH once this task closes and votes are settled.
+          You'll earn ETH once this task closes and opinions are settled.
         </p>
       </div>
 
@@ -106,7 +106,7 @@ export function AlreadyVoted({
             {votedSrc ? (
               <Image
                 src={votedSrc}
-                alt="Your selected thumbnail"
+                alt="Your selected option"
                 fill
                 sizes="50vw"
                 style={{ objectFit: "cover" }}
@@ -199,7 +199,7 @@ export function AlreadyVoted({
                       }}
                     >
                       Option {String.fromCharCode(65 + i)}
-                      {isMyVote && " ·  your vote"}
+                      {isMyVote && " ·  your pick"}
                     </span>
                     <span
                       style={{
@@ -250,7 +250,7 @@ export function AlreadyVoted({
                   textTransform: "uppercase",
                 }}
               >
-                Total votes
+                Total opinions
               </span>
               <span
                 style={{

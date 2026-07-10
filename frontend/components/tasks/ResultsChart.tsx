@@ -38,7 +38,7 @@ export function ResultsChart({ thumbnails }: ResultsChartProps) {
   if (totalVotes === 0) {
     return (
       <div className="flex flex-col items-center justify-center p-8 bg-zinc-900/20 border border-zinc-800 rounded-xl">
-        <span className="text-zinc-500 text-sm font-mono">No votes recorded yet</span>
+        <span className="text-zinc-500 text-sm font-mono">No opinions recorded yet</span>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export function ResultsChart({ thumbnails }: ResultsChartProps) {
       return (
         <div className="bg-[#111118] border border-zinc-800 px-3 py-2 rounded-lg text-xs shadow-2xl">
           <div className="font-semibold text-white mb-1">{data.name}</div>
-          <div className="text-purple-400 font-mono">Votes: {data.votes}</div>
+          <div className="text-purple-400 font-mono">Opinions: {data.votes}</div>
           <div className="text-cyan-400 font-mono">Ratio: {data.percentage}%</div>
         </div>
       );
