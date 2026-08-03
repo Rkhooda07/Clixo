@@ -14,6 +14,7 @@ export interface Thumbnail {
 export interface Task {
   id: number;
   title: string;
+  description?: string | null;
   user_id: number;
   signature: string | null;
   amount: string | null;

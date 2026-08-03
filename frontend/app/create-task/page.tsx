@@ -1,18 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import { WalletGuard } from "@/components/wallet/WalletGuard";
-import { ThumbnailUploader } from "@/components/tasks/ThumbnailUploader";
-import { taskApi, uploadApi } from "@/lib/api";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
+import type { Eip1193Provider } from "ethers";
 import axios from "axios";
 import { toast } from "sonner";
-import { ethers } from "ethers";
+import { WalletGuard } from "@/components/wallet/WalletGuard";
 import { PageWrapper } from "@/components/layout/PageWrapper";
-
-const mono = "JetBrains Mono, monospace";
-const geist = "Geist, system-ui, sans-serif";
-const inter = "Inter, system-ui, sans-serif";
+import { Card } from "@/components/ui/Card";
+import { StepIndicator } from "@/components/create-task/StepIndicator";
+import { StepDetails } from "@/components/create-task/StepDetails";
+import { StepOptions } from "@/components/create-task/StepOptions";
+import { StepReview } from "@/components/create-task/StepReview";
+import { StepSuccess } from "@/components/create-task/StepSuccess";
+import { taskApi, uploadApi } from "@/lib/api";
+import { useEthPrice } from "@/hooks/useEthPrice";
 
 const SEPOLIA_CHAIN_ID = 11155111;
 const SEPOLIA_CHAIN_ID_HEX = "0xaa36a7";
@@ -28,189 +30,6 @@ const STEPS = [
   { n: 3, label: "Confirm" },
 ];
 
-interface InputProps {
-  value: string | number;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  type?: string;
-  placeholder?: string;
-  readOnly?: boolean;
-  step?: string;
-  min?: number;
-  max?: number;
-}
-
-function StyledInput({ value, onChange, type = "text", placeholder, readOnly, step, min, max }: InputProps) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <input
-      type={type}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      readOnly={readOnly}
-      step={step}
-      min={min}
-      max={max}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={{
-        width: "100%",
-        background: "var(--surface-2)",
-        border: `1px solid ${focused ? "var(--text-3)" : "var(--line)"}`,
-        borderRadius: "5px",
-        padding: "10px 14px",
-        fontFamily: inter,
-        fontSize: "13px",
-        color: readOnly ? "var(--text-2)" : "var(--text-1)",
-        outline: "none",
-        transition: "border-color 0.1s",
-        boxSizing: "border-box",
-      }}
-    />
-  );
-}
-
-function StyledTextarea({ value, onChange, rows = 4, placeholder }: {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  rows?: number;
-  placeholder?: string;
-}) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <textarea
-      value={value}
-      onChange={onChange}
-      rows={rows}
-      placeholder={placeholder}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      style={{
-        width: "100%",
-        background: "var(--surface-2)",
-        border: `1px solid ${focused ? "var(--text-3)" : "var(--line)"}`,
-        borderRadius: "5px",
-        padding: "10px 14px",
-        fontFamily: inter,
-        fontSize: "13px",
-        color: "var(--text-1)",
-        outline: "none",
-        resize: "none",
-        transition: "border-color 0.1s",
-        boxSizing: "border-box",
-      }}
-    />
-  );
-}
-
-function PrimaryButton({ onClick, disabled, loading, children }: {
-  onClick?: () => void;
-  disabled?: boolean;
-  loading?: boolean;
-  children: React.ReactNode;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const isDisabled = disabled || loading;
-  return (
-    <button
-      onClick={onClick}
-      disabled={isDisabled}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        flex: 1,
-        padding: "10px 18px",
-        fontFamily: geist,
-        fontSize: "13px",
-        fontWeight: 500,
-        background: isDisabled ? "var(--surface-2)" : hovered ? "var(--surface-2)" : "var(--text-1)",
-        color: isDisabled ? "var(--text-3)" : hovered ? "var(--text-1)" : "var(--ink)",
-        border: `1px solid ${isDisabled ? "var(--line)" : hovered ? "var(--text-1)" : "var(--text-1)"}`,
-        borderRadius: "5px",
-        cursor: isDisabled ? "not-allowed" : "pointer",
-        transition: "background 150ms, color 150ms",
-        letterSpacing: "-0.01em",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "8px",
-        pointerEvents: loading ? "none" : undefined,
-        opacity: loading ? 0.6 : undefined,
-      }}
-    >
-      {loading ? (
-        <>
-          <span className="btn-spinner" />
-          <span>...</span>
-        </>
-      ) : children}
-    </button>
-  );
-}
-
-function SecondaryButton({ onClick, children }: {
-  onClick?: () => void;
-  children: React.ReactNode;
-}) {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        flex: 1,
-        padding: "10px 18px",
-        fontFamily: geist,
-        fontSize: "13px",
-        fontWeight: 500,
-        background: hovered ? "var(--surface-2)" : "transparent",
-        color: "var(--text-2)",
-        border: "1px solid var(--line)",
-        borderRadius: "5px",
-        cursor: "pointer",
-        transition: "background 150ms, border-color 150ms",
-        letterSpacing: "-0.01em",
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function FieldLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        fontFamily: mono,
-        fontSize: "10px",
-        color: "var(--text-3)",
-        letterSpacing: "0.1em",
-        textTransform: "uppercase",
-        marginBottom: "6px",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function CharCount({ current, max }: { current: number; max: number }) {
-  return (
-    <div
-      style={{
-        fontFamily: mono,
-        fontSize: "10px",
-        color: "var(--text-3)",
-        textAlign: "right",
-        marginTop: "4px",
-      }}
-    >
-      {current}/{max}
-    </div>
-  );
-}
-
 export default function CreateTaskPage() {
   const [step, setStep] = useState(1);
 
@@ -223,7 +42,9 @@ export default function CreateTaskPage() {
   const [submissionProgress, setSubmissionProgress] = useState("");
   const [createdTaskId, setCreatedTaskId] = useState<number | null>(null);
 
-  const ethPrice = 3200;
+  const reduceMotion = useReducedMotion();
+
+  const ethPrice = useEthPrice() ?? 3200;
   const rewardEth = (minVotes * ETH_PER_CREDIT).toFixed(3);
   const usdEstimate = (Number(rewardEth) * ethPrice).toFixed(2);
 
@@ -290,24 +111,29 @@ export default function CreateTaskPage() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    setSubmissionProgress("Uploading option files to IPFS...");
+    setSubmissionProgress(`Uploading options... 0/${thumbnails.length}`);
     toast.loading("Creating campaign...", { id: "create-campaign" });
 
     try {
-      const uploadedOptions: { ipfs_cid: string; gateway_url: string; ipfs_uri: string }[] = [];
-      for (let i = 0; i < thumbnails.length; i++) {
-        setSubmissionProgress(`Uploading option ${i + 1} of ${thumbnails.length}...`);
-        const res = await uploadApi.uploadFile(thumbnails[i]);
-        if (res.ok) {
-          uploadedOptions.push({ ipfs_cid: res.cid, gateway_url: res.gatewayUrl, ipfs_uri: res.ipfs_uri });
-        } else {
-          throw new Error(`Failed to upload option ${i + 1}`);
-        }
-      }
+      // Keep ethers out of the route bundle — only loaded when funding starts.
+      const { ethers } = await import("ethers");
+
+      let settled = 0;
+      const uploadedOptions = await Promise.all(
+        thumbnails.map(async (file, i) => {
+          const res = await uploadApi.uploadFile(file);
+          if (!res.ok) throw new Error(`Failed to upload option ${i + 1}`);
+          settled += 1;
+          setSubmissionProgress(`Uploading options... ${settled}/${thumbnails.length}`);
+          return { ipfs_cid: res.cid, gateway_url: res.gatewayUrl, ipfs_uri: res.ipfs_uri };
+        })
+      );
 
       setSubmissionProgress("Registering task...");
+      const trimmedDescription = description.trim();
       const taskRes = await taskApi.create({
         title,
+        ...(trimmedDescription ? { description: trimmedDescription } : {}),
         budget: minVotes,
         deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         options: uploadedOptions,
@@ -321,7 +147,7 @@ export default function CreateTaskPage() {
 
       await ensureSepoliaNetwork();
 
-      const provider = new ethers.BrowserProvider(window.ethereum as ethers.Eip1193Provider);
+      const provider = new ethers.BrowserProvider(window.ethereum as Eip1193Provider);
       const signer = await provider.getSigner();
       const network = await provider.getNetwork();
       const signerAddress = await signer.getAddress();
@@ -369,446 +195,88 @@ export default function CreateTaskPage() {
   return (
     <WalletGuard>
       <PageWrapper>
-      <div style={{ maxWidth: "800px", margin: "0 auto", paddingTop: "40px", paddingBottom: "48px" }}>
+        <div className="mx-auto max-w-[800px] pb-12 pt-10">
+          {step < 4 ? (
+            <>
+              <StepIndicator steps={STEPS} current={step} />
 
-        {step < 4 && (
-          <>
-            {/* Step indicator */}
-            <div style={{ marginBottom: "32px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
-                {STEPS.map((s, i) => (
-                  <React.Fragment key={s.n}>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
+              <div className="flex items-start gap-6">
+                {/* Main form card */}
+                <Card className="min-w-0 flex-1 overflow-hidden p-6">
+                  <AnimatePresence mode="wait" initial={false}>
+                    <m.div
+                      key={step}
+                      className="flex flex-col gap-5"
+                      initial={reduceMotion ? false : { opacity: 0, x: 8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={reduceMotion ? undefined : { opacity: 0, x: -8 }}
+                      transition={{ duration: 0.2 }}
                     >
-                      <span
-                        style={{
-                          fontFamily: mono,
-                          fontSize: "10px",
-                          color: step >= s.n ? "var(--text-1)" : "var(--text-3)",
-                          letterSpacing: "0.04em",
-                        }}
-                      >
-                        {s.n < 10 ? `0${s.n}` : s.n}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: geist,
-                          fontSize: "12px",
-                          fontWeight: 500,
-                          color: step === s.n ? "var(--text-1)" : "var(--text-3)",
-                          letterSpacing: "-0.01em",
-                        }}
-                      >
-                        {s.label}
-                      </span>
+                      {step === 1 && (
+                        <StepDetails
+                          title={title}
+                          description={description}
+                          minVotes={minVotes}
+                          onTitleChange={(v) => setTitle(v.slice(0, 80))}
+                          onDescriptionChange={(v) => setDescription(v.slice(0, 300))}
+                          onMinVotesChange={(v) => setMinVotes(Math.max(5, Math.min(500, v)))}
+                          onNext={handleNext}
+                        />
+                      )}
+                      {step === 2 && (
+                        <StepOptions
+                          files={thumbnails}
+                          onFilesChange={setThumbnails}
+                          onBack={handleBack}
+                          onNext={handleNext}
+                        />
+                      )}
+                      {step === 3 && (
+                        <StepReview
+                          rewardEth={rewardEth}
+                          usdEstimate={usdEstimate}
+                          minVotes={minVotes}
+                          ethPerCredit={ETH_PER_CREDIT}
+                          isSubmitting={isSubmitting}
+                          submissionProgress={submissionProgress}
+                          onBack={handleBack}
+                          onSubmit={handleSubmit}
+                        />
+                      )}
+                    </m.div>
+                  </AnimatePresence>
+                </Card>
+
+                {/* Summary sidebar — desktop only */}
+                <div className="hidden w-[220px] shrink-0 lg:block">
+                  <Card className="sticky top-[72px] p-4">
+                    <div className="eyebrow mb-4">Task summary</div>
+                    <div className="flex flex-col gap-3">
+                      <SummaryRow label="Title">
+                        <span className="line-clamp-2 text-xs leading-snug text-lo">
+                          {title || <span className="text-dim">—</span>}
+                        </span>
+                      </SummaryRow>
+                      <SummaryRow label="Options">
+                        <span className="font-mono text-xs text-lo">
+                          {thumbnails.length || "—"}
+                        </span>
+                      </SummaryRow>
+                      <SummaryRow label="Opinions">
+                        <span className="font-mono text-xs text-lo">{minVotes}</span>
+                      </SummaryRow>
+                      <SummaryRow label="Reward">
+                        <span className="font-mono text-xs text-amber">Ξ {rewardEth} ETH</span>
+                      </SummaryRow>
                     </div>
-                    {i < STEPS.length - 1 && (
-                      <div
-                        style={{
-                          flex: 1,
-                          height: "1px",
-                          background: step > s.n ? "var(--text-3)" : "var(--line)",
-                          margin: "0 16px",
-                        }}
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-
-            {/* Form area */}
-            <div style={{ display: "flex", gap: "24px", alignItems: "flex-start" }}>
-
-              {/* Main form card */}
-              <div
-                style={{
-                  flex: 1,
-                  background: "var(--surface-1)",
-                  border: "1px solid var(--line)",
-                  borderRadius: "6px",
-                  padding: "24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "20px",
-                }}
-              >
-                {/* Step 1: Details */}
-                {step === 1 && (
-                  <>
-                    <div
-                      style={{
-                        fontFamily: geist,
-                        fontSize: "16px",
-                        fontWeight: 500,
-                        color: "var(--text-1)",
-                        letterSpacing: "-0.01em",
-                      }}
-                    >
-                      Task Details
-                    </div>
-
-                    <div>
-                      <FieldLabel>What&apos;s your question or decision?</FieldLabel>
-                      <StyledInput
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value.slice(0, 80))}
-                        placeholder="e.g. Which logo feels more trustworthy?"
-                      />
-                      <CharCount current={title.length} max={80} />
-                    </div>
-
-                    <div>
-                      <FieldLabel>Give people context</FieldLabel>
-                      <StyledTextarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value.slice(0, 300))}
-                        rows={4}
-                        placeholder="What should contributors know before giving their opinion? The more context, the better the answers."
-                      />
-                      <CharCount current={description.length} max={300} />
-                    </div>
-
-                    <div>
-                      <FieldLabel>How many opinions do you need?</FieldLabel>
-                      <StyledInput
-                        type="number"
-                        value={minVotes}
-                        onChange={(e) =>
-                          setMinVotes(Math.max(5, Math.min(500, Number(e.target.value))))
-                        }
-                        min={5}
-                        max={500}
-                      />
-                      <div
-                        style={{
-                          fontFamily: inter,
-                          fontSize: "12px",
-                          color: "var(--text-3)",
-                          marginTop: "6px",
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        5–500 opinions. More opinions produce a stronger signal.
-                      </div>
-                    </div>
-
-                    <PrimaryButton onClick={handleNext}>
-                      Next: Add your options →
-                    </PrimaryButton>
-                  </>
-                )}
-
-                {/* Step 2: Uploads */}
-                {step === 2 && (
-                  <>
-                    <div
-                      style={{
-                        fontFamily: geist,
-                        fontSize: "16px",
-                        fontWeight: 500,
-                        color: "var(--text-1)",
-                        letterSpacing: "-0.01em",
-                      }}
-                    >
-                      Add your options
-                    </div>
-                    <p
-                      style={{
-                        fontFamily: inter,
-                        fontSize: "13px",
-                        color: "var(--text-2)",
-                        lineHeight: 1.5,
-                        margin: "4px 0 16px 0",
-                      }}
-                    >
-                      Upload images, screenshots, mockups — or skip to Step 3 if your options are text-based.
-                    </p>
-
-                    <ThumbnailUploader onFilesChange={setThumbnails} />
-
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <SecondaryButton onClick={handleBack}>Back</SecondaryButton>
-                      <PrimaryButton onClick={handleNext}>
-                        Next: Review &amp; confirm →
-                      </PrimaryButton>
-                    </div>
-                  </>
-                )}
-
-                {/* Step 3: Confirm */}
-                {step === 3 && (
-                  <>
-                    <div
-                      style={{
-                        fontFamily: geist,
-                        fontSize: "16px",
-                        fontWeight: 500,
-                        color: "var(--text-1)",
-                        letterSpacing: "-0.01em",
-                      }}
-                    >
-                      Set your reward
-                    </div>
-
-                    <div>
-                      <FieldLabel>ETH reward for contributors</FieldLabel>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ position: "relative", flex: 1 }}>
-                          <span
-                            style={{
-                              position: "absolute",
-                              left: "14px",
-                              top: "50%",
-                              transform: "translateY(-50%)",
-                              fontFamily: mono,
-                              fontSize: "13px",
-                              color: "var(--amber)",
-                              pointerEvents: "none",
-                            }}
-                          >
-                            Ξ
-                          </span>
-                          <input
-                            type="number"
-                            step="0.001"
-                            value={rewardEth}
-                            readOnly
-                            style={{
-                              width: "100%",
-                              background: "var(--surface-2)",
-                              border: "1px solid var(--line)",
-                              borderRadius: "5px",
-                              padding: "10px 14px 10px 28px",
-                              fontFamily: mono,
-                              fontSize: "13px",
-                              color: "var(--amber)",
-                              outline: "none",
-                              boxSizing: "border-box",
-                            }}
-                          />
-                        </div>
-                        <div
-                          style={{
-                            background: "var(--surface-2)",
-                            border: "1px solid var(--line)",
-                            borderRadius: "5px",
-                            padding: "10px 14px",
-                            fontFamily: mono,
-                            fontSize: "12px",
-                            color: "var(--text-3)",
-                            whiteSpace: "nowrap",
-                            flexShrink: 0,
-                          }}
-                        >
-                          ~${usdEstimate}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: inter,
-                          fontSize: "12px",
-                          color: "var(--text-3)",
-                          marginTop: "6px",
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {minVotes} opinions × {ETH_PER_CREDIT.toFixed(3)} ETH. Split equally among winning-option contributors at close.
-                      </div>
-                    </div>
-
-                    {isSubmitting && (
-                      <div
-                        style={{
-                          fontFamily: mono,
-                          fontSize: "10px",
-                          color: "var(--text-3)",
-                          letterSpacing: "0.08em",
-                        }}
-                      >
-                        {submissionProgress}
-                      </div>
-                    )}
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <SecondaryButton onClick={handleBack}>Back</SecondaryButton>
-                      <PrimaryButton onClick={handleSubmit} loading={isSubmitting}>
-                        Post Task &amp; Stake ETH
-                      </PrimaryButton>
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Summary sidebar — desktop only */}
-              <div
-                className="hidden lg:block"
-                style={{ width: "220px", flexShrink: 0 }}
-              >
-                <div
-                  style={{
-                    background: "var(--surface-1)",
-                    border: "1px solid var(--line)",
-                    borderRadius: "6px",
-                    padding: "16px",
-                    position: "sticky",
-                    top: "72px",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: mono,
-                      fontSize: "10px",
-                      color: "var(--text-3)",
-                      letterSpacing: "0.1em",
-                      textTransform: "uppercase",
-                      marginBottom: "16px",
-                    }}
-                  >
-                    Task summary
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                    }}
-                  >
-                    <SummaryRow label="Title">
-                      <span
-                        style={{
-                          fontFamily: inter,
-                          fontSize: "12px",
-                          color: "var(--text-2)",
-                          lineHeight: 1.4,
-                          display: "-webkit-box",
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: "vertical",
-                          overflow: "hidden",
-                        }}
-                      >
-                        {title || <span style={{ color: "var(--text-3)" }}>—</span>}
-                      </span>
-                    </SummaryRow>
-
-                    <SummaryRow label="Options">
-                      <span style={{ fontFamily: mono, fontSize: "12px", color: "var(--text-2)" }}>
-                        {thumbnails.length || "—"}
-                      </span>
-                    </SummaryRow>
-
-                    <SummaryRow label="Opinions">
-                      <span style={{ fontFamily: mono, fontSize: "12px", color: "var(--text-2)" }}>
-                        {minVotes}
-                      </span>
-                    </SummaryRow>
-
-                    <SummaryRow label="Reward">
-                      <span style={{ fontFamily: mono, fontSize: "12px", color: "var(--amber)" }}>
-                        Ξ {rewardEth} ETH
-                      </span>
-                    </SummaryRow>
-                  </div>
+                  </Card>
                 </div>
               </div>
-            </div>
-          </>
-        )}
-
-        {/* Step 4: Success */}
-        {step === 4 && (
-          <div
-            style={{
-              maxWidth: "480px",
-              margin: "0 auto",
-              textAlign: "center",
-              paddingTop: "40px",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: mono,
-                fontSize: "10px",
-                color: "var(--text-3)",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                marginBottom: "16px",
-              }}
-            >
-              Task Posted
-            </div>
-
-            <h2
-              style={{
-                fontFamily: geist,
-                fontSize: "24px",
-                fontWeight: 500,
-                color: "var(--text-1)",
-                letterSpacing: "-0.02em",
-                marginBottom: "12px",
-              }}
-            >
-              Task posted.
-            </h2>
-
-            <p
-              style={{
-                fontFamily: inter,
-                fontSize: "13px",
-                color: "var(--text-2)",
-                lineHeight: 1.6,
-                marginBottom: "32px",
-              }}
-            >
-              Contributors can now give their opinions and earn your staked ETH reward.
-            </p>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <Link
-                href={`/tasks/${createdTaskId}`}
-                style={{
-                  display: "block",
-                  padding: "10px 18px",
-                  fontFamily: geist,
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  background: "var(--text-1)",
-                  color: "var(--ink)",
-                  border: "1px solid var(--text-1)",
-                  borderRadius: "5px",
-                  textDecoration: "none",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                View Task →
-              </Link>
-              <Link
-                href="/dashboard"
-                style={{
-                  display: "block",
-                  padding: "10px 18px",
-                  fontFamily: geist,
-                  fontSize: "13px",
-                  fontWeight: 500,
-                  background: "transparent",
-                  color: "var(--text-2)",
-                  border: "1px solid var(--line)",
-                  borderRadius: "5px",
-                  textDecoration: "none",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                Back to Dashboard →
-              </Link>
-            </div>
-          </div>
-        )}
-      </div>
+            </>
+          ) : (
+            <StepSuccess taskId={createdTaskId} />
+          )}
+        </div>
       </PageWrapper>
     </WalletGuard>
   );
@@ -817,18 +285,7 @@ export default function CreateTaskPage() {
 function SummaryRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div
-        style={{
-          fontFamily: mono,
-          fontSize: "10px",
-          color: "var(--text-3)",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          marginBottom: "3px",
-        }}
-      >
-        {label}
-      </div>
+      <div className="eyebrow mb-0.5">{label}</div>
       {children}
     </div>
   );

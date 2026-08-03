@@ -1,52 +1,49 @@
 "use client";
 
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { X } from "lucide-react";
+import { AnimatePresence, m, useReducedMotion } from "framer-motion";
+import { Upload, X } from "lucide-react";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 interface ThumbnailUploaderProps {
+  initialFiles?: File[];
   onFilesChange: (files: File[]) => void;
 }
 
-const mono = "JetBrains Mono, monospace";
-const inter = "Inter, system-ui, sans-serif";
+interface UploadEntry {
+  id: string;
+  file: File;
+}
 
-export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
-  const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+const toEntry = (file: File): UploadEntry => ({ id: crypto.randomUUID(), file });
+
+export function ThumbnailUploader({ initialFiles, onFilesChange }: ThumbnailUploaderProps) {
+  const [entries, setEntries] = useState<UploadEntry[]>(() => (initialFiles ?? []).map(toEntry));
   const [error, setError] = useState<string | null>(null);
-  const [dropHovered, setDropHovered] = useState(false);
+  const reduceMotion = useReducedMotion();
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       setError(null);
-      const updatedFiles = [...files, ...acceptedFiles];
-      if (updatedFiles.length > 10) {
+      const next = [...entries, ...acceptedFiles.map(toEntry)];
+      if (next.length > 10) {
         setError("Maximum 10 option files.");
         return;
       }
-      setFiles(updatedFiles);
-      onFilesChange(updatedFiles);
+      setEntries(next);
+      onFilesChange(next.map((e) => e.file));
     },
-    [files, onFilesChange]
+    [entries, onFilesChange]
   );
 
-  const removeFile = (index: number) => {
+  const removeEntry = (id: string) => {
     setError(null);
-    URL.revokeObjectURL(previews[index]);
-    const updatedFiles = files.filter((_, i) => i !== index);
-    setFiles(updatedFiles);
-    onFilesChange(updatedFiles);
+    const next = entries.filter((e) => e.id !== id);
+    setEntries(next);
+    onFilesChange(next.map((e) => e.file));
   };
-
-  useEffect(() => {
-    const objectUrls = files.map((file) => URL.createObjectURL(file));
-    setPreviews(objectUrls);
-    return () => {
-      objectUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [files]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -59,80 +56,57 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
   });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+    <div className="flex flex-col gap-4">
       {/* Dropzone */}
       <div
-        {...getRootProps()}
-        onMouseEnter={() => setDropHovered(true)}
-        onMouseLeave={() => setDropHovered(false)}
-        style={{
-          border: `1px dashed ${isDragActive ? "var(--text-3)" : dropHovered ? "var(--text-3)" : "var(--line)"}`,
-          borderRadius: "5px",
-          padding: "32px 24px",
-          textAlign: "center",
-          cursor: "pointer",
-          background: isDragActive ? "var(--surface-2)" : "transparent",
-          transition: "border-color 0.1s, background 0.1s",
-        }}
+        {...getRootProps({
+          className: cn(
+            "cursor-pointer rounded-lg border border-dashed border-line px-6 py-8 text-center transition-colors duration-150 hover:border-dim",
+            isDragActive && "border-dim bg-raised"
+          ),
+        })}
       >
         <input {...getInputProps()} />
-        <div
-          style={{
-            fontFamily: inter,
-            fontSize: "13px",
-            color: "var(--text-2)",
-            marginBottom: "4px",
-          }}
-        >
+        <Upload size={16} className="mx-auto mb-2 text-dim" aria-hidden />
+        <p className="mb-1 text-[13px] text-lo">
           {isDragActive ? "Drop files here" : "Drop your option images here or click to browse"}
-        </div>
-        <div
-          style={{
-            fontFamily: mono,
-            fontSize: "10px",
-            color: "var(--text-3)",
-            letterSpacing: "0.04em",
-          }}
-        >
+        </p>
+        <p className="font-mono text-[10px] tracking-[0.04em] text-dim">
           2 to 10 options · JPG, PNG, or WebP
-        </div>
+        </p>
       </div>
 
       {/* Error */}
       {error && (
-        <div
-          style={{
-            fontFamily: mono,
-            fontSize: "11px",
-            color: "var(--red)",
-            padding: "8px 12px",
-            border: "1px solid var(--red)",
-            borderRadius: "5px",
-            letterSpacing: "0.02em",
-            opacity: 0.85,
-          }}
+        <p
+          role="alert"
+          className="rounded-md border border-red/60 px-3 py-2 font-mono text-[11px] tracking-[0.02em] text-red"
         >
           {error}
-        </div>
+        </p>
       )}
 
       {/* Preview grid */}
-      {previews.length > 0 && (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-            gap: "10px",
-          }}
-        >
-          {previews.map((preview, index) => (
-            <PreviewItem
-              key={index}
-              src={preview}
-              index={index}
-              onRemove={removeFile}
-            />
-          ))}
+      {entries.length > 0 && (
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-2.5">
+          <AnimatePresence initial={false}>
+            {entries.map((entry, index) => (
+              <m.div
+                key={entry.id}
+                layout={!reduceMotion}
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={reduceMotion ? undefined : { opacity: 0, scale: 0.94 }}
+                transition={{ duration: 0.18 }}
+              >
+                <PreviewItem
+                  file={entry.file}
+                  index={index}
+                  onRemove={() => removeEntry(entry.id)}
+                />
+              </m.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </div>
@@ -140,82 +114,43 @@ export function ThumbnailUploader({ onFilesChange }: ThumbnailUploaderProps) {
 }
 
 function PreviewItem({
-  src,
+  file,
   index,
   onRemove,
 }: {
-  src: string;
+  file: File;
   index: number;
-  onRemove: (i: number) => void;
+  onRemove: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
+  const [src, setSrc] = useState<string | null>(null);
+
+  // One object URL per file, revoked exactly once on cleanup.
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
 
   return (
-    <div
-      style={{ position: "relative", aspectRatio: "16 / 9" }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          borderRadius: "3px",
-          overflow: "hidden",
-          border: "1px solid var(--line)",
-        }}
-      >
-        <Image
-          src={src}
-          alt={`Option ${index + 1}`}
-          fill
-          style={{ objectFit: "cover" }}
-        />
+    <div className="group relative aspect-video">
+      <div className="absolute inset-0 overflow-hidden rounded-sm border border-line">
+        {src && <Image src={src} alt={`Option ${index + 1}`} fill className="object-cover" />}
       </div>
 
       {/* Index label */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: "5px",
-          left: "6px",
-          fontFamily: "JetBrains Mono, monospace",
-          fontSize: "9px",
-          color: "var(--text-3)",
-          letterSpacing: "0.04em",
-          background: "rgba(12,12,14,0.7)",
-          padding: "2px 5px",
-          borderRadius: "2px",
-        }}
-      >
+      <span className="absolute bottom-1 left-1.5 rounded-xs bg-ink/70 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.04em] text-lo">
         {index + 1}
-      </div>
+      </span>
 
-      {/* Remove button — appears on hover */}
-      {hovered && (
-        <button
-          type="button"
-          onClick={() => onRemove(index)}
-          style={{
-            position: "absolute",
-            top: "5px",
-            right: "5px",
-            width: "20px",
-            height: "20px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "var(--ink)",
-            border: "1px solid var(--line)",
-            borderRadius: "3px",
-            cursor: "pointer",
-            color: "var(--text-2)",
-            padding: 0,
-          }}
-        >
-          <X size={11} />
-        </button>
-      )}
+      {/* Remove button — appears on hover / keyboard focus */}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove option ${index + 1}`}
+        className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-sm border border-line bg-ink text-lo opacity-0 transition-opacity duration-150 hover:text-hi focus-visible:opacity-100 group-hover:opacity-100"
+      >
+        <X size={11} />
+      </button>
     </div>
   );
 }

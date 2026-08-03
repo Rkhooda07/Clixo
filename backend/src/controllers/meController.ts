@@ -39,6 +39,7 @@ export const getMyTasks = async (req: Request, res: Response) => {
     const formatted = tasks.map(task => ({
       id: task.id,
       title: task.title,
+      description: task.description,
       status: task.status,
       budget: task.budget,
       fundedAmount: task.fundedAmount,

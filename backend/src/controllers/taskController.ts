@@ -45,12 +45,16 @@ export async function createTask(req: Request, res: Response) {
     }
 
     // Destructure data
-    const { title, signature, amount, budget, deadline, options } = req.body;
+    const { title, description, signature, amount, budget, deadline, options } = req.body;
 
     // Create task and related options in a single txn
     const task = await prisma.task.create({
       data: {
         title,
+        description:
+          typeof description === "string" && description.trim().length > 0
+            ? description.trim()
+            : null,
         signature: signature || null,
         amount: amount || null,
         budget,

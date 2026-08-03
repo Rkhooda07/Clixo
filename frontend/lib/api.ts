@@ -35,6 +35,7 @@ export const taskApi = {
     api.get<Task>(`/tasks/${id}`).then((r) => r.data),
   create: (payload: {
     title: string;
+    description?: string;
     budget: number;
     deadline: string;
     options: { ipfs_cid: string; gateway_url: string; ipfs_uri?: string }[];

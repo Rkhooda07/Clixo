@@ -8,6 +8,7 @@ export type IncomingOption = {
 
 export type createTaskBody = {
   title: String,
+  description?: string,
   signature: String,
   amount: String,
   options: IncomingOption[];
@@ -28,6 +29,15 @@ export function validateCreateTaskBody(body: any) {
     errors.push("Title is required and must be a non-empty string");
   } else if (body.title.trim().length > 200) {
     errors.push("Title must be 200 characters or fewer.");
+  }
+
+  // Description checks (optional)
+  if ("description" in body && body.description != null) {
+    if (typeof body.description !== "string") {
+      errors.push("description, if present, must be a string.");
+    } else if (body.description.trim().length > 500) {
+      errors.push("description must be 500 characters or fewer.");
+    }
   }
 
   // Signature checks (optional coz user will pay after creating task draft)
