@@ -1,19 +1,31 @@
 "use client";
 
 import React, { useState } from "react";
+import { Check, Link2 } from "lucide-react";
 import { Task } from "@/types";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { StatBlock } from "@/components/ui/StatBlock";
+import { cn } from "@/lib/utils";
 
 interface TaskDetailHeaderProps {
   task: Task;
   isOwner: boolean;
 }
 
-const mono = "JetBrains Mono, monospace";
-const geist = "Geist, system-ui, sans-serif";
+function formatDate(date: string | null | undefined) {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export function TaskDetailHeader({ task }: TaskDetailHeaderProps) {
   const [shareCopied, setShareCopied] = useState(false);
-  const [shareHovered, setShareHovered] = useState(false);
 
   const isCompleted =
     task.status === "COMPLETED" || task.status === "CLOSED" || task.status === "SETTLED";
@@ -29,163 +41,50 @@ export function TaskDetailHeader({ task }: TaskDetailHeaderProps) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+    <div className="flex flex-col gap-5">
 
       {/* Top row: eyebrow + title, actions */}
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "16px" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px", flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span
-              style={{
-                fontFamily: mono,
-                fontSize: "10px",
-                color: "var(--text-3)",
-                letterSpacing: "0.08em",
-              }}
-            >
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <div className="flex items-center gap-3">
+            <span className="font-mono text-[10px] tracking-[0.08em] text-dim">
               TASK #{task.id}
             </span>
-            <span
-              style={{
-                fontFamily: mono,
-                fontSize: "11px",
-                color: isOpen ? "var(--green)" : "var(--text-3)",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {isOpen ? "OPEN" : isCompleted ? "CLOSED" : task.status}
-            </span>
+            <Badge variant={isOpen ? "green" : "default"}>
+              {isOpen ? "Open" : isCompleted ? "Closed" : task.status}
+            </Badge>
           </div>
-          <h1
-            style={{
-              fontFamily: geist,
-              fontSize: "22px",
-              fontWeight: 500,
-              color: "var(--text-1)",
-              letterSpacing: "-0.02em",
-              lineHeight: 1.3,
-              margin: 0,
-            }}
-          >
-            {task.title}
-          </h1>
+          <h1 className="m-0 text-[22px] leading-[1.3]">{task.title}</h1>
+          {task.description && (
+            <p className="m-0 text-[13px] leading-relaxed text-lo">
+              {task.description}
+            </p>
+          )}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-          <button
-            onClick={handleShare}
-            onMouseEnter={() => setShareHovered(true)}
-            onMouseLeave={() => setShareHovered(false)}
-            style={{
-              fontFamily: mono,
-              fontSize: "11px",
-              color: shareCopied ? "var(--green)" : "var(--text-2)",
-              background: "transparent",
-              border: `1px solid ${shareHovered ? "var(--text-3)" : "var(--line)"}`,
-              borderRadius: "5px",
-              padding: "7px 14px",
-              cursor: "pointer",
-              letterSpacing: "0.04em",
-              transition: "border-color 0.1s, color 0.1s",
-            }}
-          >
-            {shareCopied ? "Copied" : "Share Link"}
-          </button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleShare}
+          className={cn("shrink-0", shareCopied && "text-green hover:text-green")}
+        >
+          {shareCopied ? <Check size={14} /> : <Link2 size={14} className="text-lo" />}
+          {shareCopied ? "Copied" : "Share Link"}
+        </Button>
       </div>
 
       {/* Stats row — 2×2 grid on mobile, single row on desktop */}
-      <div
-        className="grid grid-cols-2 md:flex md:items-center"
-        style={{
-          gap: "20px",
-          borderTop: "1px solid var(--line)",
-          paddingTop: "16px",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: "10px",
-              color: "var(--text-3)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            Reward
-          </span>
-          <span style={{ fontFamily: mono, fontSize: "14px", color: "var(--amber)" }}>
-            Ξ {rewardEth} ETH
-          </span>
-        </div>
-
-        <div className="hidden md:block" style={{ width: "1px", height: "32px", background: "var(--line)" }} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: "10px",
-              color: "var(--text-3)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            Total Contributors
-          </span>
-          <span style={{ fontFamily: mono, fontSize: "14px", color: "var(--text-1)" }}>
-            {task.totalSubmissions || 0}
-          </span>
-        </div>
-
-        <div className="hidden md:block" style={{ width: "1px", height: "32px", background: "var(--line)" }} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: "10px",
-              color: "var(--text-3)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            Deadline
-          </span>
-          <span style={{ fontFamily: mono, fontSize: "14px", color: "var(--text-2)" }}>
-            {task.deadline
-              ? new Date(task.deadline).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })
-              : "—"}
-          </span>
-        </div>
-
-        <div className="hidden md:block" style={{ width: "1px", height: "32px", background: "var(--line)" }} />
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: "10px",
-              color: "var(--text-3)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-            }}
-          >
-            Created
-          </span>
-          <span style={{ fontFamily: mono, fontSize: "14px", color: "var(--text-2)" }}>
-            {new Date(task.createdAt).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
-        </div>
+      <div className="grid grid-cols-2 gap-5 border-t border-line pt-4 md:flex md:items-center">
+        <StatBlock label="Reward" value={`Ξ ${rewardEth} ETH`} accent="amber" />
+        <div className="hidden h-8 w-px bg-line md:block" />
+        <StatBlock label="Total Contributors" value={task.totalSubmissions || 0} />
+        <div className="hidden h-8 w-px bg-line md:block" />
+        <StatBlock
+          label="Deadline"
+          value={task.deadline ? formatDate(task.deadline) : "—"}
+        />
+        <div className="hidden h-8 w-px bg-line md:block" />
+        <StatBlock label="Created" value={formatDate(task.createdAt)} />
       </div>
     </div>
   );

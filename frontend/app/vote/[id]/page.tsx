@@ -4,27 +4,23 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { taskApi, submissionApi, meApi } from "@/lib/api";
-import { Task, TaskStats, Thumbnail } from "@/types";
+import { Task, TaskStats, Thumbnail, WorkerVoteRecord } from "@/types";
 import { ThumbnailGallery } from "@/components/vote/ThumbnailGallery";
 import { AlreadyVoted } from "@/components/vote/AlreadyVoted";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
-import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { useAppStore } from "@/store/useAppStore";
-
-const mono = "JetBrains Mono, monospace";
-const geist = "Geist, system-ui, sans-serif";
-const inter = "Inter, system-ui, sans-serif";
+import { cn } from "@/lib/utils";
 
 export default function VotePage() {
   const params = useParams();
   const router = useRouter();
   const taskId = Number(params.id);
-  const { address } = useAccount();
-  const { userId } = useAppStore();
+  const { userId, token } = useAppStore();
 
   const [task, setTask] = useState<Task | null>(null);
   const [stats, setStats] = useState<TaskStats | null>(null);
@@ -39,10 +35,16 @@ export default function VotePage() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        // No token = not signed in: skip /me/submissions (it would 401) and
+        // treat as "no previous vote".
         const [taskData, statsData, mySubs] = await Promise.all([
           taskApi.getById(taskId),
           taskApi.getStats(taskId),
-          meApi.getSubmissions(),
+          token
+            ? meApi.getSubmissions()
+            : Promise.resolve<{ submissions: WorkerVoteRecord[] }>({
+                submissions: [],
+              }),
         ]);
 
         const previousVote = mySubs.submissions.find(
@@ -71,7 +73,7 @@ export default function VotePage() {
     };
 
     if (taskId) fetchData();
-  }, [taskId, address]);
+  }, [taskId, token]);
 
   const handleVote = async () => {
     if (selectedId === null || isSubmitting) return;
@@ -112,22 +114,8 @@ export default function VotePage() {
   /* ── Loading ──────────────────────────────────────────────────────────── */
   if (isLoading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flex: 1,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: mono,
-            fontSize: "11px",
-            color: "var(--text-3)",
-            letterSpacing: "0.06em",
-          }}
-        >
+      <div className="flex flex-1 items-center justify-center">
+        <span className="font-mono text-[11px] tracking-[0.06em] text-dim">
           Loading...
         </span>
       </div>
@@ -137,17 +125,8 @@ export default function VotePage() {
   /* ── Not found ────────────────────────────────────────────────────────── */
   if (!task) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flex: 1,
-        }}
-      >
-        <p style={{ fontFamily: mono, fontSize: "12px", color: "var(--text-3)" }}>
-          Task not found.
-        </p>
+      <div className="flex flex-1 items-center justify-center">
+        <p className="font-mono text-xs text-dim">Task not found.</p>
       </div>
     );
   }
@@ -169,69 +148,20 @@ export default function VotePage() {
   if (isCompleted) {
     return (
       <WalletGuard>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-            padding: "40px",
-          }}
-        >
-          <div style={{ maxWidth: "480px", textAlign: "center" }}>
-            <div
-              style={{
-                fontFamily: mono,
-                fontSize: "10px",
-                color: "var(--text-3)",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                marginBottom: "20px",
-              }}
-            >
-              Task #{task.id} · Closed
-            </div>
-            <h2
-              style={{
-                fontFamily: geist,
-                fontSize: "24px",
-                fontWeight: 500,
-                color: "var(--text-1)",
-                letterSpacing: "-0.02em",
-                marginBottom: "12px",
-              }}
-            >
-              Voting is Closed
-            </h2>
-            <p
-              style={{
-                fontFamily: "Inter, system-ui, sans-serif",
-                fontSize: "13px",
-                color: "var(--text-2)",
-                lineHeight: 1.6,
-                marginBottom: "28px",
-              }}
-            >
+        <div className="flex flex-1 items-center justify-center p-10">
+          <div className="max-w-[480px] text-center">
+            <div className="eyebrow mb-5">Task #{task.id} · Closed</div>
+            <h2 className="mb-3 text-2xl">Voting is Closed</h2>
+            <p className="mb-7 text-[13px] leading-relaxed text-lo">
               This task has been completed and consensus has been reached. View
               the final standings below.
             </p>
-            <button
+            <Button
+              variant="outline"
               onClick={() => router.push(`/tasks/${taskId}`)}
-              style={{
-                background: "var(--surface-2)",
-                border: "1px solid var(--line)",
-                borderRadius: "5px",
-                color: "var(--text-1)",
-                fontFamily: geist,
-                fontSize: "13px",
-                fontWeight: 500,
-                padding: "10px 24px",
-                cursor: "pointer",
-                letterSpacing: "-0.01em",
-              }}
             >
               View Results →
-            </button>
+            </Button>
           </div>
         </div>
       </WalletGuard>
@@ -242,68 +172,19 @@ export default function VotePage() {
   if (isCreator) {
     return (
       <WalletGuard>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flex: 1,
-            padding: "40px",
-          }}
-        >
-          <div style={{ maxWidth: "480px", textAlign: "center" }}>
-            <div
-              style={{
-                fontFamily: mono,
-                fontSize: "10px",
-                color: "var(--text-3)",
-                letterSpacing: "0.12em",
-                textTransform: "uppercase",
-                marginBottom: "20px",
-              }}
-            >
-              Task #{task.id} · Creator
-            </div>
-            <h2
-              style={{
-                fontFamily: geist,
-                fontSize: "24px",
-                fontWeight: 500,
-                color: "var(--text-1)",
-                letterSpacing: "-0.02em",
-                marginBottom: "12px",
-              }}
-            >
-              You posted this task.
-            </h2>
-            <p
-              style={{
-                fontFamily: "Inter, system-ui, sans-serif",
-                fontSize: "13px",
-                color: "var(--text-2)",
-                lineHeight: 1.6,
-                marginBottom: "28px",
-              }}
-            >
+        <div className="flex flex-1 items-center justify-center p-10">
+          <div className="max-w-[480px] text-center">
+            <div className="eyebrow mb-5">Task #{task.id} · Creator</div>
+            <h2 className="mb-3 text-2xl">You posted this task.</h2>
+            <p className="mb-7 text-[13px] leading-relaxed text-lo">
               Task creators can&apos;t answer their own tasks.
             </p>
-            <button
+            <Button
+              variant="outline"
               onClick={() => router.push(`/tasks/${taskId}`)}
-              style={{
-                background: "var(--surface-2)",
-                border: "1px solid var(--line)",
-                borderRadius: "5px",
-                color: "var(--text-1)",
-                fontFamily: geist,
-                fontSize: "13px",
-                fontWeight: 500,
-                padding: "10px 24px",
-                cursor: "pointer",
-                letterSpacing: "-0.01em",
-              }}
             >
               View Results →
-            </button>
+            </Button>
           </div>
         </div>
       </WalletGuard>
@@ -326,150 +207,56 @@ export default function VotePage() {
   /* ── Shared sub-elements ──────────────────────────────────────────────── */
   const taskContextBlock = (
     <>
-      <div
-        style={{
-          fontFamily: mono,
-          fontSize: "10px",
-          color: "var(--text-3)",
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          marginBottom: "12px",
-        }}
-      >
-        OPEN FOR OPINIONS
-      </div>
+      <div className="eyebrow mb-3">Open for Opinions</div>
 
-      <h1
-        style={{
-          fontFamily: geist,
-          fontSize: "20px",
-          fontWeight: 500,
-          color: "var(--text-1)",
-          letterSpacing: "-0.02em",
-          lineHeight: 1.25,
-          marginBottom: "16px",
-        }}
-      >
-        {task.title}
-      </h1>
+      <h1 className="mb-4 text-xl leading-[1.25]">{task.title}</h1>
 
-      <div
-        style={{
-          height: "1px",
-          background: "var(--line)",
-          marginBottom: "20px",
-        }}
-      />
+      {task.description && (
+        <p className="mb-4 text-[13px] leading-relaxed text-lo">
+          {task.description}
+        </p>
+      )}
 
-      <div
-        style={{
-          fontFamily: mono,
-          fontSize: "10px",
-          color: "var(--text-3)",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          marginBottom: "6px",
-        }}
-      >
-        Reward
-      </div>
-      <div
-        style={{
-          fontFamily: mono,
-          fontSize: "24px",
-          color: "var(--amber)",
-          letterSpacing: "-0.01em",
-          marginBottom: "28px",
-        }}
-      >
+      <div className="mb-5 h-px bg-line" />
+
+      <div className="eyebrow mb-1.5">Reward</div>
+      <div className="mb-7 font-mono text-2xl tracking-[-0.01em] text-amber">
         Ξ {rewardEth} ETH
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          fontFamily: mono,
-          fontSize: "10px",
-          color: "var(--text-3)",
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          marginBottom: "8px",
-        }}
-      >
+      <div className="eyebrow mb-2 flex justify-between">
         <span>Opinions Needed</span>
         <span>
           {votes} / {maxVotes}
         </span>
       </div>
-      <div
-        style={{
-          height: "2px",
-          background: "var(--line)",
-          borderRadius: "1px",
-          overflow: "hidden",
-        }}
-      >
+      <div className="h-0.5 overflow-hidden rounded-[1px] bg-line">
         <div
-          style={{
-            height: "100%",
-            width: `${progressPct}%`,
-            background: "var(--text-2)",
-            transition: "width 0.4s ease-out",
-          }}
+          className="h-full bg-lo transition-[width] duration-300 ease-out"
+          style={{ width: `${progressPct}%` }}
         />
       </div>
     </>
   );
 
   const submitBlock = (
-    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      <button
+    <div className="flex flex-col gap-2.5">
+      <Button
+        variant="primary"
+        size="lg"
+        loading={isSubmitting}
+        disabled={selectedId === null}
         onClick={handleVote}
-        disabled={selectedId === null || isSubmitting}
-        style={{
-          width: "100%",
-          height: "44px",
-          borderRadius: "5px",
-          fontFamily: geist,
-          fontSize: "13px",
-          fontWeight: 600,
-          letterSpacing: "-0.01em",
-          cursor: selectedId === null || isSubmitting ? "not-allowed" : "pointer",
-          transition: "background 150ms, color 150ms, border-color 150ms",
-          border: `1px solid ${selectedId !== null && !isSubmitting ? "var(--text-1)" : "var(--line)"}`,
-          background: selectedId !== null && !isSubmitting ? "var(--text-1)" : "var(--surface-2)",
-          color: selectedId !== null && !isSubmitting ? "var(--ink)" : "var(--text-3)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          pointerEvents: isSubmitting ? "none" : "auto",
-          opacity: isSubmitting ? 0.6 : 1,
-        }}
+        className="w-full"
       >
-        {isSubmitting ? (
-          <>
-            <span className="btn-spinner" />
-            <span>...</span>
-          </>
-        ) : selectedId === null ? (
-          "Select an option to continue"
-        ) : (
-          "Submit Opinion"
-        )}
-      </button>
-      <p
-        style={{
-          fontFamily: mono,
-          fontSize: "10px",
-          color: "var(--text-3)",
-          lineHeight: 1.5,
-          textAlign: "center",
-          margin: 0,
-        }}
-      >
-        Your opinion has been recorded on-chain. You&apos;ll earn ETH when this task closes.
+        {isSubmitting
+          ? "..."
+          : selectedId === null
+            ? "Select an option to continue"
+            : "Submit Opinion"}
+      </Button>
+      <p className="m-0 text-center font-mono text-[10px] leading-normal text-dim">
+        Your opinion is recorded on-chain. You&apos;ll earn ETH when this task closes.
       </p>
     </div>
   );
@@ -481,148 +268,68 @@ export default function VotePage() {
       {/* Desktop layout (md+) ────────────────────────────────────────────── */}
       <div className="hidden md:flex flex-1">
         {/* Left 60%: thumbnail grid */}
-        <div
-          style={{
-            flex: "0 0 60%",
-            padding: "40px",
-            overflowY: "auto",
-            display: "flex",
-            alignItems: "flex-start",
-          }}
-        >
-          <div style={{ width: "100%" }}>
-            <div
-              style={{
-                fontFamily: inter,
-                fontSize: "11px",
-                color: "var(--text-3)",
-                marginBottom: "16px",
-              }}
-            >
-              Select the option you&apos;d choose. Your vote is anonymous and permanent.
-            </div>
-            <ThumbnailGallery
-              options={task.options || []}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-            />
-          </div>
+        <div className="flex-[0_0_60%] overflow-y-auto p-10">
+          <p className="mb-4 text-[11px] text-dim">
+            Select the option you&apos;d choose. Your vote is anonymous and permanent.
+          </p>
+          <ThumbnailGallery
+            options={task.options || []}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+          />
         </div>
 
         {/* Right 40%: context + submit */}
-        <div
-          style={{
-            flex: "0 0 40%",
-            position: "sticky",
-            top: "52px",
-            height: "calc(100dvh - 52px)",
-            background: "var(--surface-1)",
-            borderLeft: "1px solid var(--line)",
-            padding: "32px 24px",
-            display: "flex",
-            flexDirection: "column",
-            overflowY: "auto",
-          }}
-        >
-          <div style={{ flex: 1 }}>{taskContextBlock}</div>
-          <div>{submitBlock}</div>
+        <div className="sticky top-[52px] flex h-[calc(100dvh-52px)] flex-[0_0_40%] flex-col overflow-y-auto border-l border-line bg-surface px-6 py-8">
+          <div className="flex-1">{taskContextBlock}</div>
+          {submitBlock}
         </div>
       </div>
 
       {/* Mobile layout ────────────────────────────────────────────────────── */}
-      <div className="md:hidden" style={{ paddingBottom: "88px" }}>
+      <div className="md:hidden pb-[88px]">
         {/* Accordion: task context */}
-        <div style={{ borderBottom: "1px solid var(--line)" }}>
+        <div className="border-b border-line">
           <button
+            type="button"
+            aria-expanded={contextOpen}
             onClick={() => setContextOpen((v) => !v)}
-            style={{
-              width: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "14px 16px",
-              background: "var(--surface-1)",
-              border: "none",
-              cursor: "pointer",
-              textAlign: "left",
-            }}
+            className="flex w-full cursor-pointer items-center justify-between bg-surface px-4 py-3.5 text-left"
           >
             <div>
-              <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: "10px",
-                  color: "var(--text-3)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  display: "block",
-                  marginBottom: "2px",
-                }}
-              >
+              <span className="eyebrow mb-0.5 block">
                 Task #{task.id} · Ξ {rewardEth} ETH
               </span>
-              <span
-                style={{
-                  fontFamily: geist,
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: "var(--text-1)",
-                  letterSpacing: "-0.02em",
-                }}
-              >
+              <span className="font-display text-sm font-medium tracking-[-0.02em] text-hi">
                 {task.title}
               </span>
             </div>
             <ChevronDown
               size={16}
-              color="var(--text-3)"
-              style={{
-                flexShrink: 0,
-                marginLeft: "12px",
-                transform: contextOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s",
-              }}
+              className={cn(
+                "ml-3 shrink-0 text-dim transition-transform duration-200",
+                contextOpen && "rotate-180"
+              )}
             />
           </button>
 
           {contextOpen && (
-            <div
-              style={{
-                padding: "0 16px 16px",
-                background: "var(--surface-1)",
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: mono,
-                  fontSize: "10px",
-                  color: "var(--text-3)",
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  marginBottom: "8px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
+            <div className="bg-surface px-4 pb-4">
+              {task.description && (
+                <p className="mb-3 text-[13px] leading-relaxed text-lo">
+                  {task.description}
+                </p>
+              )}
+              <div className="eyebrow mb-2 flex justify-between">
                 <span>Opinions Needed</span>
                 <span>
                   {votes} / {maxVotes}
                 </span>
               </div>
-              <div
-                style={{
-                  height: "2px",
-                  background: "var(--line)",
-                  borderRadius: "1px",
-                  overflow: "hidden",
-                }}
-              >
+              <div className="h-0.5 overflow-hidden rounded-[1px] bg-line">
                 <div
-                  style={{
-                    height: "100%",
-                    width: `${progressPct}%`,
-                    background: "var(--text-2)",
-                  }}
+                  className="h-full bg-lo"
+                  style={{ width: `${progressPct}%` }}
                 />
               </div>
             </div>
@@ -630,17 +337,10 @@ export default function VotePage() {
         </div>
 
         {/* Thumbnails */}
-        <PageWrapper style={{ paddingTop: "16px", paddingBottom: "16px" }}>
-          <div
-            style={{
-              fontFamily: inter,
-              fontSize: "11px",
-              color: "var(--text-3)",
-              marginBottom: "16px",
-            }}
-          >
+        <PageWrapper className="pt-4 pb-4">
+          <p className="mb-4 text-[11px] text-dim">
             Select the option you&apos;d choose. Your vote is anonymous and permanent.
-          </div>
+          </p>
           <ThumbnailGallery
             options={task.options || []}
             selectedId={selectedId}
@@ -652,18 +352,7 @@ export default function VotePage() {
       </PageTransition>
 
       {/* Fixed bottom submit — outside PageTransition (position:fixed, not part of stagger) */}
-      <div
-        className="md:hidden"
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: "12px 16px",
-          background: "var(--ink)",
-          borderTop: "1px solid var(--line)",
-        }}
-      >
+      <div className="md:hidden fixed inset-x-0 bottom-0 border-t border-line bg-ink/95 px-4 py-3 backdrop-blur">
         {submitBlock}
       </div>
     </WalletGuard>

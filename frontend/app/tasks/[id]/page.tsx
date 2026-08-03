@@ -1,47 +1,35 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { taskApi } from "@/lib/api";
-import { Task, Thumbnail } from "@/types";
+import { Task, TaskStats, Thumbnail } from "@/types";
 import { TaskDetailHeader } from "@/components/tasks/TaskDetailHeader";
 import { WinnerBanner } from "@/components/tasks/WinnerBanner";
 import { ResultsGrid } from "@/components/tasks/ResultsGrid";
-import { VotesOverTimeChart } from "@/components/tasks/VotesOverTimeChart";
+import { Card } from "@/components/ui/Card";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { PageWrapper } from "@/components/layout/PageWrapper";
+import { useAppStore } from "@/store/useAppStore";
 
-const mono = "JetBrains Mono, monospace";
-
-type TaskStats = {
-  totalSubmissions?: number;
-  winningOption?: number | null;
-  rewardPerWorker?: number;
-  timeSeries?: { date: string; votes: number }[];
-  options?: { optionId: number; votes: number }[];
-};
+// Recharts (~100KB) stays out of the route bundle until the chart renders.
+const VotesOverTimeChart = dynamic(
+  () =>
+    import("@/components/tasks/VotesOverTimeChart").then(
+      (mod) => mod.VotesOverTimeChart
+    ),
+  { ssr: false, loading: () => <Skeleton className="h-[240px]" /> }
+);
 
 function LoadingSkeleton() {
   return (
-    <div
-      style={{
-        padding: "40px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "24px",
-      }}
-    >
-      {[120, 320, 240, 200].map((h, i) => (
-        <div
-          key={i}
-          style={{
-            height: `${h}px`,
-            background: "var(--surface-1)",
-            border: "1px solid var(--line)",
-            borderRadius: "6px",
-          }}
-        />
-      ))}
+    <div className="flex flex-col gap-6 p-10">
+      <Skeleton className="h-[120px] rounded-lg" />
+      <Skeleton className="h-[320px] rounded-lg" />
+      <Skeleton className="h-[240px] rounded-lg" />
+      <Skeleton className="h-[200px] rounded-lg" />
     </div>
   );
 }
@@ -49,6 +37,7 @@ function LoadingSkeleton() {
 export default function TaskDetailPage() {
   const params = useParams();
   const taskId = Number(params.id);
+  const { userId } = useAppStore();
 
   const [task, setTask] = useState<Task | null>(null);
   const [stats, setStats] = useState<TaskStats | null>(null);
@@ -90,21 +79,13 @@ export default function TaskDetailPage() {
 
   if (!task) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flex: 1,
-        }}
-      >
-        <span style={{ fontFamily: mono, fontSize: "11px", color: "var(--text-3)" }}>
-          Task not found.
-        </span>
+      <div className="flex flex-1 items-center justify-center">
+        <span className="font-mono text-[11px] text-dim">Task not found.</span>
       </div>
     );
   }
 
+  const isOwner = task.user_id === userId;
   const isCompleted =
     task.status === "COMPLETED" || task.status === "CLOSED" || task.status === "SETTLED";
   const winningOptionId = stats?.winningOption;
@@ -112,44 +93,29 @@ export default function TaskDetailPage() {
 
   return (
     <PageWrapper>
-    <div style={{ maxWidth: "900px", margin: "0 auto" }}>
-    <PageTransition
-      style={{
-        paddingTop: "40px",
-        paddingBottom: "40px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "32px",
-      }}
-    >
-      <TaskDetailHeader task={task} isOwner={true} />
+      <div className="mx-auto max-w-[900px]">
+        <PageTransition className="flex flex-col gap-8 pt-10 pb-10">
+          <TaskDetailHeader task={task} isOwner={isOwner} />
 
-      {isCompleted && winningOption && (
-        <WinnerBanner
-          winningOption={winningOption}
-          totalVotes={task.totalSubmissions || 0}
-        />
-      )}
+          {isCompleted && winningOption && (
+            <WinnerBanner
+              winningOption={winningOption}
+              totalVotes={task.totalSubmissions || 0}
+            />
+          )}
 
-      {(task.options?.length ?? 0) > 0 && (
-        <div
-          style={{
-            background: "var(--surface-1)",
-            border: "1px solid var(--line)",
-            borderRadius: "6px",
-            overflowX: "auto",
-          }}
-        >
-          <ResultsGrid
-            options={task.options || []}
-            totalVotes={task.totalSubmissions || 0}
-          />
-        </div>
-      )}
+          {(task.options?.length ?? 0) > 0 && (
+            <Card className="overflow-x-auto">
+              <ResultsGrid
+                options={task.options || []}
+                totalVotes={task.totalSubmissions || 0}
+              />
+            </Card>
+          )}
 
-      <VotesOverTimeChart data={stats?.timeSeries || []} />
-    </PageTransition>
-    </div>
+          <VotesOverTimeChart data={stats?.timeSeries || []} />
+        </PageTransition>
+      </div>
     </PageWrapper>
   );
 }

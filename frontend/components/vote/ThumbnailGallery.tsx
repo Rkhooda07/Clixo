@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Image from "next/image";
-import { Thumbnail } from "@/types";
+import { m, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
+import { Thumbnail } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface ThumbnailGalleryProps {
   options: Thumbnail[];
@@ -13,88 +15,64 @@ interface ThumbnailGalleryProps {
 
 function ThumbnailItem({
   option,
+  index,
   isSelected,
   hasAnySelection,
-  onClick,
+  onSelect,
 }: {
   option: Thumbnail;
+  index: number;
   isSelected: boolean;
   hasAnySelection: boolean;
-  onClick: () => void;
+  onSelect: () => void;
 }) {
-  const [hovered, setHovered] = useState(false);
+  const shouldReduce = useReducedMotion();
   const src = option.gateway_url || option.image_url || "";
 
   return (
-    <div
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        position: "relative",
-        aspectRatio: "16 / 9",
-        borderRadius: "3px",
-        overflow: "hidden",
-        border: `1px solid ${
-          isSelected ? "var(--text-1)" : hovered ? "var(--text-3)" : "var(--line)"
-        }`,
-        cursor: "pointer",
-        transition: isSelected ? "none" : "border-color 0.1s",
-        flexShrink: 0,
-      }}
+    <button
+      type="button"
+      role="radio"
+      aria-checked={isSelected}
+      aria-label={`Option ${index + 1}`}
+      onClick={onSelect}
+      className={cn(
+        "group relative aspect-video shrink-0 cursor-pointer overflow-hidden rounded-sm border transition-colors duration-100",
+        isSelected ? "border-hi" : "border-line hover:border-dim"
+      )}
     >
       {src ? (
         <Image
           src={src}
-          alt="Option image"
+          alt=""
           fill
           sizes="(max-width: 768px) 50vw, 30vw"
-          style={{
-            objectFit: "cover",
-            filter: isSelected || hovered || !hasAnySelection ? "brightness(1.0)" : "brightness(0.75)",
-            transition: "filter 150ms ease",
-          }}
+          className={cn(
+            "object-cover transition-[filter] duration-150",
+            hasAnySelection &&
+              !isSelected &&
+              "brightness-75 group-hover:brightness-100"
+          )}
         />
       ) : (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "var(--surface-2)",
-            fontFamily: "JetBrains Mono, monospace",
-            fontSize: "10px",
-            color: "var(--text-3)",
-          }}
-        >
+        <span className="absolute inset-0 flex items-center justify-center bg-raised font-mono text-[10px] text-dim">
           no image
-        </div>
+        </span>
       )}
 
       {/* Selected checkmark — top-left, 16px circle */}
       {isSelected && (
-        <div
-          style={{
-            position: "absolute",
-            top: "6px",
-            left: "6px",
-            width: "16px",
-            height: "16px",
-            borderRadius: "50%",
-            background: "var(--ink)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-          }}
+        <m.span
+          initial={shouldReduce ? false : { scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute top-1.5 left-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-ink"
           aria-hidden="true"
         >
-          <Check size={9} color="var(--text-1)" strokeWidth={3} />
-        </div>
+          <Check size={9} strokeWidth={3} className="text-hi" />
+        </m.span>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -107,16 +85,21 @@ export function ThumbnailGallery({
 
   return (
     <div
-      className={cols === 3 ? "grid grid-cols-2 md:grid-cols-3" : "grid grid-cols-2"}
-      style={{ gap: "8px" }}
+      role="radiogroup"
+      aria-label="Voting options"
+      className={cn(
+        "grid grid-cols-2 gap-2",
+        cols === 3 && "md:grid-cols-3"
+      )}
     >
-      {options.map((option) => (
+      {options.map((option, index) => (
         <ThumbnailItem
           key={option.id}
           option={option}
+          index={index}
           isSelected={selectedId === option.id}
           hasAnySelection={selectedId !== null}
-          onClick={() => onSelect(option.id)}
+          onSelect={() => onSelect(option.id)}
         />
       ))}
     </div>

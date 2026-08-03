@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Task Results — Clixo",
+  title: "Task Results",
 };
 
 export default function TaskResultsLayout({

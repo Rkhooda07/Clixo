@@ -2,8 +2,12 @@
 
 import React from "react";
 import Image from "next/image";
-import { Thumbnail } from "@/types";
+import { m, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
+import { Thumbnail } from "@/types";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { cn } from "@/lib/utils";
 
 interface AlreadyVotedProps {
   votedOption: Thumbnail | undefined;
@@ -11,168 +15,82 @@ interface AlreadyVotedProps {
   totalVotes: number;
 }
 
-const mono = "JetBrains Mono, monospace";
-const geist = "Geist, system-ui, sans-serif";
+function StandingBar({ pct, isMyVote }: { pct: number; isMyVote: boolean }) {
+  const shouldReduce = useReducedMotion();
+  const fillClass = cn("h-full", isMyVote ? "bg-hi" : "bg-dim");
+
+  return (
+    <div className="h-0.5 overflow-hidden rounded-[1px] bg-line">
+      {shouldReduce ? (
+        <div className={fillClass} style={{ width: `${pct}%` }} />
+      ) : (
+        <m.div
+          className={fillClass}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        />
+      )}
+    </div>
+  );
+}
 
 export function AlreadyVoted({
   votedOption,
   options,
   totalVotes,
 }: AlreadyVotedProps) {
-  const votedSrc =
-    votedOption?.gateway_url || votedOption?.image_url || "";
+  const votedSrc = votedOption?.gateway_url || votedOption?.image_url || "";
 
   return (
-    <div
-      style={{
-        maxWidth: "1000px",
-        margin: "0 auto",
-        padding: "48px 24px",
-        display: "flex",
-        flexDirection: "column",
-        gap: "40px",
-      }}
-    >
+    <div className="mx-auto flex w-full max-w-[1000px] flex-col gap-10 px-6 py-12">
       {/* Header */}
       <div>
-        <div
-          style={{
-            fontFamily: mono,
-            fontSize: "10px",
-            color: "var(--text-3)",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            marginBottom: "10px",
-          }}
-        >
-          Opinion Recorded
-        </div>
-        <h2
-          style={{
-            fontFamily: geist,
-            fontSize: "24px",
-            fontWeight: 500,
-            color: "var(--text-1)",
-            letterSpacing: "-0.02em",
-            margin: 0,
-          }}
-        >
+        <div className="eyebrow mb-2.5">Opinion Recorded</div>
+        <h2 className="m-0 text-2xl">
           You&apos;ve already answered this task.
         </h2>
-        <p
-          style={{
-            fontFamily: "Inter, system-ui, sans-serif",
-            fontSize: "13px",
-            color: "var(--text-2)",
-            marginTop: "8px",
-            lineHeight: 1.6,
-          }}
-        >
+        <p className="mt-2 text-[13px] leading-relaxed text-lo">
           You&apos;ll earn ETH once this task closes and opinions are settled.
         </p>
       </div>
 
       {/* Divider */}
-      <div style={{ height: "1px", background: "var(--line)" }} />
+      <div className="h-px bg-line" />
 
       {/* Content: voted image + standings */}
-      <div
-        className="grid grid-cols-1 md:grid-cols-2"
-        style={{ gap: "40px", alignItems: "start" }}
-      >
+      <div className="grid grid-cols-1 items-start gap-10 md:grid-cols-2">
         {/* Your selection */}
         <div>
-          <div
-            style={{
-              fontFamily: mono,
-              fontSize: "10px",
-              color: "var(--text-3)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              marginBottom: "12px",
-            }}
-          >
-            Your Selection
-          </div>
-          <div
-            style={{
-              position: "relative",
-              aspectRatio: "16 / 9",
-              borderRadius: "3px",
-              overflow: "hidden",
-              border: "1px solid var(--text-1)",
-            }}
-          >
+          <div className="eyebrow mb-3">Your Selection</div>
+          <div className="relative aspect-video overflow-hidden rounded-sm border border-hi">
             {votedSrc ? (
               <Image
                 src={votedSrc}
                 alt="Your selected option"
                 fill
                 sizes="50vw"
-                style={{ objectFit: "cover" }}
+                className="object-cover"
               />
             ) : (
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "var(--surface-2)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontFamily: mono,
-                  fontSize: "10px",
-                  color: "var(--text-3)",
-                }}
-              >
+              <span className="absolute inset-0 flex items-center justify-center bg-raised font-mono text-[10px] text-dim">
                 no image
-              </div>
+              </span>
             )}
             {/* Voted badge */}
-            <div
-              style={{
-                position: "absolute",
-                top: "6px",
-                left: "6px",
-                width: "16px",
-                height: "16px",
-                borderRadius: "50%",
-                background: "var(--ink)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+            <span
+              className="absolute top-1.5 left-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-ink"
+              aria-hidden="true"
             >
-              <Check size={9} color="var(--text-1)" strokeWidth={3} />
-            </div>
+              <Check size={9} strokeWidth={3} className="text-hi" />
+            </span>
           </div>
         </div>
 
         {/* Current standings */}
         <div>
-          <div
-            style={{
-              fontFamily: mono,
-              fontSize: "10px",
-              color: "var(--text-3)",
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
-              marginBottom: "16px",
-            }}
-          >
-            Current Standings
-          </div>
-          <div
-            style={{
-              background: "var(--surface-1)",
-              border: "1px solid var(--line)",
-              borderRadius: "5px",
-              padding: "16px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "16px",
-            }}
-          >
+          <div className="eyebrow mb-4">Current Standings</div>
+          <Card className="flex flex-col gap-4 p-4">
             {options.map((opt, i) => {
               const pct =
                 totalVotes > 0
@@ -182,87 +100,38 @@ export function AlreadyVoted({
 
               return (
                 <div key={opt.id}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginBottom: "6px",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: mono,
-                        fontSize: "10px",
-                        color: isMyVote ? "var(--text-1)" : "var(--text-3)",
-                        letterSpacing: "0.04em",
-                      }}
-                    >
-                      Option {String.fromCharCode(65 + i)}
-                      {isMyVote && " ·  your pick"}
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "font-mono text-[10px] tracking-[0.04em]",
+                          isMyVote ? "text-hi" : "text-dim"
+                        )}
+                      >
+                        Option {String.fromCharCode(65 + i)}
+                      </span>
+                      {isMyVote && <Badge>Your pick</Badge>}
                     </span>
                     <span
-                      style={{
-                        fontFamily: mono,
-                        fontSize: "11px",
-                        color: isMyVote ? "var(--text-1)" : "var(--text-3)",
-                      }}
+                      className={cn(
+                        "font-mono text-[11px]",
+                        isMyVote ? "text-hi" : "text-dim"
+                      )}
                     >
                       {pct}%
                     </span>
                   </div>
-                  <div
-                    style={{
-                      height: "2px",
-                      background: "var(--line)",
-                      borderRadius: "1px",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${pct}%`,
-                        background: isMyVote ? "var(--text-1)" : "var(--text-3)",
-                        transition: "width 0.5s ease-out",
-                      }}
-                    />
-                  </div>
+                  <StandingBar pct={pct} isMyVote={isMyVote} />
                 </div>
               );
             })}
 
             {/* Totals */}
-            <div
-              style={{
-                paddingTop: "12px",
-                borderTop: "1px solid var(--line)",
-                display: "flex",
-                justifyContent: "space-between",
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: "10px",
-                  color: "var(--text-3)",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                }}
-              >
-                Total opinions
-              </span>
-              <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: "11px",
-                  color: "var(--text-2)",
-                }}
-              >
-                {totalVotes}
-              </span>
+            <div className="flex justify-between border-t border-line pt-3">
+              <span className="eyebrow tracking-[0.08em]">Total opinions</span>
+              <span className="font-mono text-[11px] text-lo">{totalVotes}</span>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

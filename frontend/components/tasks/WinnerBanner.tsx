@@ -2,79 +2,48 @@
 
 import React from "react";
 import Image from "next/image";
+import { Trophy } from "lucide-react";
 import { Thumbnail } from "@/types";
+import { Card } from "@/components/ui/Card";
+import { useCountUp } from "@/hooks/useCountUp";
 
 interface WinnerBannerProps {
   winningOption: Thumbnail;
   totalVotes: number;
 }
 
-const mono = "JetBrains Mono, monospace";
-
 export function WinnerBanner({ winningOption, totalVotes }: WinnerBannerProps) {
   const votes = winningOption.votes || 0;
   const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
   const src = winningOption.gateway_url || winningOption.image_url || "";
 
+  // Counts up on mount; static under prefers-reduced-motion (handled by the hook).
+  const displayPct = useCountUp(pct, true);
+
   return (
-    <div
-      style={{
-        background: "var(--surface-1)",
-        border: "1px solid var(--line)",
-        borderRadius: "6px",
-        padding: "40px",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "20px",
-      }}
-    >
-      <div
-        style={{
-          fontFamily: mono,
-          fontSize: "10px",
-          color: "var(--text-3)",
-          letterSpacing: "0.15em",
-          textTransform: "uppercase",
-        }}
-      >
-        Top Pick
+    <Card className="flex flex-col items-center gap-5 border-amber/30 p-10 shadow-[0_0_40px_rgba(232,160,32,0.08)]">
+      <div className="flex items-center gap-2">
+        <Trophy size={14} className="text-amber" aria-hidden="true" />
+        <span className="eyebrow tracking-[0.15em]">Top Pick</span>
       </div>
 
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "480px",
-          position: "relative",
-          aspectRatio: "16 / 9",
-          border: "1px solid var(--text-1)",
-          borderRadius: "3px",
-          overflow: "hidden",
-        }}
-      >
+      <div className="relative aspect-video w-full max-w-[480px] overflow-hidden rounded-sm border border-line">
         {src ? (
           <Image
             src={src}
             alt="Winning option"
             fill
             sizes="(max-width: 768px) 100vw, 480px"
-            style={{ objectFit: "cover" }}
+            className="object-cover"
           />
         ) : (
-          <div style={{ width: "100%", height: "100%", background: "var(--surface-2)" }} />
+          <div className="h-full w-full bg-raised" />
         )}
       </div>
 
-      <div
-        style={{
-          fontFamily: mono,
-          fontSize: "13px",
-          color: "var(--amber)",
-          letterSpacing: "0.02em",
-        }}
-      >
-        Ξ {votes} opinions — {pct}%
+      <div className="font-mono text-[13px] tracking-[0.02em] text-amber">
+        {votes} opinions — {displayPct}%
       </div>
-    </div>
+    </Card>
   );
 }

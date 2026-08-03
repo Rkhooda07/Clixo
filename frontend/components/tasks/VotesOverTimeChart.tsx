@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { Card } from "@/components/ui/Card";
 
 interface VotesOverTimeChartProps {
   data: { date: string; votes: number }[];
@@ -21,7 +22,12 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-const mono = "JetBrains Mono, monospace";
+// Recharts tick props are SVG attributes, not classes — CSS var keeps the font tokenized.
+const TICK_STYLE = {
+  fontFamily: "var(--font-jetbrains), monospace",
+  fontSize: 10,
+  fill: "var(--text-3)",
+};
 
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
@@ -36,21 +42,10 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   })();
 
   return (
-    <div
-      style={{
-        background: "var(--surface-2)",
-        border: "1px solid var(--line)",
-        borderRadius: "5px",
-        padding: "8px 12px",
-        fontFamily: mono,
-        fontSize: "12px",
-      }}
-    >
-      <div style={{ color: "var(--text-3)", marginBottom: "4px", fontSize: "10px", letterSpacing: "0.06em" }}>
-        {date}
-      </div>
-      {payload.map((entry: { value: number; color?: string }, i: number) => (
-        <div key={i} style={{ color: entry.color, lineHeight: 1.6 }}>
+    <div className="rounded-md border border-line bg-raised px-3 py-2 font-mono text-xs">
+      <div className="mb-1 text-[10px] tracking-[0.06em] text-dim">{date}</div>
+      {payload.map((entry, i) => (
+        <div key={i} className="leading-relaxed text-hi">
           {entry.value} opinions
         </div>
       ))}
@@ -61,54 +56,19 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 export function VotesOverTimeChart({ data }: VotesOverTimeChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div
-        style={{
-          background: "var(--surface-1)",
-          border: "1px solid var(--line)",
-          borderRadius: "6px",
-          padding: "40px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: mono,
-            fontSize: "11px",
-            color: "var(--text-3)",
-            letterSpacing: "0.06em",
-          }}
-        >
+      <Card className="flex items-center justify-center p-10">
+        <span className="font-mono text-[11px] tracking-[0.06em] text-dim">
           No activity recorded yet.
         </span>
-      </div>
+      </Card>
     );
   }
 
   return (
-    <div
-      style={{
-        background: "var(--surface-1)",
-        border: "1px solid var(--line)",
-        borderRadius: "6px",
-        padding: "24px",
-      }}
-    >
-      <div
-        style={{
-          fontFamily: mono,
-          fontSize: "10px",
-          color: "var(--text-3)",
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          marginBottom: "20px",
-        }}
-      >
-        Opinions Over Time
-      </div>
+    <Card className="p-6">
+      <div className="eyebrow mb-5">Opinions Over Time</div>
 
-      <div style={{ height: "200px" }}>
+      <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
             <CartesianGrid
@@ -120,7 +80,7 @@ export function VotesOverTimeChart({ data }: VotesOverTimeChartProps) {
               dataKey="date"
               tickLine={false}
               axisLine={false}
-              tick={{ fontFamily: mono, fontSize: 10, fill: "var(--text-3)" }}
+              tick={TICK_STYLE}
               tickFormatter={(str) => {
                 try {
                   return new Date(str).toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -132,7 +92,7 @@ export function VotesOverTimeChart({ data }: VotesOverTimeChartProps) {
             <YAxis
               tickLine={false}
               axisLine={false}
-              tick={{ fontFamily: mono, fontSize: 10, fill: "var(--text-3)" }}
+              tick={TICK_STYLE}
               allowDecimals={false}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -147,6 +107,6 @@ export function VotesOverTimeChart({ data }: VotesOverTimeChartProps) {
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 }

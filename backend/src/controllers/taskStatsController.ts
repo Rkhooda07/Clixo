@@ -34,7 +34,7 @@ export const getTaskStats = async(req: Request, res: Response) => {
     // Time-series data: group submissions by date
     const timeSeriesMap: Record<string, number> = {};
     submissions.forEach(sub => {
-      const date = sub.createdAt.toISOString().split('T')[0]; // YYYY-MM-DD
+      const date = sub.createdAt.toISOString().slice(0, 10); // YYYY-MM-DD
       timeSeriesMap[date] = (timeSeriesMap[date] || 0) + 1;
     });
 

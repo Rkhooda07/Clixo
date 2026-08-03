@@ -55,10 +55,13 @@ export const getTasksById = async (req: Request, res: Response) => {
     return res.json({
       id: task.id,
       title: task.title,
+      description: task.description,
+      user_id: task.user_id,
       status: task.status,
       budget: task.budget,
       fundedAmount: task.fundedAmount,
       deadline: task.deadline,
+      createdAt: task.createdAt,
       options: task.options.map((opt) => ({
         id: opt.id,
         image_url: opt.image_url,
