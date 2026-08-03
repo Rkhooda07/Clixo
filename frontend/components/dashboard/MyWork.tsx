@@ -214,7 +214,7 @@ export function MyWork({ submissions, isLoading }: MyWorkProps) {
                 color: "var(--text-3)",
               }}
             >
-              You haven't answered any tasks yet.{" "}
+              You haven&apos;t answered any tasks yet.{" "}
               <Link
                 href="/browse"
                 style={{ color: "var(--text-2)", textDecoration: "none" }}

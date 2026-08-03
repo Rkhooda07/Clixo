@@ -57,7 +57,7 @@ export function AlreadyVoted({
             margin: 0,
           }}
         >
-          You've already answered this task.
+          You&apos;ve already answered this task.
         </h2>
         <p
           style={{
@@ -68,7 +68,7 @@ export function AlreadyVoted({
             lineHeight: 1.6,
           }}
         >
-          You'll earn ETH once this task closes and opinions are settled.
+          You&apos;ll earn ETH once this task closes and opinions are settled.
         </p>
       </div>
 

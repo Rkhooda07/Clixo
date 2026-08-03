@@ -202,7 +202,7 @@ export function MyTasks({ tasks, isLoading }: MyTasksProps) {
                 color: "var(--text-3)",
               }}
             >
-              You haven't posted any tasks yet.{" "}
+              You haven&apos;t posted any tasks yet.{" "}
               <Link
                 href="/create-task"
                 style={{ color: "var(--text-2)", textDecoration: "none" }}

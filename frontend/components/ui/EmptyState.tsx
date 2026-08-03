@@ -1,42 +1,48 @@
-"use client";
-
 import React from "react";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
+import { buttonVariants } from "./Button";
 
 interface EmptyStateProps {
   message: string;
+  detail?: string;
+  icon?: React.ReactNode;
   action?: { label: string; href: string };
+  className?: string;
 }
 
-const mono = "JetBrains Mono, monospace";
-const inter = "Inter, system-ui, sans-serif";
-
-export function EmptyState({ message, action }: EmptyStateProps) {
+export function EmptyState({
+  message,
+  detail,
+  icon,
+  action,
+  className,
+}: EmptyStateProps) {
   return (
     <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "8px",
-        padding: "48px 24px",
-        fontFamily: mono,
-        fontSize: "11px",
-        color: "var(--text-3)",
-      }}
+      className={cn(
+        "flex flex-col items-center justify-center gap-3 px-6 py-12 text-center border border-dashed border-line rounded-lg",
+        className
+      )}
     >
-      <span>{message}</span>
+      {icon && (
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-raised text-dim">
+          {icon}
+        </div>
+      )}
+      <div className="flex flex-col gap-1">
+        <div className="text-[13px] text-hi font-display font-medium">
+          {message}
+        </div>
+        {detail && <div className="text-xs text-lo max-w-[320px]">{detail}</div>}
+      </div>
       {action && (
-        <a
+        <Link
           href={action.href}
-          style={{
-            fontFamily: inter,
-            fontSize: "13px",
-            color: "var(--text-2)",
-            textDecoration: "none",
-          }}
+          className={buttonVariants({ variant: "outline", size: "sm", className: "mt-1" })}
         >
           {action.label} →
-        </a>
+        </Link>
       )}
     </div>
   );

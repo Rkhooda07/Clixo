@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { taskApi, submissionApi, meApi } from "@/lib/api";
-import { Task, Thumbnail } from "@/types";
+import { Task, TaskStats, Thumbnail } from "@/types";
 import { ThumbnailGallery } from "@/components/vote/ThumbnailGallery";
 import { AlreadyVoted } from "@/components/vote/AlreadyVoted";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
@@ -26,7 +27,7 @@ export default function VotePage() {
   const { userId } = useAppStore();
 
   const [task, setTask] = useState<Task | null>(null);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<TaskStats | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [votedOptionId, setVotedOptionId] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -45,7 +46,7 @@ export default function VotePage() {
         ]);
 
         const previousVote = mySubs.submissions.find(
-          (s: any) => s.taskId === taskId,
+          (s) => s.taskId === taskId,
         );
         if (previousVote) {
           setHasVoted(true);
@@ -54,7 +55,7 @@ export default function VotePage() {
 
         const updatedOptions = taskData.options?.map((opt: Thumbnail) => {
           const optStat = statsData.options.find(
-            (s: any) => s.optionId === opt.id,
+            (s) => s.optionId === opt.id,
           );
           return { ...opt, votes: optStat ? optStat.votes : 0 };
         });
@@ -86,14 +87,17 @@ export default function VotePage() {
       if (task?.options) {
         const updatedOptions = task.options.map((opt) => {
           const optStat = statsData.options.find(
-            (s: any) => s.optionId === opt.id,
+            (s) => s.optionId === opt.id,
           );
           return { ...opt, votes: optStat ? optStat.votes : 0 };
         });
         setTask({ ...task, options: updatedOptions });
       }
-    } catch (err: any) {
-      let errMsg = err.response?.data?.message || "Failed to submit opinion";
+    } catch (err) {
+      const apiMessage = axios.isAxiosError(err)
+        ? (err.response?.data as { message?: string } | undefined)?.message
+        : undefined;
+      let errMsg = apiMessage || "Failed to submit opinion";
       if (errMsg === "Task creator cannot vote on their own task.") {
         errMsg = "You posted this task, so you can't answer it.";
       } else if (errMsg === "You've already voted on this task." || errMsg === "Worker has already submitted for this task") {
@@ -113,7 +117,7 @@ export default function VotePage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          minHeight: "calc(100dvh - 52px)",
+          flex: 1,
         }}
       >
         <span
@@ -138,7 +142,7 @@ export default function VotePage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          minHeight: "calc(100dvh - 52px)",
+          flex: 1,
         }}
       >
         <p style={{ fontFamily: mono, fontSize: "12px", color: "var(--text-3)" }}>
@@ -170,7 +174,7 @@ export default function VotePage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: "calc(100dvh - 52px)",
+            flex: 1,
             padding: "40px",
           }}
         >
@@ -243,7 +247,7 @@ export default function VotePage() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            minHeight: "calc(100dvh - 52px)",
+            flex: 1,
             padding: "40px",
           }}
         >
@@ -281,7 +285,7 @@ export default function VotePage() {
                 marginBottom: "28px",
               }}
             >
-              Task creators can't answer their own tasks.
+              Task creators can&apos;t answer their own tasks.
             </p>
             <button
               onClick={() => router.push(`/tasks/${taskId}`)}
@@ -465,7 +469,7 @@ export default function VotePage() {
           margin: 0,
         }}
       >
-        Your opinion has been recorded on-chain. You'll earn ETH when this task closes.
+        Your opinion has been recorded on-chain. You&apos;ll earn ETH when this task closes.
       </p>
     </div>
   );
@@ -473,9 +477,9 @@ export default function VotePage() {
   /* ── Voting UI ────────────────────────────────────────────────────────── */
   return (
     <WalletGuard>
-      <PageTransition>
+      <PageTransition className="flex-1 flex flex-col">
       {/* Desktop layout (md+) ────────────────────────────────────────────── */}
-      <div className="hidden md:flex" style={{ minHeight: "calc(100dvh - 52px)" }}>
+      <div className="hidden md:flex flex-1">
         {/* Left 60%: thumbnail grid */}
         <div
           style={{
@@ -495,7 +499,7 @@ export default function VotePage() {
                 marginBottom: "16px",
               }}
             >
-              Select the option you'd choose. Your vote is anonymous and permanent.
+              Select the option you&apos;d choose. Your vote is anonymous and permanent.
             </div>
             <ThumbnailGallery
               options={task.options || []}
@@ -635,7 +639,7 @@ export default function VotePage() {
               marginBottom: "16px",
             }}
           >
-            Select the option you'd choose. Your vote is anonymous and permanent.
+            Select the option you&apos;d choose. Your vote is anonymous and permanent.
           </div>
           <ThumbnailGallery
             options={task.options || []}

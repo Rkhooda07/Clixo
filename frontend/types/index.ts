@@ -39,19 +39,18 @@ export interface WorkerVoteRecord {
   earnedEth?: string; // UI derived/aggregated value
 }
 
+export interface TaskStats {
+  taskId: number;
+  status: TaskStatus;
+  totalSubmissions: number;
+  options: { optionId: number; votes: number }[];
+  timeSeries: { date: string; votes: number }[];
+  winningOption: number | null;
+  rewardPerWorker: number;
+}
+
 export interface PlatformStats {
   totalTasks: number;
   totalEthDistributed: string;
-  totalWorkers: number;
-}
-
-export interface CreateTaskPayload {
-  title: string;
-  budget: number;
-  deadline: string;
-  options: {
-    ipfs_cid: string;
-    gateway_url: string;
-    ipfs_uri?: string;
-  }[];
+  totalOpinions: number;
 }

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Task, TaskStatus, WorkerVoteRecord, PlatformStats } from "@/types";
+import { Task, TaskStats, TaskStatus, WorkerVoteRecord, PlatformStats } from "@/types";
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api",
@@ -43,7 +43,9 @@ export const taskApi = {
   fund: (id: number, txHash: string) =>
     api.post(`/tasks/${id}/fund`, { txHash }).then((r) => r.data),
   getStats: (id: number) =>
-    api.get(`/tasks/${id}/stats`).then((r) => r.data),
+    api
+      .get<TaskStats>(`/tasks/${id}/stats`)
+      .then((r) => r.data),
 };
 
 export const uploadApi = {
@@ -147,26 +149,19 @@ export const meApi = {
     api.get<{ fundings: { credits: number; source: string; txHash: string | null; createdAt: string }[] }>("/me/funding-history").then((r) => r.data),
 };
 
-// Platform-wide stats (calculated in frontend based on tasks or mocked for home page)
+// Platform-wide stats derived from the public task list.
+// ponytail: client-side aggregation; move to a backend /stats endpoint if the task list grows.
 export const statsApi = {
   get: async (): Promise<PlatformStats> => {
-    // Dynamically calculate from available active tasks
-    try {
-      const data = await taskApi.getAll();
-      const totalTasks = data.tasks.length;
-      const completedTasks = data.tasks.filter((t) => t.status === "COMPLETED" || t.status === "CLOSED" || t.status === "SETTLED");
-      const totalEth = completedTasks.reduce((acc, t) => acc + (t.budget * 0.001), 0);
-      return {
-        totalTasks,
-        totalEthDistributed: totalEth.toFixed(3),
-        totalWorkers: totalTasks * 3 + 2, // approximation
-      };
-    } catch {
-      return {
-        totalTasks: 3,
-        totalEthDistributed: "0.012",
-        totalWorkers: 5,
-      };
-    }
+    const data = await taskApi.getAll();
+    const completedTasks = data.tasks.filter(
+      (t) => t.status === "COMPLETED" || t.status === "CLOSED" || t.status === "SETTLED"
+    );
+    const totalEth = completedTasks.reduce((acc, t) => acc + t.budget * 0.001, 0);
+    return {
+      totalTasks: data.tasks.length,
+      totalEthDistributed: totalEth.toFixed(3),
+      totalOpinions: data.tasks.reduce((acc, t) => acc + (t.totalSubmissions ?? 0), 0),
+    };
   },
 };

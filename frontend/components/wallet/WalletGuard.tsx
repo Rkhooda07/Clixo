@@ -4,10 +4,6 @@ import React from "react";
 import { useWalletUser } from "@/hooks/useWalletUser";
 import { ConnectButton } from "./ConnectButton";
 
-const mono = "JetBrains Mono, monospace";
-const geist = "Geist, system-ui, sans-serif";
-const inter = "Inter, system-ui, sans-serif";
-
 function AuthPrompt({
   title,
   body,
@@ -18,62 +14,13 @@ function AuthPrompt({
   children?: React.ReactNode;
 }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flex: 1,
-        minHeight: "calc(100dvh - 52px)",
-        padding: "40px",
-      }}
-    >
-      <div style={{ maxWidth: "400px", width: "100%" }}>
-        <div
-          style={{
-            fontFamily: mono,
-            fontSize: "10px",
-            color: "var(--text-3)",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
-            marginBottom: "16px",
-          }}
-        >
-          Authentication Required
-        </div>
-        <h2
-          style={{
-            fontFamily: geist,
-            fontSize: "22px",
-            fontWeight: 500,
-            color: "var(--text-1)",
-            letterSpacing: "-0.02em",
-            marginBottom: "10px",
-          }}
-        >
-          {title}
-        </h2>
-        <p
-          style={{
-            fontFamily: inter,
-            fontSize: "13px",
-            color: "var(--text-2)",
-            lineHeight: 1.6,
-            marginBottom: "28px",
-          }}
-        >
-          {body}
-        </p>
+    <div className="flex flex-1 items-center justify-center p-10">
+      <div className="w-full max-w-[400px]">
+        <div className="eyebrow mb-4">Authentication Required</div>
+        <h2 className="text-[22px] mb-2.5">{title}</h2>
+        <p className="text-[13px] text-lo leading-relaxed mb-7">{body}</p>
         {children}
-        <p
-          style={{
-            fontFamily: mono,
-            fontSize: "10px",
-            color: "var(--text-3)",
-            marginTop: "16px",
-            lineHeight: 1.5,
-          }}
-        >
+        <p className="font-mono text-[10px] text-dim mt-4 leading-normal">
           One wallet = one account. No passwords.
         </p>
       </div>
@@ -82,27 +29,12 @@ function AuthPrompt({
 }
 
 export function WalletGuard({ children }: { children: React.ReactNode }) {
-  const { isConnected, token, isInitializing, address } = useWalletUser();
+  const { isConnected, token, isInitializing } = useWalletUser();
 
   if (isInitializing) {
     return (
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flex: 1,
-          minHeight: "calc(100dvh - 52px)",
-        }}
-      >
-        <span
-          style={{
-            fontFamily: mono,
-            fontSize: "11px",
-            color: "var(--text-3)",
-            letterSpacing: "0.06em",
-          }}
-        >
+      <div className="flex flex-1 items-center justify-center">
+        <span className="font-mono text-[11px] text-dim tracking-[0.06em]">
           Initializing...
         </span>
       </div>
@@ -124,7 +56,7 @@ export function WalletGuard({ children }: { children: React.ReactNode }) {
     return (
       <AuthPrompt
         title="Reconnecting wallet..."
-        body={`We found an active session. Waiting for your wallet provider to reconnect.`}
+        body="We found an active session. Waiting for your wallet provider to reconnect."
       >
         <ConnectButton />
       </AuthPrompt>

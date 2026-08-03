@@ -96,7 +96,6 @@ export default function TaskDetailPage() {
           alignItems: "center",
           justifyContent: "center",
           flex: 1,
-          minHeight: "calc(100dvh - 52px)",
         }}
       >
         <span style={{ fontFamily: mono, fontSize: "11px", color: "var(--text-3)" }}>

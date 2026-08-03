@@ -2,48 +2,12 @@
 
 import { useEffect, useState, useRef } from "react";
 import { statsApi } from "@/lib/api";
+import type { PlatformStats } from "@/types";
 
-function useCountUp(target: number, started: boolean, duration = 1200) {
-  const [value, setValue] = useState(0);
-  const raf = useRef<number>(0);
-
-  useEffect(() => {
-    if (!started || target === 0) return;
-
-    const prefersReduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (prefersReduced) {
-      setValue(target);
-      return;
-    }
-
-    cancelAnimationFrame(raf.current);
-    let start: number | null = null;
-
-    function easeOut(t: number) {
-      return 1 - Math.pow(1 - t, 3);
-    }
-
-    function step(ts: number) {
-      if (start === null) start = ts;
-      const t = Math.min((ts - start) / duration, 1);
-      setValue(Math.round(target * easeOut(t)));
-      if (t < 1) raf.current = requestAnimationFrame(step);
-    }
-
-    raf.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf.current);
-  }, [target, duration, started]);
-
-  return value;
-}
-
-function useCountUpFloat(
+function useCountUp(
   target: number,
   started: boolean,
-  decimals = 1,
+  decimals = 0,
   duration = 1200
 ) {
   const [value, setValue] = useState(0);
@@ -71,7 +35,8 @@ function useCountUpFloat(
     function step(ts: number) {
       if (start === null) start = ts;
       const t = Math.min((ts - start) / duration, 1);
-      setValue(parseFloat((target * easeOut(t)).toFixed(decimals)));
+      const eased = target * easeOut(t);
+      setValue(decimals === 0 ? Math.round(eased) : parseFloat(eased.toFixed(decimals)));
       if (t < 1) raf.current = requestAnimationFrame(step);
     }
 
@@ -82,26 +47,14 @@ function useCountUpFloat(
   return value;
 }
 
-const divider: React.CSSProperties = {
-  width: "1px",
-  height: "10px",
-  background: "var(--line)",
-  margin: "0 20px",
-  flexShrink: 0,
-};
-
-const statStyle: React.CSSProperties = {
-  fontFamily: "JetBrains Mono, monospace",
-  fontSize: "10px",
-  color: "var(--text-3)",
-  letterSpacing: "0.02em",
-  whiteSpace: "nowrap",
-};
+function Divider() {
+  return (
+    <span className="w-px h-2.5 bg-line mx-5 shrink-0" aria-hidden="true" />
+  );
+}
 
 export function LiveStats() {
-  const [tasks, setTasks] = useState(0);
-  const [eth, setEth] = useState(0);
-  const [workers, setWorkers] = useState(0);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
   const [started, setStarted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -110,12 +63,9 @@ export function LiveStats() {
     statsApi
       .get()
       .then((s) => {
-        if (!active) return;
-        setTasks(s.totalTasks);
-        setEth(parseFloat(s.totalEthDistributed));
-        setWorkers(s.totalWorkers);
+        if (active) setStats(s);
       })
-      .catch(console.error);
+      .catch(() => {});
     return () => {
       active = false;
     };
@@ -139,20 +89,28 @@ export function LiveStats() {
     return () => observer.disconnect();
   }, []);
 
-  const animTasks = useCountUp(tasks, started);
-  const animEth = useCountUpFloat(eth, started);
-  const animWorkers = useCountUp(workers, started);
+  const animTasks = useCountUp(stats?.totalTasks ?? 0, started);
+  const animEth = useCountUp(
+    stats ? parseFloat(stats.totalEthDistributed) : 0,
+    started,
+    3
+  );
+  const animOpinions = useCountUp(stats?.totalOpinions ?? 0, started);
 
   return (
     <div
       ref={containerRef}
-      style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "10px 0" }}
+      className="flex items-center flex-wrap gap-y-2.5 font-mono text-[10px] text-dim tracking-[0.02em] whitespace-nowrap min-h-[15px]"
     >
-      <span style={statStyle}>{animTasks.toLocaleString()} tasks posted</span>
-      <span style={divider} aria-hidden="true" />
-      <span style={statStyle}>{animEth.toFixed(1)} ETH paid out</span>
-      <span style={divider} aria-hidden="true" />
-      <span style={statStyle}>{animWorkers.toLocaleString()} contributors</span>
+      {stats && (
+        <>
+          <span>{animTasks.toLocaleString()} tasks posted</span>
+          <Divider />
+          <span>{animEth.toFixed(3)} ETH paid out</span>
+          <Divider />
+          <span>{animOpinions.toLocaleString()} opinions collected</span>
+        </>
+      )}
     </div>
   );
 }

@@ -47,9 +47,9 @@ function DashboardContent() {
     enabled: !!address,
   });
 
-  const rawTasks = tasksData?.tasks || [];
   const tasks = React.useMemo(() => {
-    return rawTasks.map((t: any) => ({
+    const rawTasks = tasksData?.tasks || [];
+    return rawTasks.map((t) => ({
       ...t,
       createdAt: t.createdAt ?? new Date().toISOString(),
       updatedAt: t.updatedAt ?? new Date().toISOString(),
@@ -57,7 +57,7 @@ function DashboardContent() {
       signature: t.signature ?? null,
       amount: t.amount ?? null,
     }));
-  }, [rawTasks]);
+  }, [tasksData]);
 
   const submissions = subsData?.submissions || [];
   const earnings = earningsData || { pending: 0, locked: 0, totalEarned: 0 };

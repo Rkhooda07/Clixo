@@ -10,9 +10,8 @@ interface TaskDetailHeaderProps {
 
 const mono = "JetBrains Mono, monospace";
 const geist = "Geist, system-ui, sans-serif";
-const inter = "Inter, system-ui, sans-serif";
 
-export function TaskDetailHeader({ task, isOwner }: TaskDetailHeaderProps) {
+export function TaskDetailHeader({ task }: TaskDetailHeaderProps) {
   const [shareCopied, setShareCopied] = useState(false);
   const [shareHovered, setShareHovered] = useState(false);
 
