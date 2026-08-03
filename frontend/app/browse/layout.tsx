@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Browse Tasks — Clixo",
+  title: "Browse Tasks",
 };
 
 export default function BrowseLayout({

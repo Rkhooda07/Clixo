@@ -1,9 +1,9 @@
-"use client";
-
-import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Task } from "@/types";
+import { Card } from "@/components/ui/Card";
+import { Badge } from "@/components/ui/Badge";
+import { buttonVariants } from "@/components/ui/buttonVariants";
 
 interface TaskCardProps {
   task: Task;
@@ -12,9 +12,6 @@ interface TaskCardProps {
   earnedEth?: string;
   optionPickedImage?: string;
 }
-
-const mono = "JetBrains Mono, monospace";
-const geist = "Geist, system-ui, sans-serif";
 
 function ActionButton({
   href,
@@ -25,35 +22,24 @@ function ActionButton({
   label: string;
   disabled?: boolean;
 }) {
-  const [hovered, setHovered] = useState(false);
-
-  const base: React.CSSProperties = {
-    display: "block",
-    textAlign: "center",
-    padding: "9px 0",
-    fontFamily: disabled ? mono : geist,
-    fontSize: "13px",
-    fontWeight: 500,
-    color: disabled ? "var(--green)" : "var(--text-1)",
-    background: "var(--surface-2)",
-    border: `1px solid ${hovered && !disabled ? "var(--text-3)" : "var(--line)"}`,
-    borderRadius: "5px",
-    textDecoration: "none",
-    transition: "border-color 0.1s",
-    letterSpacing: "-0.01em",
-    cursor: disabled ? "default" : "pointer",
-  };
-
   if (disabled) {
-    return <div style={base}>{label}</div>;
+    return (
+      <div
+        className={buttonVariants({
+          variant: "ghost",
+          className:
+            "w-full font-mono text-green opacity-50 cursor-default pointer-events-none",
+        })}
+      >
+        {label}
+      </div>
+    );
   }
 
   return (
     <Link
       href={href}
-      style={base}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className={buttonVariants({ variant: "outline", className: "w-full" })}
     >
       {label}
     </Link>
@@ -67,8 +53,6 @@ export function TaskCard({
   earnedEth,
   optionPickedImage,
 }: TaskCardProps) {
-  const [hovered, setHovered] = useState(false);
-
   const isOpen =
     task.status === "ACTIVE" || task.status === "CREATED";
   const isCompleted =
@@ -88,172 +72,64 @@ export function TaskCard({
       : task.options?.[0]?.gateway_url ?? null;
 
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: "var(--surface-1)",
-        border: `1px solid ${hovered ? "var(--text-3)" : "var(--line)"}`,
-        borderRadius: "6px",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        transition: "border-color 0.1s",
-      }}
-    >
+    <Card interactive className="group flex flex-col overflow-hidden">
       {/* ── Thumbnail image ───────────────────────────────────────────── */}
-      <div
-        style={{
-          position: "relative",
-          aspectRatio: "16 / 9",
-          background: "var(--surface-2)",
-          flexShrink: 0,
-        }}
-      >
+      <div className="relative aspect-video bg-raised shrink-0 overflow-hidden">
         {thumbnailSrc ? (
           <Image
             src={thumbnailSrc}
             alt={task.title}
             fill
             sizes="(max-width: 768px) 100vw, 33vw"
-            style={{ objectFit: "cover" }}
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
           />
         ) : (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontFamily: mono,
-              fontSize: "11px",
-              color: "var(--text-3)",
-            }}
-          >
+          <div className="absolute inset-0 flex items-center justify-center font-mono text-[11px] text-dim">
             no preview
           </div>
         )}
 
         {/* Options count badge — top right */}
         {optionCount > 0 && (
-          <div
-            style={{
-              position: "absolute",
-              top: "8px",
-              right: "8px",
-              background: "rgba(12, 12, 14, 0.70)",
-              borderRadius: "3px",
-              padding: "3px 7px",
-              fontFamily: mono,
-              fontSize: "10px",
-              color: "var(--text-2)",
-              userSelect: "none",
-            }}
-          >
+          <div className="absolute top-2 right-2 bg-ink/70 rounded-sm px-[7px] py-[3px] font-mono text-[10px] text-lo select-none">
             {optionCount} options
           </div>
         )}
       </div>
 
       {/* ── Body ──────────────────────────────────────────────────────── */}
-      <div
-        style={{
-          padding: "16px",
-          display: "flex",
-          flexDirection: "column",
-          flex: 1,
-        }}
-      >
+      <div className="p-4 flex flex-col flex-1">
         {/* Status + ETH reward */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "10px",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: "10px",
-              color: isOpen ? "var(--green)" : "var(--text-3)",
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-            }}
-          >
+        <div className="flex items-center justify-between mb-2.5">
+          <Badge variant={isOpen ? "green" : "default"}>
             {isOpen ? "Open" : "Closed"}
-          </span>
-          <span
-            style={{
-              fontFamily: mono,
-              fontSize: "11px",
-              color: "var(--amber)",
-            }}
-          >
+          </Badge>
+          <span className="font-mono text-[11px] text-amber">
             Ξ {rewardEth} ETH
           </span>
         </div>
 
         {/* Title */}
-        <h3
-          style={{
-            fontFamily: geist,
-            fontSize: "16px",
-            fontWeight: 500,
-            color: "var(--text-1)",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.3,
-            margin: "0 0 12px 0",
-          }}
-        >
-          {task.title}
-        </h3>
+        <h3 className="text-[16px] leading-[1.3] mb-3">{task.title}</h3>
 
         {/* Divider */}
-        <div
-          style={{
-            height: "1px",
-            background: "var(--line-subtle)",
-            marginBottom: "12px",
-          }}
-        />
+        <div className="h-px bg-subtle mb-3" />
 
         {/* Vote meta */}
-        <div
-          style={{
-            fontFamily: mono,
-            fontSize: "11px",
-            color: "var(--text-3)",
-            marginBottom: "8px",
-          }}
-        >
+        <div className="font-mono text-[11px] text-dim mb-2">
           {optionCount} options · {votes}/{maxVotes} opinions
         </div>
 
         {/* Progress bar */}
-        <div
-          style={{
-            height: "2px",
-            background: "var(--line)",
-            borderRadius: "1px",
-            overflow: "hidden",
-            marginBottom: "16px",
-          }}
-        >
+        <div className="h-0.5 bg-line rounded-[1px] overflow-hidden mb-4">
           <div
-            style={{
-              height: "100%",
-              width: `${progressPct}%`,
-              background: "var(--text-2)",
-              transition: "width 0.4s ease-out",
-            }}
+            className="h-full bg-lo transition-[width] duration-[400ms] ease-out"
+            style={{ width: `${progressPct}%` }}
           />
         </div>
 
         {/* Action — pinned to bottom */}
-        <div style={{ marginTop: "auto" }}>
+        <div className="mt-auto">
           {mode === "browse" && (
             <>
               {hasVoted ? (
@@ -276,30 +152,10 @@ export function TaskCard({
           )}
 
           {mode === "worker-dashboard" && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "9px 0",
-                borderTop: "1px solid var(--line)",
-              }}
-            >
+            <div className="flex justify-between items-center py-[9px] border-t border-line">
+              <span className="font-mono text-[10px] text-dim">Earnings</span>
               <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: "10px",
-                  color: "var(--text-3)",
-                }}
-              >
-                Earnings
-              </span>
-              <span
-                style={{
-                  fontFamily: mono,
-                  fontSize: "11px",
-                  color: isCompleted ? "var(--green)" : "var(--amber)",
-                }}
+                className={`font-mono text-[11px] ${isCompleted ? "text-green" : "text-amber"}`}
               >
                 {isCompleted ? `+${earnedEth ?? "0.000"} ETH` : "Pending"}
               </span>
@@ -307,6 +163,6 @@ export function TaskCard({
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
