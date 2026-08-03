@@ -4,21 +4,22 @@ import React, { Suspense } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Plus } from "lucide-react";
+import { useAccount, useBalance } from "wagmi";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
 import { StatsRow } from "@/components/dashboard/StatsRow";
-import { ActivityTabs } from "@/components/dashboard/ActivityTabs";
 import { MyTasks } from "@/components/dashboard/MyTasks";
 import { MyWork } from "@/components/dashboard/MyWork";
+import { Tabs } from "@/components/ui/Tabs";
+import { buttonVariants } from "@/components/ui/buttonVariants";
 import { meApi } from "@/lib/api";
 import { Task } from "@/types";
-import { useAccount } from "wagmi";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 
-const geist = "Geist, system-ui, sans-serif";
-
 function DashboardContent() {
   const { address } = useAccount();
+  const { data: balance } = useBalance({ address });
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -67,14 +68,13 @@ function DashboardContent() {
 
   return (
     <WalletGuard>
-
-      <PageTransition style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+      <PageTransition className="flex flex-1 flex-col">
 
         {/* Stats row */}
-        <PageWrapper style={{ paddingTop: "32px", paddingBottom: "24px" }}>
+        <PageWrapper className="pt-8 pb-6">
           <StatsRow
             stats={{
-              ethBalance: "0.000",
+              ethBalance: balance ? Number(balance.formatted).toFixed(3) : "—",
               tasksCreated: tasks.length,
               ethSpent: ethSpent.toFixed(3),
               ethEarned: (earnings.totalEarned * 0.001).toFixed(3),
@@ -83,46 +83,36 @@ function DashboardContent() {
         </PageWrapper>
 
         {/* Subnav */}
-        <PageWrapper
-          style={{
-            borderBottom: "1px solid var(--line)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <ActivityTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <PageWrapper className="flex items-end justify-between gap-4 border-b border-line">
+          <Tabs
+            aria-label="Dashboard activity"
+            className="border-b-0"
+            items={[
+              {
+                id: "my-tasks",
+                label: "Posted Tasks",
+                count: isTasksLoading ? undefined : tasks.length,
+              },
+              {
+                id: "my-work",
+                label: "My Opinions",
+                count: isSubsLoading ? undefined : submissions.length,
+              },
+            ]}
+            value={activeTab}
+            onChange={(id) => setActiveTab(id === "my-work" ? "my-work" : "my-tasks")}
+          />
           <Link
             href="/create-task"
-            style={{
-              fontFamily: geist,
-              fontSize: "12px",
-              fontWeight: 500,
-              color: "var(--text-2)",
-              textDecoration: "none",
-              letterSpacing: "-0.01em",
-              padding: "6px 10px",
-              border: "1px solid var(--line)",
-              borderRadius: "5px",
-              transition: "border-color 0.1s, color 0.1s",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              el.style.borderColor = "var(--text-3)";
-              el.style.color = "var(--text-1)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLAnchorElement;
-              el.style.borderColor = "var(--line)";
-              el.style.color = "var(--text-2)";
-            }}
+            className={buttonVariants({ variant: "outline", size: "sm", className: "mb-1.5 shrink-0" })}
           >
-            Post a Task →
+            <Plus size={14} className="text-dim" />
+            Post a Task
           </Link>
         </PageWrapper>
 
         {/* Table content */}
-        <PageWrapper style={{ paddingTop: "24px", paddingBottom: "24px", overflowX: "auto" }}>
+        <PageWrapper className="py-6">
           {activeTab === "my-tasks" ? (
             <MyTasks tasks={tasks} isLoading={isLoading} />
           ) : (

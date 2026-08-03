@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Dashboard — Clixo",
+  title: "Dashboard",
 };
 
 export default function DashboardLayout({
