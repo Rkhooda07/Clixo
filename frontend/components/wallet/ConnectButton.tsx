@@ -1,57 +1,13 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ConnectButton as RainbowConnectButton } from "@rainbow-me/rainbowkit";
+import { ExternalLink, LayoutDashboard, LogOut } from "lucide-react";
 import { useWalletUser } from "@/hooks/useWalletUser";
-
-const mono = "JetBrains Mono, monospace";
-const inter = "Inter, system-ui, sans-serif";
-const geist = "Geist, system-ui, sans-serif";
-
-const base: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "8px",
-  border: "1px solid var(--line)",
-  background: "transparent",
-  color: "var(--text-1)",
-  fontSize: "13px",
-  fontFamily: geist,
-  padding: "8px 14px",
-  borderRadius: "5px",
-  cursor: "pointer",
-  lineHeight: 1,
-  letterSpacing: "-0.01em",
-  transition: "border-color 120ms, background 120ms",
-  whiteSpace: "nowrap",
-};
-
-function useHoverHandlers() {
-  return {
-    onMouseEnter: (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.currentTarget.style.borderColor = "var(--text-3)";
-      e.currentTarget.style.background = "var(--surface-2)";
-    },
-    onMouseLeave: (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.currentTarget.style.borderColor = "var(--line)";
-      e.currentTarget.style.background = "transparent";
-    },
-  };
-}
-
-function useEthPrice() {
-  const [price, setPrice] = useState<number | null>(null);
-  useEffect(() => {
-    fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
-    )
-      .then((r) => r.json())
-      .then((d) => setPrice(d?.ethereum?.usd ?? null))
-      .catch(() => {});
-  }, []);
-  return price;
-}
+import { useEthPrice } from "@/hooks/useEthPrice";
+import { Button } from "@/components/ui/Button";
+import { StatBlock } from "@/components/ui/StatBlock";
 
 function DropdownLink({
   href,
@@ -66,24 +22,9 @@ function DropdownLink({
     <Link
       href={href}
       onClick={onClick}
-      style={{
-        display: "block",
-        padding: "10px 16px",
-        fontFamily: inter,
-        fontSize: "13px",
-        color: "var(--text-2)",
-        textDecoration: "none",
-        transition: "background 0.1s, color 0.1s",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = "var(--surface-2)";
-        e.currentTarget.style.color = "var(--text-1)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = "transparent";
-        e.currentTarget.style.color = "var(--text-2)";
-      }}
+      className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-lo transition-colors duration-100 hover:bg-raised hover:text-hi"
     >
+      <LayoutDashboard size={14} className="shrink-0 text-dim" aria-hidden="true" />
       {label}
     </Link>
   );
@@ -102,8 +43,8 @@ function AuthenticatedPill({
 }: AuthenticatedPillProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const ethPrice = useEthPrice();
-  const hover = useHoverHandlers();
 
   useEffect(() => {
     if (!open) return;
@@ -116,7 +57,10 @@ function AuthenticatedPill({
       }
     }
     function handleKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
     }
     document.addEventListener("mousedown", handleOutside);
     document.addEventListener("keydown", handleKey);
@@ -133,117 +77,44 @@ function AuthenticatedPill({
   const etherscanUrl = `https://sepolia.etherscan.io/address/${address}`;
 
   return (
-    <div ref={containerRef} style={{ position: "relative" }}>
+    <div ref={containerRef} className="relative">
       <button
+        ref={triggerRef}
         onClick={() => setOpen((o) => !o)}
-        style={{
-          ...base,
-          fontFamily: mono,
-          fontSize: "12px",
-          color: "var(--text-2)",
-          letterSpacing: "0",
-        }}
-        {...hover}
+        aria-expanded={open}
+        className="inline-flex h-[34px] cursor-pointer items-center gap-2 rounded-md border border-line bg-transparent px-3.5 font-mono text-xs whitespace-nowrap text-lo transition-colors duration-150 hover:border-dim hover:bg-raised"
       >
-        <span
-          style={{
-            width: "5px",
-            height: "5px",
-            borderRadius: "50%",
-            background: "var(--green)",
-            flexShrink: 0,
-          }}
-        />
+        <span className="h-[5px] w-[5px] shrink-0 rounded-full bg-green" aria-hidden="true" />
         <span>{shortAddr}</span>
         {displayBalance && (
           <>
-            <span style={{ color: "var(--text-3)", margin: "0 2px" }}>·</span>
-            <span style={{ color: "var(--amber)" }}>{displayBalance}</span>
+            <span className="mx-0.5 text-dim">·</span>
+            <span className="text-amber">{displayBalance}</span>
           </>
         )}
       </button>
 
       {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            right: 0,
-            width: "240px",
-            background: "var(--surface-1)",
-            border: "1px solid var(--line)",
-            borderRadius: "6px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
-            zIndex: 100,
-            overflow: "hidden",
-          }}
-        >
+        <div className="absolute top-[calc(100%+8px)] right-0 z-[100] w-[min(240px,calc(100vw-24px))] origin-top-right scale-100 overflow-hidden rounded-lg border border-line bg-surface shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-[opacity,scale] duration-[120ms] ease-out starting:scale-95 starting:opacity-0 motion-reduce:transition-none">
           {/* Row 1: Connected + full address */}
-          <div style={{ padding: "10px 16px" }}>
-            <div
-              style={{
-                fontFamily: mono,
-                fontSize: "10px",
-                color: "var(--text-3)",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                marginBottom: "4px",
-              }}
-            >
-              Connected
-            </div>
-            <div
-              style={{
-                fontFamily: mono,
-                fontSize: "12px",
-                color: "var(--text-2)",
-                wordBreak: "break-all",
-              }}
-            >
-              {address}
-            </div>
+          <div className="px-4 py-2.5">
+            <div className="eyebrow mb-1">Connected</div>
+            <div className="font-mono text-xs break-all text-lo">{address}</div>
           </div>
 
-          <div style={{ height: "1px", background: "var(--line)" }} />
+          <div className="h-px bg-line" />
 
           {/* Row 2: Balance */}
-          <div style={{ padding: "10px 16px" }}>
-            <div
-              style={{
-                fontFamily: mono,
-                fontSize: "10px",
-                color: "var(--text-3)",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                marginBottom: "4px",
-              }}
-            >
-              Balance
-            </div>
-            <div
-              style={{
-                fontFamily: mono,
-                fontSize: "16px",
-                color: "var(--amber)",
-              }}
-            >
-              {displayBalance ?? "0 ETH"}
-            </div>
-            {usdEstimate !== null && (
-              <div
-                style={{
-                  fontFamily: inter,
-                  fontSize: "11px",
-                  color: "var(--text-3)",
-                  marginTop: "2px",
-                }}
-              >
-                ≈ ${usdEstimate} USD
-              </div>
-            )}
+          <div className="px-4 py-2.5">
+            <StatBlock
+              label="Balance"
+              accent="amber"
+              value={displayBalance ?? "0 ETH"}
+              sub={usdEstimate !== null ? `≈ $${usdEstimate} USD` : undefined}
+            />
           </div>
 
-          <div style={{ height: "1px", background: "var(--line)" }} />
+          <div className="h-px bg-line" />
 
           {/* Rows 3 & 4: Dashboard links */}
           <DropdownLink
@@ -257,7 +128,7 @@ function AuthenticatedPill({
             onClick={() => setOpen(false)}
           />
 
-          <div style={{ height: "1px", background: "var(--line)" }} />
+          <div className="h-px bg-line" />
 
           {/* Row 5: Etherscan */}
           <a
@@ -265,25 +136,10 @@ function AuthenticatedPill({
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            style={{
-              display: "block",
-              padding: "10px 16px",
-              fontFamily: inter,
-              fontSize: "12px",
-              color: "var(--text-3)",
-              textDecoration: "none",
-              transition: "background 0.1s, color 0.1s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--surface-2)";
-              e.currentTarget.style.color = "var(--text-2)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "var(--text-3)";
-            }}
+            className="flex items-center gap-2.5 px-4 py-2.5 text-xs text-dim transition-colors duration-100 hover:bg-raised hover:text-lo"
           >
-            View on Etherscan ↗
+            <ExternalLink size={14} className="shrink-0" aria-hidden="true" />
+            View on Etherscan
           </a>
 
           {/* Row 6: Disconnect */}
@@ -292,28 +148,9 @@ function AuthenticatedPill({
               setOpen(false);
               onLogout();
             }}
-            style={{
-              display: "block",
-              width: "100%",
-              padding: "10px 16px",
-              fontFamily: inter,
-              fontSize: "12px",
-              color: "var(--text-3)",
-              background: "transparent",
-              border: "none",
-              textAlign: "left",
-              cursor: "pointer",
-              transition: "background 0.1s, color 0.1s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "var(--surface-2)";
-              e.currentTarget.style.color = "var(--red)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "var(--text-3)";
-            }}
+            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-2.5 text-left text-xs text-dim transition-colors duration-100 hover:bg-raised hover:text-red"
           >
+            <LogOut size={14} className="shrink-0" aria-hidden="true" />
             Disconnect
           </button>
         </div>
@@ -324,7 +161,6 @@ function AuthenticatedPill({
 
 export function ConnectButton() {
   const { isAuthenticating, isLogged, login, logout } = useWalletUser();
-  const hover = useHoverHandlers();
 
   return (
     <RainbowConnectButton.Custom>
@@ -333,65 +169,34 @@ export function ConnectButton() {
         const connected = ready && account && chain;
 
         if (!ready) {
-          return (
-            <div
-              style={{
-                width: "118px",
-                height: "33px",
-                background: "var(--surface-2)",
-                borderRadius: "5px",
-              }}
-            />
-          );
+          return <div className="h-[34px] w-[118px] rounded-md bg-raised" />;
         }
 
         if (isAuthenticating) {
           return (
-            <button
-              disabled
-              style={{ ...base, opacity: 0.5, cursor: "not-allowed" }}
-            >
+            <Button variant="outline" loading>
               Signing...
-            </button>
+            </Button>
           );
         }
 
         if (!connected) {
           return (
-            <button onClick={openConnectModal} style={base} {...hover}>
+            <Button variant="outline" onClick={openConnectModal}>
               Connect Wallet
-            </button>
+            </Button>
           );
         }
 
         if (chain.unsupported) {
-          return (
-            <button
-              style={{ ...base, borderColor: "var(--red)", color: "var(--red)" }}
-            >
-              Wrong Network
-            </button>
-          );
+          return <Button variant="danger">Wrong Network</Button>;
         }
 
         if (!isLogged) {
           return (
-            <button
-              onClick={login}
-              style={{
-                ...base,
-                borderColor: "var(--amber)",
-                color: "var(--amber)",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "var(--amber-dim)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-              }}
-            >
+            <Button variant="amber" onClick={login}>
               Sign In
-            </button>
+            </Button>
           );
         }
 
