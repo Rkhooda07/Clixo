@@ -1,6 +1,10 @@
 # Clixo — Development Guide
 
-Clixo is a decentralized thumbnail testing platform. Creators upload thumbnail variants, stake ETH as a reward, and get real human votes from workers who earn ETH for participating. The frontend is a precision instrument — cold, data-forward, surgical. No consumer-app decoration.
+Clixo is a decentralised opinion market on Sepolia. Creators post a question with 2–10 image options and stake ETH; workers vote blind and split the stake when the vote target is reached. The frontend is a precision instrument — cold, data-forward, surgical. No consumer-app decoration.
+
+This guide covers the **frontend**. Backend conventions live in `CLAUDE.md`.
+
+> Rewritten 2026-08-04 to match the design-system overhaul. The previous version mandated inline `style={{}}` objects, per-file font constants, and `useState` hover — all removed. If you find a copy of this file saying otherwise, it is stale; delete it.
 
 ---
 
@@ -8,18 +12,17 @@ Clixo is a decentralized thumbnail testing platform. Creators upload thumbnail v
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15.1.0 (App Router) |
+| Framework | Next.js 15.1 (App Router) |
 | Language | TypeScript |
-| Styling | Tailwind CSS v4 + CSS custom properties |
+| Styling | Tailwind CSS v4, configured **in CSS** (`@theme inline`) — there is no `tailwind.config.ts` |
+| Motion | framer-motion behind `LazyMotion` |
 | Wallet | wagmi + RainbowKit |
-| Auth | SIWE (Sign-In with Ethereum) |
-| Global state | Zustand (`persist` middleware, key: `"clixo-storage"`) |
+| Auth | SIWE-shaped challenge/sign/verify → JWT |
+| Global state | Zustand (`persist`, key `"clixo-storage"`) |
 | Server state | @tanstack/react-query |
-| HTTP | Axios (`frontend/lib/api.ts`) |
-| Toasts | Sonner |
-| Icons | Lucide React |
-| Images | `next/image` |
-| Backend | Node.js API at `localhost:4000` (separate repo) |
+| HTTP | Axios (`lib/api.ts`) |
+| Toasts | Sonner · Icons: Lucide · Charts: Recharts · Uploads: react-dropzone |
+| Backend | Express API at `localhost:4000` (this repo, `backend/`) |
 | Network | Sepolia testnet |
 
 ---
@@ -27,431 +30,256 @@ Clixo is a decentralized thumbnail testing platform. Creators upload thumbnail v
 ## Repository Layout
 
 ```
-/
-├── frontend/          ← All Next.js code (work here)
-│   ├── app/           ← App Router pages and layouts
-│   │   ├── globals.css        ← Design tokens (do not touch lightly)
-│   │   ├── layout.tsx         ← Root layout (Navbar + Footer + Providers)
-│   │   ├── page.tsx           ← Landing page (server component)
-│   │   ├── browse/            ← Task browser
-│   │   ├── vote/[id]/         ← Voting page (most used screen)
-│   │   ├── dashboard/         ← User dashboard + layout.tsx
-│   │   └── create-task/       ← Task creation
-│   ├── components/
-│   │   ├── dashboard/         ← StatsRow, ActivityTabs, MyTasks, MyWork
-│   │   ├── home/              ← LiveStats
-│   │   ├── layout/            ← Navbar, Footer
-│   │   ├── tasks/             ← TaskCard, ThumbnailUploader, WinnerBanner, ResultsGrid
-│   │   ├── ui/                ← EmptyState, Skeleton, etc.
-│   │   ├── vote/              ← ThumbnailGallery, AlreadyVoted
-│   │   └── wallet/            ← ConnectButton, WalletGuard, Providers
-│   ├── hooks/
-│   │   └── useWalletUser.ts   ← SIWE auth flow hook
-│   ├── lib/
-│   │   ├── api.ts             ← Axios API client (all endpoints)
-│   │   └── queryClient.ts     ← React Query client singleton
-│   ├── store/
-│   │   └── useAppStore.ts     ← Zustand store (token, walletAddress)
-│   └── types/
-│       └── index.ts           ← Core TypeScript types
-└── backend/           ← Separate Node.js API (do not modify from frontend work)
+frontend/
+├── app/
+│   ├── globals.css          ← design tokens (see below — changes cascade everywhere)
+│   ├── layout.tsx           ← root: fonts, Providers, Navbar, Breadcrumb, Footer
+│   ├── page.tsx             ← landing
+│   ├── browse/ dashboard/ create-task/ vote/[id]/ tasks/[id]/
+│   │   └── layout.tsx       ← exists only to set `metadata.title`; renders <>{children}</>
+├── components/
+│   ├── ui/                  ← 12 primitives + buttonVariants.ts
+│   ├── layout/              ← Navbar, Footer, Breadcrumb, PageWrapper, ScrollToTop
+│   ├── wallet/              ← Providers, ConnectButton, WalletGuard
+│   ├── tasks/ vote/ dashboard/ create-task/ home/
+├── hooks/                   ← useWalletUser, useEthPrice, useBreadcrumbs, useCountUp
+├── lib/                     ← api.ts, wagmi.ts, queryClient.ts, utils.ts (cn)
+├── store/useAppStore.ts
+└── types/                   ← index.ts (domain), global.d.ts (window.ethereum)
 ```
 
 ---
 
 ## Design System
 
-All tokens are defined as CSS custom properties in `frontend/app/globals.css` and mapped to Tailwind via `@theme inline`. Never add color scales or override the theme mapping.
+Tokens are CSS custom properties in `app/globals.css`, exposed to Tailwind through `@theme inline`. **Name the role, never the value.** Never a raw hex, never a Tailwind palette colour (`bg-zinc-800`, `text-purple-400`).
 
-### Color Tokens
+### Colour
 
-| Token | Value | Usage |
-|---|---|---|
-| `--ink` | `#0c0c0e` | Page background |
-| `--surface-1` | `#111113` | Cards, panels, sticky sidebars |
-| `--surface-2` | `#19191d` | Hover states, inputs, raised elements |
-| `--line` | `#242428` | Borders, dividers, table headers |
-| `--line-subtle` | `#1c1c20` | Table row dividers |
-| `--text-1` | `#f0f0f0` | Primary text, headings, active labels |
-| `--text-2` | `#888890` | Body text, secondary labels |
-| `--text-3` | `#4a4a52` | Muted labels, disabled text, mono data |
-| `--amber` | `#e8a020` | ETH values, rewards, highlights |
-| `--amber-dim` | `#3d2a08` | Amber backgrounds |
-| `--green` | `#22c55e` | OPEN status, success states |
-| `--red` | `#f43f5e` | Error states, wrong network |
+| Token | Utility | Value | Usage |
+|---|---|---|---|
+| `--ink` | `bg-ink` | `#0c0c0e` | page background |
+| `--surface-1` | `bg-surface` | `#111113` | cards, panels, sticky sidebars |
+| `--surface-2` | `bg-raised` | `#19191d` | hover states, inputs, raised elements |
+| `--line` | `border-line` | `#242428` | borders, dividers, table headers |
+| `--line-subtle` | `border-subtle` | `#1c1c20` | table row dividers |
+| `--text-1` | `text-hi` | `#f0f0f0` | primary text, headings, active labels |
+| `--text-2` | `text-lo` | `#888890` | body text, secondary labels |
+| `--text-3` | `text-dim` | `#4a4a52` | muted labels, disabled, mono data |
+| `--amber` | `text-amber` | `#e8a020` | **ETH and money only** |
+| `--amber-dim` | `bg-amber-bg` | `#3d2a08` | amber backgrounds |
+| `--green` | `text-green` | `#22c55e` | OPEN status, success |
+| `--red` | `text-red` | `#f43f5e` | errors, wrong network |
+
+Amber is reserved for money. If a value is not ETH, it is not amber.
 
 ### Typography
 
-Three fonts. Each has a specific role — do not swap them.
+Three fonts, each with one job. Loaded via `next/font/google` in `app/layout.tsx` and reachable as Tailwind utilities — **do not declare font constants in component files.**
 
-| Font | Variable | Role |
+| Font | Utility | Role |
 |---|---|---|
-| Geist | `"Geist, system-ui, sans-serif"` | Display, headings, titles, CTA buttons, tab labels |
-| Inter | `"Inter, system-ui, sans-serif"` | Body copy, descriptions, prose |
-| JetBrains Mono | `"JetBrains Mono, monospace"` | ETH values, stats, table headers, status labels, dates, codes |
+| Geist | `font-display` | headings, titles, buttons, tab labels |
+| Inter | (body default) | body copy, descriptions, table cells |
+| JetBrains Mono | `font-mono` | ETH values, stats, table headers, status, dates, addresses |
 
-Declare font constants at the top of every client component file:
+`h1`–`h6` already get Geist, weight 500, `-0.02em` tracking, `--text-1` from the base layer. Do not re-specify.
+
+**`eyebrow` is a custom utility**, not a set of classes — the app's signature mono-uppercase micro-label:
 
 ```tsx
-const mono = "JetBrains Mono, monospace";
-const geist = "Geist, system-ui, sans-serif";
-const inter = "Inter, system-ui, sans-serif";
+<div className="eyebrow mb-2">Section Label</div>
 ```
 
-### Type Scale (common sizes)
+`scrollbar-none` is the other custom utility (used on horizontally scrolling tab strips).
 
-- Section eyebrows / table headers: 10px mono, `text-3`, `letter-spacing: 0.1em`, uppercase
-- Status labels (OPEN/CLOSED): 10–11px mono, green or text-3
-- Body / table data: 13px Inter, `text-2`
-- Card titles: 16px Geist weight 500, `text-1`
-- Panel headings: 20–24px Geist weight 500, `text-1`, `letter-spacing: -0.02em`
-- ETH values in stats: 22–24px mono, amber
-- Hero H1: `clamp(44px, 5.5vw, 72px)` Geist weight 500
+### Radii and Motion
+
+`rounded-xs` 2px (micro-thumbs) · `rounded-sm` 3px (images) · `rounded-md` 5px (buttons, inputs, badges) · `rounded-lg` 6px (cards, panels). Nothing larger.
+
+Named animations live in `@theme`: `animate-shimmer` (skeletons), `animate-fade-up`, `animate-scroll-hint`, plus `ease-out-quart`. All are disabled under `prefers-reduced-motion` by a global block in `globals.css`.
+
+### Elevation
+
+Shadows are used **sparingly and only for elevation or focus**, never as decoration:
+
+- card hover lift — `hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)]`
+- input/textarea focus ring — `focus:shadow-[0_0_0_3px_rgba(240,240,240,0.05)]`
+- floating surfaces (wallet dropdown)
+- one amber glow, on `WinnerBanner` and the landing hero card — the only decorative exception
+
+`backdrop-blur` appears exactly once, on the mobile fixed submit bar. Do not add more. No glassmorphism, no ambient glows, no coloured drop-shadows.
 
 ---
 
 ## Styling Conventions
 
-### Inline Styles — Always
-
-All visual styling uses inline `style={{}}` props, not Tailwind utility classes. Tailwind is used **only** for responsive breakpoints and display toggling.
+**Tailwind utility classes over token names.** Not inline styles.
 
 ```tsx
 // Correct
-<div style={{ color: "var(--text-1)", fontFamily: geist, fontSize: "13px" }}>
+<div className="bg-surface border border-line rounded-lg p-4 text-[13px] text-lo">
 
-// Wrong — Tailwind color/typography utilities
-<div className="text-zinc-100 font-geist text-sm">
+// Wrong — raw values, and unstyleable by hover/focus variants
+<div style={{ background: "#111113", border: "1px solid #242428" }}>
 ```
 
-### Responsive Classes — Tailwind Only for Display
+Inline `style` is acceptable for exactly one thing: a **computed** value that cannot be a class, such as a progress-bar width.
 
 ```tsx
-// Correct — Tailwind class controls display, no inline display style
-<div className="hidden md:flex">
-  ...
+<div className="h-0.5 overflow-hidden rounded-[1px] bg-line">
+  <div className="h-full bg-lo transition-[width] duration-[400ms] ease-out"
+       style={{ width: `${progressPct}%` }} />
 </div>
-
-// Wrong — inline display overrides Tailwind responsive class
-<div className="md:hidden" style={{ display: "flex" }}>
 ```
 
-**Critical**: Never put `display` in an inline style on an element that also uses `md:hidden`, `md:flex`, `hidden`, etc. Wrap in a container div that holds only the Tailwind class.
+**Compose classes with `cn()`** (`lib/utils.ts` — clsx + tailwind-merge) so conditional classes override cleanly rather than fighting over specificity.
 
-### Hover States — useState Pattern
-
-Tailwind `hover:` pseudo-classes cannot override inline styles. Use `onMouseEnter`/`onMouseLeave` with a `useState`:
-
-```tsx
-const [hovered, setHovered] = useState(false);
-
-<div
-  onMouseEnter={() => setHovered(true)}
-  onMouseLeave={() => setHovered(false)}
-  style={{
-    border: `1px solid ${hovered ? "var(--text-3)" : "var(--line)"}`,
-  }}
->
-```
-
-### Border Radius
-
-- Cards, panels: `6px`
-- Buttons, badges, inputs: `5px`
-- Thumbnail images: `3px`
-- Progress bars: `1px`
-- No `rounded-xl`, `rounded-2xl`, `rounded-3xl` — those are the old design
-
-### Borders
-
-- Standard: `1px solid var(--line)`
-- Subtle (table rows): `1px solid var(--line-subtle)`
-- Active/selected: `1px solid var(--text-1)`
-- Hover lift: `1px solid var(--text-3)`
-
-### Shadows / Glows / Blur
-
-None. No `box-shadow`, no `backdrop-blur`, no `drop-shadow`. No glassmorphism. No ambient glows.
+**Hover, focus, and reduced-motion are CSS variants**, not React state: `hover:`, `focus-visible:`, `motion-reduce:`, `group-hover:`, `starting:`. Focus rings are already global (`*:focus-visible` in `globals.css`) — do not add per-component outlines.
 
 ---
 
 ## Component Patterns
 
-### Server vs. Client
+**Server by default.** Add `"use client"` only for hooks, event handlers, or browser APIs. The landing page is a server component.
 
-- Default to server components (no `"use client"`)
-- Add `"use client"` only when the component uses hooks, event handlers, or browser APIs
-- Landing page (`app/page.tsx`) is a server component — use `hover:` Tailwind classes for simple hover on links, extract interactive parts to client components
+**Named exports** for components; default exports only for `page.tsx` / `layout.tsx`.
 
-### Named Exports
+**Props typed inline** at the top of the file, unless shared across many files (then `types/index.ts`).
 
-Components use named exports. Only Next.js page/layout files use default exports.
+**Reach for the platform before a library.** The mobile drawer is a native `<dialog>` + `showModal()` — Escape, focus trap, background inertness and `::backdrop` are free. Its entry animation is CSS `starting:translate-x-full`. Check for a native element before writing or installing a component.
 
-```tsx
-// components/tasks/TaskCard.tsx
-export function TaskCard({ ... }) { ... }
+**Primitives are hand-rolled** (`components/ui/`) — no Radix, no shadcn CLI. That means **accessibility is your responsibility**: role, `aria-*`, keyboard traversal, focus return. `Tabs` is the reference implementation (`role="tablist"`, `aria-selected`, roving `tabIndex`, arrow-key navigation).
 
-// app/browse/page.tsx
-export default function BrowsePage() { ... }
-```
-
-### Props Typing
-
-Inline interfaces at the top of the file, not in a separate types file (unless shared across many files):
+**`buttonVariants` is server-safe.** Import from `components/ui/buttonVariants` to style a `<Link>` or a server component without pulling the client `Button` into the bundle:
 
 ```tsx
-interface TaskCardProps {
-  task: Task;
-  mode: "browse" | "creator-dashboard" | "worker-dashboard";
-}
+<Link href="/create-task" className={buttonVariants({ variant: "outline", size: "sm" })}>
 ```
 
-### `React.CSSProperties` for style objects
+Variants: `primary | outline | ghost | amber | danger`. Sizes: `sm | md | lg`.
 
-When extracting reusable style objects, type them:
-
-```tsx
-const TH_STYLE: React.CSSProperties = {
-  fontFamily: mono,
-  fontSize: "10px",
-  ...
-};
-```
+**Available primitives:** `Badge` `Button` `Card` `EmptyState` `Input` `PageTransition` `Reveal` `Skeleton` `Spinner` `StatBlock` `Tabs` `Textarea`. Check this list before building a new one.
 
 ---
 
-## Key UI Patterns
+## Motion
 
-### Progress Bar
+framer-motion runs behind `LazyMotion features={domMax} strict` in `Providers.tsx`.
 
-```tsx
-// Track
-<div style={{ height: "2px", background: "var(--line)", borderRadius: "1px", overflow: "hidden" }}>
-  // Fill
-  <div style={{ height: "100%", width: `${pct}%`, background: "var(--text-2)", transition: "width 0.4s ease-out" }} />
-</div>
-```
-
-### Status Label
-
-```tsx
-<span style={{ fontFamily: mono, fontSize: "11px", color: isOpen ? "var(--green)" : "var(--text-3)", letterSpacing: "0.04em" }}>
-  {isOpen ? "OPEN" : "CLOSED"}
-</span>
-```
-
-No badge pills. Status is plain mono text. `OPEN` = green, `CLOSED` = text-3.
-
-### ETH Value
-
-```tsx
-<span style={{ fontFamily: mono, fontSize: "12px", color: "var(--amber)" }}>
-  Ξ {rewardEth} ETH
-</span>
-```
-
-Always `Ξ` prefix, amber, mono. Calculate from budget: `(task.budget * 0.001).toFixed(3)`.
-
-### Section Eyebrow
-
-```tsx
-<div style={{ fontFamily: mono, fontSize: "10px", color: "var(--text-3)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "16px" }}>
-  Section Label
-</div>
-```
-
-### Data Tables
-
-```tsx
-<table style={{ width: "100%", borderCollapse: "collapse" }}>
-  <thead>
-    <tr>
-      <th style={{ fontFamily: mono, fontSize: "10px", color: "var(--text-3)", letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 400, textAlign: "left", padding: "10px 12px", borderBottom: "1px solid var(--line)" }}>
-        Column
-      </th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr style={{ height: "48px", borderBottom: "1px solid var(--line-subtle)", background: hovered ? "var(--surface-2)" : "transparent" }}>
-      <td style={{ fontFamily: inter, fontSize: "13px", color: "var(--text-2)", padding: "0 12px", verticalAlign: "middle" }}>
-        Cell
-      </td>
-    </tr>
-  </tbody>
-</table>
-```
-
-### Full-Viewport Sections
-
-Navbar is 52px. Use `calc(100dvh - 52px)` for full-screen sections:
-
-```tsx
-style={{ minHeight: "calc(100dvh - 52px)" }}
-// sticky panels:
-style={{ position: "sticky", top: "52px", height: "calc(100dvh - 52px)" }}
-```
-
----
-
-## Layout Dimensions
-
-| Context | Value |
-|---|---|
-| Navbar height | `52px` |
-| Page horizontal padding (desktop) | `40px` |
-| Page horizontal padding (mobile) | `16px` |
-| Stats section top padding | `32px` |
-| Dashboard table padding | `24px 40px` |
+- **Use `m.div`, never `motion.div`.** `strict` makes `motion.` a runtime throw, not a type error.
+- Guard every animation with `useReducedMotion()` and return the static element when it is true — `PageTransition` and `Reveal` are the reference.
+- `PageTransition` wraps page content (fade + 4px rise). `Reveal` is scroll-triggered, `viewport={{ once: true }}`.
+- Prefer CSS (`transition-colors`, `@starting-style`, keyframes in `@theme`) for anything a class can express. Reserve framer-motion for enter/exit choreography, layout animation, and `AnimatePresence`.
+- Hover is border-colour lift plus, on cards, a 2px rise. No scale transforms on hover except the 1.02 image zoom inside `TaskCard`.
 
 ---
 
 ## State Management
 
-### Auth / Session (Zustand)
+**Auth (Zustand).** `useAppStore` persists `token`, `walletAddress`, `userId`, `workerId` under `"clixo-storage"`. Never read `localStorage` directly.
 
-`useAppStore` persists `token` and `walletAddress` to localStorage under key `"clixo-storage"`. Never read localStorage directly — use `useAppStore()`.
+**`useWalletUser()`** wraps wagmi + Zustand and returns `{ address, isConnected, isAuthenticating, isInitializing, isLogged, token, login, logout }`.
 
-`useWalletUser()` wraps wagmi + Zustand auth:
-- Returns: `{ address, isConnected, isAuthenticating, isInitializing, isLogged, token, login, logout }`
-- `isInitializing` is true while wagmi reconnects or the store is hydrating — always show a loading state while this is true
+Three states, not one — always branch on all three:
 
-### Server State (React Query)
+- `isInitializing` — wagmi reconnecting **or** the store still hydrating. Show a loading state.
+- `isAuthenticating` — signature in flight.
+- `isLogged` — token present **and** its address matches the currently connected wallet.
+
+Switching accounts in the wallet clears the session; the check is address equality, case-insensitive.
+
+**Server state (React Query).** Wallet-scoped queries take `address` in the key *and* gate on it:
 
 ```tsx
-const { data, isLoading } = useQuery({
-  queryKey: ["my-tasks", address],   // always include address in key for wallet-scoped queries
+useQuery({
+  queryKey: ["my-tasks", address],
   queryFn: () => meApi.getTasks(),
-  enabled: !!address,                // never fetch without wallet
+  enabled: !!address,
 });
 ```
 
-### UI State (useState)
+Both halves are needed — the key alone still lets an unauthenticated 401 into the cache. The client is a singleton in `lib/queryClient.ts` (`refetchOnWindowFocus: false`, `retry: 1`, `staleTime: 5min`).
 
-Local hover, selection, tab, accordion open/closed — always `useState`. Do not lift purely visual state into Zustand or React Query.
-
----
-
-## API Conventions
-
-Base URL: `http://localhost:4000`
-
-Key endpoints (from `frontend/lib/api.ts`):
-
-| Call | Purpose |
-|---|---|
-| `taskApi.getById(id)` | Fetch task + options |
-| `taskApi.getStats(id)` | Vote breakdown per option |
-| `meApi.getTasks()` | Creator's tasks |
-| `meApi.getSubmissions()` | Worker's vote records |
-| `meApi.getEarnings()` | Earnings: `{ pending, locked, totalEarned }` |
-| `submissionApi.submit(taskId, optionId)` | Submit a vote |
-| `authApi.getChallenge(address)` | SIWE challenge message |
-| `authApi.verify(address, sig, nonce)` | Verify signature, returns JWT |
-
-Error handling: catch `err.response?.data?.message` for backend error messages.
+**UI state (`useState`).** Hover, selection, tabs, accordions. Do not lift purely visual state into Zustand or React Query.
 
 ---
 
-## Authentication
+## API and Auth
 
-Pages requiring auth must be wrapped in `<WalletGuard>`. It handles three states: no token, token but wallet not connected (reconnecting), and wallet connected. Never duplicate this logic.
+Base URL `NEXT_PUBLIC_API_BASE_URL`, default `http://localhost:4000/api`. All endpoints are declared in `lib/api.ts`; an Axios request interceptor attaches the bearer token. Read backend errors from `err.response?.data?.message` via `axios.isAxiosError(err)`.
 
-The voting page (`vote/[id]/page.tsx`) and dashboard are wallet-gated. Browse page is public.
+Groups: `authApi` `taskApi` `uploadApi` `submissionApi` `meApi` — plus `aggregationApi`, `rewardApi`, `payoutApi`, which are **declared but have no call sites**. The settlement and withdrawal flows are not wired up; see `known-defects.md` in Developer Brain before assuming they work.
+
+Auth-gated pages wrap in `<WalletGuard>`, which renders the three states above. Never reimplement it. `/browse` and `/` are public; vote, dashboard, task detail and create-task are gated.
 
 ---
 
 ## Images
 
-Always use `next/image`. Two patterns:
+Always `next/image`. Remote hosts are allow-listed in `next.config.ts` (`gateway.pinata.cloud`, `ipfs.io`) — an image from anywhere else will fail at runtime.
 
-**Fill (aspect-ratio containers):**
 ```tsx
-<div style={{ position: "relative", aspectRatio: "16 / 9" }}>
-  <Image src={src} alt="..." fill sizes="(max-width: 768px) 100vw, 33vw" style={{ objectFit: "cover" }} />
+// Aspect-ratio container — always pass `sizes` with `fill`
+<div className="relative aspect-video">
+  <Image src={src} alt="…" fill sizes="(max-width: 768px) 100vw, 33vw" className="object-cover" />
 </div>
 ```
 
-**Fixed size (inline in tables/lists):**
-```tsx
-<Image src={src} alt="..." width={40} height={24} style={{ objectFit: "cover", borderRadius: "2px", display: "block" }} />
-```
-
-Always provide `sizes` with `fill`. Thumbnail sources: `option.gateway_url || option.image_url || ""`.
+Source is `option.gateway_url || option.image_url || ""`. For local `File` previews, create the object URL in a `useEffect` keyed on the file and revoke it in the cleanup (`ThumbnailUploader` is the reference).
 
 ---
 
-## Responsive Design
+## Layout and Responsive
 
-Desktop-first with mobile support. Breakpoint: `md` (768px).
+Navbar is `52px`. Sticky full-height panels: `top-[52px] h-[calc(100dvh-52px)]`.
 
-- Desktop sidebar, split-panel, and multi-column layouts use `className="hidden md:flex"` wrappers
-- Mobile alternatives use `className="md:hidden"` wrappers
-- Mobile often collapses context into an accordion (e.g., voting page right panel → top accordion)
-- Fixed bottom elements on mobile: `position: fixed; bottom: 0; left: 0; right: 0` + `borderTop: "1px solid var(--line)"` + `background: "var(--ink)"`
-- Add `paddingBottom: "88px"` to scrollable mobile content above fixed bottom elements
+`PageWrapper` owns horizontal padding (`px-4 sm:px-8 lg:px-12`) — use it rather than re-specifying per page. Navbar content is capped at `max-w-[1280px]`.
 
----
+Breakpoint is `md` (768px). Desktop and mobile variants are separate subtrees (`hidden md:flex` / `md:hidden`), not one tree with overrides. Established mobile patterns:
 
-## Voting Page Architecture
+- context panels collapse into a top accordion (voting page)
+- tables collapse into stacked cards
+- fixed bottom action bars need `pb-[88px]` on the scrolling content above them
 
-The voting page (`app/vote/[id]/page.tsx`) is the most-used screen. Its structure:
-- **Desktop**: 60% left (thumbnail grid) / 40% right (sticky context panel with task info, reward, submit)
-- **Mobile**: top accordion (collapsed task context) / full-width grid / fixed bottom submit button
-- `ThumbnailGallery` is a pure presentational component — receives `selectedId` and `onSelect` from the page
-- The page owns: selection state, vote submission, data fetching, layout
+Every page must work at mobile width. Every table must have a card form.
 
 ---
 
-## Dashboard Architecture
+## Page Architectures
 
-The dashboard (`app/dashboard/`) uses a layout that is a transparent pass-through (no sidebar). All layout is self-contained in `page.tsx`. Structure: stats row → subnav tabs → table content.
+**Voting (`app/vote/[id]/page.tsx`)** — the most-used screen. Desktop: 60% thumbnail grid / 40% sticky context panel with reward, progress, and submit. Mobile: collapsible context accordion, full-width grid, fixed bottom submit. `ThumbnailGallery` is purely presentational — the page owns selection, submission, fetching, and layout. Distinct terminal states: loading, not-found, closed, creator-blocked, already-voted.
 
-`ActivityTabs` does NOT receive counts or use icons — plain Geist 500 text tabs with `border-bottom` active indicator.
+**Task detail (`app/tasks/[id]/page.tsx`)** — creator-facing results. Header stats, winner banner when complete, results grid, votes-over-time chart. Recharts is `next/dynamic` with `ssr: false` and a `Skeleton` fallback at the chart's exact height; keep it that way.
 
----
+**Dashboard (`app/dashboard/page.tsx`)** — stats row → `Tabs` subnav → table content. The active tab is persisted in the URL (`?tab=tasks|work`), so the page is wrapped in `<Suspense>` for `useSearchParams`. `layout.tsx` is a metadata-only pass-through — no sidebar.
 
-## Animation & Interaction Principles
-
-- Hover: border color lift only (`var(--line)` → `var(--text-3)` → `var(--text-1)`), `transition: 0.1s`
-- Image brightness: `brightness(0.85)` unselected, `brightness(1.0)` hovered/selected, `transition: filter 0.15s`
-- Progress bars: `transition: width 0.4s ease-out`
-- Tab active indicator: `border-bottom`, no animation needed
-- No scale transforms on hover
-- No Framer Motion (installed, not used — leave it)
+**Create task (`app/create-task/page.tsx`)** — 4-step wizard (Details → Upload → Confirm → Success) with a desktop summary sidebar. `ethers` is `await import()`-ed inside the submit handler so it stays out of the route bundle. Uploads run in parallel with a live progress counter.
 
 ---
 
-## Git Conventions
+## Performance Rules
 
-Commit prefix:
-- `design:` — visual/UI changes
-- `feat:` — new functionality
-- `fix:` — bug fixes
-- `refactor:` — restructuring without behavior change
-
-Commit message body: explain architectural decisions, not what lines changed.
-
-Always co-author AI-assisted commits:
-```
-Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
-```
-
-Commit after each self-contained piece of work (one component, one page, one system). Do not batch unrelated changes.
+- Defer heavy dependencies to their moment of use, and **write the reason and the size in a comment** so the next reader can judge whether it still pays (`ethers`, `recharts` are the two examples).
+- Parallelise independent network calls in submit handlers (`Promise.all`) — the user is watching.
+- `useMemo` list filtering/sorting; use a `Set` for membership lookups across a list.
+- Share cross-component fetches through one React Query key (`useEthPrice` is one CoinGecko call for three consumers).
+- Mark a knowingly-cheap shortcut in place with its ceiling and its trigger:
+  `// ponytail: client-side aggregation; move to a backend /stats endpoint if the task list grows.`
 
 ---
 
 ## Definition of Done
 
-Before marking any frontend task complete:
-
-1. **TypeScript**: `npx tsc --noEmit` passes with no new errors in changed files
-2. **Dev server**: start `npm run dev` and navigate to the changed page(s)
-3. **Visual check**: screenshot with Playwright to verify layout matches spec
-4. **Console errors**: no new errors in `browser_console_messages`
-5. **Mobile check**: resize to mobile breakpoint and verify responsive behavior
-6. **WalletGuard**: if the page is auth-gated, verify the pre-auth prompt renders correctly
-7. **Empty states**: verify empty/loading states are handled (no blank divs, no crashes)
-8. **Commit**: staged and committed with the correct prefix and co-author line
+1. `npx tsc --noEmit` clean in the package you touched
+2. `npm run build` clean (catches server/client boundary violations)
+3. Dev server: navigate to the changed page(s)
+4. No new console errors
+5. Mobile breakpoint checked
+6. If auth-gated: the pre-auth `WalletGuard` state renders
+7. Empty and loading states handled — no blank divs, no crashes
+8. **If the change touches a multi-step flow, run the flow end to end** — a screen that renders is not a flow that works
+9. Committed with a Conventional Commit message
 
 ---
 
@@ -459,28 +287,26 @@ Before marking any frontend task complete:
 
 | File | Why |
 |---|---|
-| `frontend/app/globals.css` | Defines all design tokens. Changes cascade to every component. |
-| `frontend/tailwind.config.ts` | Minimal by design. Do not add color scales or theme extensions. |
-| `frontend/types/index.ts` | Shared types. Adding fields here affects all consumers. |
-| `frontend/store/useAppStore.ts` | Persisted auth state. Schema changes break existing sessions. |
-| `frontend/lib/api.ts` | All backend calls. Axios interceptors set auth headers here. |
-| `frontend/hooks/useWalletUser.ts` | SIWE auth flow. The reconnect/hydration logic is fragile. |
-| `frontend/components/wallet/Providers.tsx` | wagmi + RainbowKit config. Wrong config breaks wallet entirely. |
-| `frontend/app/layout.tsx` | Root layout. Affects every page. |
+| `app/globals.css` | every token; changes cascade to every component |
+| `types/index.ts` | shared domain types; `TaskStatus` must match the backend's status strings |
+| `store/useAppStore.ts` | persisted auth; schema changes break live sessions |
+| `lib/api.ts` | every backend call and the auth interceptor |
+| `hooks/useWalletUser.ts` | SIWE flow; the reconnect/hydration logic is fragile |
+| `components/wallet/Providers.tsx` | wagmi + RainbowKit + LazyMotion; wrong config breaks wallets or all motion |
+| `app/layout.tsx` | fonts and root shell; affects every page |
 
 ---
 
 ## What Not To Do
 
-- **No purple, cyan, or emerald** — these are explicitly out of the design system
-- **No glassmorphism** — no `backdrop-blur`, `bg-opacity`, frosted glass cards
-- **No glow effects** — no `box-shadow` with color, no blurred background divs
-- **No large border radii** — `rounded-xl`, `rounded-2xl`, `rounded-3xl` do not belong
-- **No Tailwind color utilities** — `bg-zinc-*`, `text-purple-*`, `border-emerald-*`, etc.
-- **No `hover:` Tailwind classes** on elements with inline `style={}` (they can't win)
-- **No badge pills for status** — status is plain mono text
-- **No count badges on tabs** — tabs are just text labels
-- **No decorative sidebar** — the dashboard layout.tsx is a pass-through
-- **No icons in nav tabs**
-- **No comments explaining what code does** — only comment the non-obvious WHY
-- **No `display` inline styles on elements with Tailwind responsive classes**
+- **No `motion.` components** — `m.` only, under `LazyMotion strict`
+- **No raw hex or Tailwind palette colours** — `bg-zinc-*`, `text-purple-*`, `border-emerald-*`
+- **No purple, cyan, or emerald**; amber is for money and nothing else
+- **No glassmorphism**, no ambient glows, no coloured drop-shadows
+- **No radii above 6px** — `rounded-xl`/`2xl`/`3xl` do not belong
+- **No per-file font constants** — use `font-display` / `font-mono`
+- **No `useState` hover** — use `hover:` and `group-hover:`
+- **No inline `style`** except for computed values (widths, transforms from state)
+- **No `tailwind.config.ts`** — Tailwind v4 is configured in `globals.css`
+- **No AI attribution in commits** — no `Co-Authored-By`, no `Generated-by`
+- **No comments explaining what code does** — comment the non-obvious *why*

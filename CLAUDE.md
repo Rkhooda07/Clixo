@@ -48,9 +48,9 @@ The database was provisioned with `prisma db push`, so `prisma/migrations/` desc
 
 `backend/src/generated/prisma/` is stale dead weight from a superseded generator config. Ignore it; it is the copy grep finds first.
 
-### Do not read `agents.md` or `DEVELOPMENT_GUIDE.md`
+### Frontend work — read `DEVELOPMENT_GUIDE.md` first
 
-Two byte-identical tracked copies of an obsolete 486-line guide. They describe the pre-2026-08 architecture and contradict the shipped code on nearly every rule — mandatory inline styles, "no Framer Motion", no badge pills, no tab counts, a `tailwind.config.ts` that does not exist, and a `Co-Authored-By: Claude` commit trailer that violates the global no-AI-attribution rule. Following them undoes the design system. They should be deleted.
+It is the authoritative frontend reference: token tables, motion rules, state contracts, page architectures, and the Definition of Done. Rewritten 2026-08-04 to match the design-system overhaul. The summary below is the short form; the guide wins on any detail.
 
 ### Frontend conventions
 
