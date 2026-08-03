@@ -19,17 +19,58 @@ The principles in Developer Brain govern every session in this repository. Do no
 **Name:** `Clixo`
 *Must match the folder name at `Developer Brain/projects/Clixo/`.*
 
-**What it is:** [One sentence describing what this repository does.]
+**What it is:** An opinion market on Ethereum Sepolia — creators post a question with 2–10 image options and stake ETH; workers vote blind and split the stake when the vote target is reached.
 
-**Stack:** [Primary language, frameworks, key dependencies]
+**Stack:** TypeScript throughout, two processes.
+`backend/` — Express 5, Prisma, Neon Postgres, ethers v6, Pinata (IPFS), jsonwebtoken, multer.
+`frontend/` — Next.js 15 App Router, React 19, Tailwind v4 (CSS-first), wagmi + RainbowKit, TanStack Query, Zustand, framer-motion, Axios, Recharts, sonner.
 
 ---
 
 ## Rules
 
-[Project-specific rules only — what Claude needs to know about this codebase that is not covered by Developer Brain's operating principles. Examples: how to run tests, build commands, CI pipeline, deployment process, code style decisions specific to this project.]
+### Commands
 
-*Remove this section if there is nothing project-specific to add.*
+```
+cd backend  && npm run dev      # tsx + nodemon on :4000
+cd frontend && npm run dev      # Next dev server on :3000
+npx tsc --noEmit                # run in each package; both must be clean
+cd frontend && npm run build    # catches server/client boundary violations
+```
+
+There are no tests and no CI. `backend`'s `npm run build`/`start` do not currently work — `tsconfig.json` sets `noEmit: true`, so `tsc` produces no `dist/`.
+
+### Database — read before touching Prisma
+
+The database was provisioned with `prisma db push`, so `prisma/migrations/` describes a schema six features out of date and `prisma migrate status` reports every migration as never applied.
+
+**Never run `prisma migrate dev`.** It reads the live database as drifted and offers a destructive reset of the only system of record for every task, vote, and balance. Use `prisma db push` for schema changes until the history is baselined (`prisma migrate resolve --applied` per migration, plus one squashed migration for the drift).
+
+`backend/src/generated/prisma/` is stale dead weight from a superseded generator config. Ignore it; it is the copy grep finds first.
+
+### Do not read `agents.md` or `DEVELOPMENT_GUIDE.md`
+
+Two byte-identical tracked copies of an obsolete 486-line guide. They describe the pre-2026-08 architecture and contradict the shipped code on nearly every rule — mandatory inline styles, "no Framer Motion", no badge pills, no tab counts, a `tailwind.config.ts` that does not exist, and a `Co-Authored-By: Claude` commit trailer that violates the global no-AI-attribution rule. Following them undoes the design system. They should be deleted.
+
+### Frontend conventions
+
+- **Tokens, never values.** Colours, radii, and fonts live once in `frontend/app/globals.css` and reach Tailwind via `@theme inline`. Use semantic utilities (`bg-surface`, `text-lo`, `border-line`, `text-amber`); never a raw hex, never a Tailwind palette colour (`bg-zinc-*`). There is no `tailwind.config.ts` — Tailwind v4 is configured in CSS.
+- **framer-motion is behind `LazyMotion features={domMax} strict`.** Use `m.div`, never `motion.div` — `motion.` throws at runtime under `strict`. Guard every animation with `useReducedMotion()`.
+- **Prefer the native platform element.** The mobile drawer is a real `<dialog>` + `showModal()`; entry animation is CSS `@starting-style`. Check the platform before adding a component or a dependency.
+- **Primitives are hand-rolled** in `components/ui/` — no Radix, no shadcn CLI. Accessibility is yours to get right: role, `aria-*`, keyboard traversal, focus return.
+- Import `buttonVariants` from `components/ui/buttonVariants.ts` (server-safe) when styling a `<Link>` or a server component; import `Button` only where you need the client component.
+- Wallet-scoped queries always take `address` in the `queryKey` and gate on `enabled: !!address`.
+
+### Backend conventions
+
+- **Identity never comes from the request body.** Read `workerId` / `walletAddress` from `req.auth` (set by `requireAuth`). Resolve the creator `User` by address, case-insensitively.
+- `User` and `Worker` are separate tables with independent `SERIAL` sequences. A `workerId` is not a `userId`. This has already caused one cross-account data leak — see `known-defects.md` in Developer Brain.
+- Money is integer credits at `0.001 ETH`. Keep `BigInt` confined to the lines that touch `tx.value`.
+- New routes are auth-gated unless there is a stated reason to be public, and any route acting on a task checks ownership.
+
+### Git
+
+Conventional Commits with a scope (`feat(vote):`, `fix(payout):`, `polish(ui):`). No AI attribution of any kind.
 
 ---
 
