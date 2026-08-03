@@ -4,7 +4,7 @@ import React from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
-import { LazyMotion, domAnimation } from "framer-motion";
+import { LazyMotion, domMax } from "framer-motion";
 import { wagmiConfig } from "@/lib/wagmi";
 import { Toaster } from "sonner";
 import { queryClient } from "@/lib/queryClient";
@@ -31,7 +31,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={rkTheme}>
-          <LazyMotion features={domAnimation} strict>
+          <LazyMotion features={domMax} strict>
             {children}
           </LazyMotion>
           <Toaster
