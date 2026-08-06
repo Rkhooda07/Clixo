@@ -47,7 +47,8 @@ export function useWalletUser() {
     } catch (err: any) {
       console.error("SIWE Authentication failed: ", err);
       toast.error(err?.message || "Signature request cancelled or authentication failed", { id: "siwe-auth" });
-      authAttempted.current = null;
+      // Keep authAttempted set so a rejected signature doesn't re-prompt in a
+      // loop — the manual Sign In button is the retry path.
       // We don't necessarily want to logout/disconnect here if it was just a cancelled signature
     } finally {
       setIsAuthenticating(false);
@@ -67,6 +68,19 @@ export function useWalletUser() {
       }
     }
   }, [isConnected, address, isConnecting, isReconnecting, isHydrated, walletAddress]);
+
+  // Auto-prompt the SIWE signature right after connecting, so connect + sign
+  // feel like one step. One attempt per address; rejection falls back to the
+  // manual Sign In button.
+  useEffect(() => {
+    if (isConnecting || isReconnecting || !isHydrated) return;
+    if (!isConnected || !address || isAuthenticating) return;
+    if (token && walletAddress?.toLowerCase() === address.toLowerCase()) return;
+    if (authAttempted.current === address) return;
+    authAttempted.current = address;
+    login();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, address, isConnecting, isReconnecting, isHydrated, token, walletAddress, isAuthenticating]);
 
   return {
     address,
