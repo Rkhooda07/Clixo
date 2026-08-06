@@ -8,7 +8,9 @@ export const getTasks = async (req: Request, res: Response) => {
     const tasks = await prisma.task.findMany({
       where: status ? { status: String(status) }: {},
       include: {
-        options: true,
+        // First option only — the card thumbnail; _count keeps the full total
+        options: { take: 1, orderBy: { id: "asc" } },
+        _count: { select: { options: true, submissions: true } },
       },
       orderBy: {
         createdAt: "desc",
@@ -22,7 +24,13 @@ export const getTasks = async (req: Request, res: Response) => {
       budget: task.budget,
       fundedAmount: task.fundedAmount,
       deadline: task.deadline,
-      optionsCount: task.options.length,
+      optionsCount: task._count.options,
+      totalSubmissions: task._count.submissions,
+      options: task.options.map((opt) => ({
+        id: opt.id,
+        image_url: opt.image_url,
+        gateway_url: opt.gateway_url,
+      })),
     }));
 
     return res.json({ tasks: formatted });
