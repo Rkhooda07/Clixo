@@ -5,11 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { ConnectButton } from "../wallet/ConnectButton";
+import { buttonVariants } from "@/components/ui/buttonVariants";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { label: "Browse Tasks", href: "/browse" },
   { label: "Dashboard", href: "/dashboard" },
+  { label: "How it works", href: "/#how-it-works" },
 ];
 
 const createTaskLink = { label: "Post a Task", href: "/create-task" };
@@ -26,13 +28,14 @@ function DesktopNavLink({
   return (
     <Link
       href={link.href}
-      prefetch={false}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex items-center self-stretch border-b-2 px-2.5 text-[13px] tracking-[-0.01em] transition-colors duration-100",
+        "relative flex items-center self-stretch px-2.5 text-[13px] tracking-[-0.01em] transition-colors duration-150",
+        // Underline grows from the left on hover, stays put on the active page
+        "after:absolute after:inset-x-2.5 after:bottom-0 after:h-[2px] after:bg-hi after:origin-left after:transition-transform after:duration-200 after:ease-out-quart motion-reduce:after:transition-none",
         active
-          ? "border-hi text-hi"
-          : "border-transparent text-lo hover:border-dim hover:text-hi focus-visible:border-dim focus-visible:text-hi"
+          ? "text-hi after:scale-x-100"
+          : "text-lo after:scale-x-0 hover:text-hi hover:after:scale-x-100 focus-visible:text-hi focus-visible:after:scale-x-100"
       )}
     >
       {link.label}
@@ -65,27 +68,36 @@ export function Navbar() {
     <>
       <nav className="sticky top-0 z-50 w-full border-b border-line bg-ink">
         <div className="mx-auto flex h-[52px] max-w-[1280px] items-center justify-between px-6">
-          {/* Wordmark */}
-          <Link href="/" prefetch={false} className={WORDMARK}>
-            CLIXO
-          </Link>
+          {/* Left: wordmark + primary nav */}
+          <div className="flex items-stretch gap-8 self-stretch">
+            <Link
+              href="/"
+              className={cn(WORDMARK, "flex items-center transition-opacity duration-150 hover:opacity-80")}
+            >
+              CLIXO
+            </Link>
 
-          {/* Center nav — desktop only */}
-          <div className="hidden items-stretch gap-0.5 md:flex">
-            {navLinks.map((link) => (
-              <DesktopNavLink key={link.href} link={link} active={pathname === link.href} />
-            ))}
-            {/* Post a Task — separated by a left hairline to mark it as an action */}
-            <div className="ml-2 flex items-stretch border-l border-line pl-7">
-              <DesktopNavLink
-                link={createTaskLink}
-                active={pathname === createTaskLink.href}
-              />
+            <div className="hidden items-stretch gap-0.5 md:flex">
+              {navLinks.map((link) => (
+                <DesktopNavLink key={link.href} link={link} active={pathname === link.href} />
+              ))}
             </div>
           </div>
 
-          {/* Right: hamburger (mobile) + wallet */}
+          {/* Right: CTA + wallet + hamburger (mobile) */}
           <div className="flex items-center gap-3">
+            <Link
+              href={createTaskLink.href}
+              className={cn(
+                buttonVariants({ variant: "primary", size: "sm" }),
+                "hidden md:inline-flex"
+              )}
+            >
+              {createTaskLink.label}
+            </Link>
+
+            <ConnectButton />
+
             <button
               onClick={() => setDrawerOpen(true)}
               aria-label="Open navigation"
@@ -94,8 +106,6 @@ export function Navbar() {
             >
               <Menu size={18} />
             </button>
-
-            <ConnectButton />
           </div>
         </div>
       </nav>
@@ -127,13 +137,12 @@ export function Navbar() {
 
             {/* Drawer links */}
             <nav className="grow divide-y divide-subtle p-3">
-              {[...navLinks, createTaskLink].map((link) => {
+              {navLinks.map((link) => {
                 const active = pathname === link.href;
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
-                    prefetch={false}
                     onClick={() => dialogRef.current?.close()}
                     aria-current={active ? "page" : undefined}
                     className={cn(
@@ -147,8 +156,15 @@ export function Navbar() {
               })}
             </nav>
 
-            {/* Drawer wallet */}
-            <div className="shrink-0 border-t border-line px-5 py-4">
+            {/* Drawer CTA + wallet */}
+            <div className="flex shrink-0 flex-col gap-3 border-t border-line px-5 py-4">
+              <Link
+                href={createTaskLink.href}
+                onClick={() => dialogRef.current?.close()}
+                className={buttonVariants({ variant: "primary", className: "w-full" })}
+              >
+                {createTaskLink.label}
+              </Link>
               <ConnectButton />
             </div>
           </div>

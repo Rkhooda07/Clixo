@@ -148,7 +148,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── How It Works ─────────────────────────────────────────────────── */}
-      <section className="py-24 bg-ink">
+      <section id="how-it-works" className="scroll-mt-[52px] py-24 bg-ink">
         <div className="max-w-[1280px] mx-auto px-6 md:px-10">
           <Reveal>
             <div className="eyebrow tracking-[0.15em] mb-12">Process</div>
