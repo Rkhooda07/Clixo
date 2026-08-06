@@ -7,7 +7,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { toast } from "sonner";
 
 export function useWalletUser() {
-  const { address, isConnected, isConnecting, isReconnecting } = useAccount();
+  const { address, isConnected, isConnecting, isReconnecting, connector } = useAccount();
   const { signMessageAsync } = useSignMessage();
   const { disconnect } = useDisconnect();
   const { token, walletAddress, setAuth, logout } = useAppStore();
@@ -32,10 +32,18 @@ export function useWalletUser() {
       // 1. Fetch challenge message
       const challenge = await authApi.getChallenge(address);
 
-      // 2. Sign message
-      const signature = await signMessageAsync({
-        message: challenge.message,
-      });
+      // 2. Sign message — wagmi reports connected before the connector
+      // finishes its handshake, so retry briefly on that specific race.
+      let signature: string;
+      for (let attempt = 0; ; attempt++) {
+        try {
+          signature = await signMessageAsync({ message: challenge.message });
+          break;
+        } catch (err: any) {
+          if (attempt >= 4 || err?.name !== "ConnectorNotConnectedError") throw err;
+          await new Promise((r) => setTimeout(r, 300));
+        }
+      }
 
       // 3. Verify signature
       const res = await authApi.verify(address, signature, challenge.nonce);
@@ -74,13 +82,13 @@ export function useWalletUser() {
   // manual Sign In button.
   useEffect(() => {
     if (isConnecting || isReconnecting || !isHydrated) return;
-    if (!isConnected || !address || isAuthenticating) return;
+    if (!isConnected || !address || !connector || isAuthenticating) return;
     if (token && walletAddress?.toLowerCase() === address.toLowerCase()) return;
     if (authAttempted.current === address) return;
     authAttempted.current = address;
     login();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address, isConnecting, isReconnecting, isHydrated, token, walletAddress, isAuthenticating]);
+  }, [isConnected, address, connector, isConnecting, isReconnecting, isHydrated, token, walletAddress, isAuthenticating]);
 
   return {
     address,
