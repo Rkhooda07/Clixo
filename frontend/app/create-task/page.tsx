@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { AnimatePresence, m, useReducedMotion } from "framer-motion";
 import type { Eip1193Provider } from "ethers";
 import axios from "axios";
@@ -43,6 +43,13 @@ export default function CreateTaskPage() {
   const [createdTaskId, setCreatedTaskId] = useState<number | null>(null);
 
   const reduceMotion = useReducedMotion();
+
+  // Warm the ethers chunk (~350 kB) as soon as the user starts uploading, so
+  // Confirm doesn't pay for the download. Webpack caches the module, so the
+  // await in handleSubmit resolves instantly.
+  useEffect(() => {
+    if (step >= 2) void import("ethers");
+  }, [step]);
 
   const ethPrice = useEthPrice() ?? 3200;
   const rewardEth = (minVotes * ETH_PER_CREDIT).toFixed(3);
@@ -115,8 +122,9 @@ export default function CreateTaskPage() {
     toast.loading("Creating campaign...", { id: "create-campaign" });
 
     try {
-      // Keep ethers out of the route bundle — only loaded when funding starts.
-      const { ethers } = await import("ethers");
+      // Kick the import off but don't await it yet — the uploads below don't
+      // need ethers, so downloading it in parallel with them costs nothing.
+      const ethersPromise = import("ethers");
 
       let settled = 0;
       const uploadedOptions = await Promise.all(
@@ -145,11 +153,22 @@ export default function CreateTaskPage() {
       setSubmissionProgress("Funding escrow...");
       if (!window.ethereum) throw new Error("No Ethereum browser extension found.");
 
+      const { ethers } = await ethersPromise;
+
       await ensureSepoliaNetwork();
 
       const provider = new ethers.BrowserProvider(window.ethereum as Eip1193Provider);
-      const signer = await provider.getSigner();
-      const network = await provider.getNetwork();
+
+      setSubmissionProgress("Checking balance and fees...");
+
+      // These three reads are independent of each other; awaiting them in
+      // sequence used to add several RPC round trips of dead time between the
+      // click and the wallet prompt.
+      const [signer, network, feeData] = await Promise.all([
+        provider.getSigner(),
+        provider.getNetwork(),
+        provider.getFeeData(),
+      ]);
       const signerAddress = await signer.getAddress();
 
       if (Number(network.chainId) !== SEPOLIA_CHAIN_ID) {
@@ -158,7 +177,6 @@ export default function CreateTaskPage() {
 
       const txValue = ethers.parseEther(rewardEth);
       const balance = await provider.getBalance(signerAddress);
-      const feeData = await provider.getFeeData();
       const maxFeePerGas = feeData.maxFeePerGas ?? feeData.gasPrice ?? 0n;
       const estimatedGasCost = maxFeePerGas * FUNDING_GAS_LIMIT;
 
