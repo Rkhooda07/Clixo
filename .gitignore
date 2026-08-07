@@ -9,3 +9,6 @@ node_modules
 # Screenshot artifacts from browser testing
 *.png
 *.jpg
+
+# ...but the generated brand icons are real assets, not artifacts
+!frontend/public/*.png
