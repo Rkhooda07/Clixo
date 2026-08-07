@@ -16,7 +16,9 @@ const rkTheme = darkTheme({
 rkTheme.colors.modalBackground = "#111113";
 rkTheme.colors.modalBorder = "#242428";
 rkTheme.colors.modalText = "#f0f0f0";
-rkTheme.colors.modalTextSecondary = "#888890";
+// Mirrors --text-2. RainbowKit's theme takes literals, not CSS vars, so this
+// has to be kept in step with app/globals.css by hand.
+rkTheme.colors.modalTextSecondary = "#a4a4aa";
 rkTheme.colors.generalBorder = "#242428";
 rkTheme.fonts.body = "var(--font-geist), system-ui, sans-serif";
 rkTheme.radii.modal = "6px";

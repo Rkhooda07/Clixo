@@ -6,9 +6,16 @@
   --surface-2:   #19191d;
   --line:        #242428;
   --line-subtle: #1c1c20;
+  /* Text tiers. Every use of these is body-size (8–14px), so all three must
+     clear WCAG AA 4.5:1 — the 3:1 large-text allowance never applies here.
+     Ratios are held against --surface-2, the lightest surface any of them
+     render on, which makes --ink and --surface-1 pass automatically.
+       --text-1  15.4:1   --text-2  7.1:1   --text-3  4.5:1
+     --text-3 was #4a4a52 (2.0:1, failing even the 3:1 floor); --text-2 moved
+     up with it to keep the three tiers visually distinct. */
   --text-1:      #f0f0f0;
-  --text-2:      #888890;
-  --text-3:      #4a4a52;
+  --text-2:      #a4a4aa;
+  --text-3:      #818186;
   --amber:       #e8a020;
   --amber-dim:   #3d2a08;
   --green:       #22c55e;

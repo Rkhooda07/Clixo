@@ -27,8 +27,11 @@ function ActionButton({
       <div
         className={buttonVariants({
           variant: "ghost",
+          // No opacity here: halving --green dropped this to 2.88:1 on a card,
+          // under AA. pointer-events-none and the ghost variant already read
+          // as non-interactive without dimming the text.
           className:
-            "w-full font-mono text-green opacity-50 cursor-default pointer-events-none",
+            "w-full font-mono text-green cursor-default pointer-events-none",
         })}
       >
         {label}
