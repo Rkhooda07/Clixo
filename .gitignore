@@ -12,3 +12,8 @@ node_modules
 
 # ...but the generated brand icons are real assets, not artifacts
 !frontend/public/*.png
+
+# Claude Code scratch. Worktrees are whole nested checkouts; settings.local is
+# per-machine. A shared .claude/settings.json stays trackable.
+.claude/worktrees/
+.claude/settings.local.json
