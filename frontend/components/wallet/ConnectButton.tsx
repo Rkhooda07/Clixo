@@ -160,7 +160,16 @@ function AuthenticatedPill({
 }
 
 export function ConnectButton() {
-  const { isAuthenticating, isLogged, login, logout } = useWalletUser();
+  const { isAuthenticating, isLogged, logout } = useWalletUser();
+
+  // Connecting and signing are one step, so there is no second button to
+  // press: everything between picking a wallet and being signed in shows the
+  // same pending state, and a rejected signature drops back to Connect Wallet.
+  const signingButton = (
+    <Button variant="outline" loading>
+      Signing...
+    </Button>
+  );
 
   return (
     <RainbowConnectButton.Custom>
@@ -173,11 +182,7 @@ export function ConnectButton() {
         }
 
         if (isAuthenticating) {
-          return (
-            <Button variant="outline" loading>
-              Signing...
-            </Button>
-          );
+          return signingButton;
         }
 
         if (!connected) {
@@ -193,11 +198,7 @@ export function ConnectButton() {
         }
 
         if (!isLogged) {
-          return (
-            <Button variant="amber" onClick={login}>
-              Sign In
-            </Button>
-          );
+          return signingButton;
         }
 
         return (
