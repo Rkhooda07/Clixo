@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { LiveStats } from "@/components/home/LiveStats";
 import { HeroResultsCard } from "@/components/home/HeroResultsCard";
+import { HeroParticles } from "@/components/home/HeroParticles";
 import { Reveal } from "@/components/ui/Reveal";
 import { Card } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/buttonVariants";
@@ -76,6 +77,9 @@ export default function LandingPage() {
               "radial-gradient(circle, rgba(232,160,32,0.055), transparent 65%)",
           }}
         />
+
+        {/* Cursor-reactive grain field — gathers around the cursor, drifts home */}
+        <HeroParticles />
 
         <div className="relative flex-1 flex flex-col md:flex-row md:items-center">
           {/* Left: headline content */}
