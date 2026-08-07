@@ -1,3 +1,5 @@
+import { WalletProviders } from "@/components/wallet/WalletProviders";
+
 export const metadata = {
   title: "Dashboard",
 };
@@ -7,5 +9,5 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <WalletProviders reconnectOnMount={false}>{children}</WalletProviders>;
 }

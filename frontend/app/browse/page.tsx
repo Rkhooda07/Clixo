@@ -9,7 +9,7 @@ import { Tabs } from "@/components/ui/Tabs";
 import { Input } from "@/components/ui/Input";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { taskApi, meApi } from "@/lib/api";
-import { useWalletUser } from "@/hooks/useWalletUser";
+import { useAppStore } from "@/store/useAppStore";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 
@@ -25,7 +25,9 @@ type FilterId = "all" | "highest" | "needed" | "newest";
 const GRID = "grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 pb-10";
 
 export default function BrowsePage() {
-  const { isConnected, token } = useWalletUser();
+  // The Bearer token is the credential this page needs; reading it from the
+  // store instead of wagmi keeps the whole wallet stack off this route.
+  const token = useAppStore((s) => s.token);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
 
@@ -37,7 +39,7 @@ export default function BrowsePage() {
   const { data: submissionsData } = useQuery({
     queryKey: ["submissions", token],
     queryFn: () => meApi.getSubmissions(),
-    enabled: !!isConnected && !!token,
+    enabled: !!token,
   });
 
   const votedTaskIds = useMemo(() => {

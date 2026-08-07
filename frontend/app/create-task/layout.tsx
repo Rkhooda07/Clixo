@@ -1,3 +1,5 @@
+import { WalletProviders } from "@/components/wallet/WalletProviders";
+
 export const metadata = {
   title: "Post a Task",
 };
@@ -7,5 +9,5 @@ export default function CreateTaskLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <WalletProviders reconnectOnMount={false}>{children}</WalletProviders>;
 }

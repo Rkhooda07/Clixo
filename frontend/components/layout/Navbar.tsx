@@ -2,11 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import { ConnectButton } from "../wallet/ConnectButton";
 import { buttonVariants } from "@/components/ui/buttonVariants";
 import { cn } from "@/lib/utils";
+
+// The wallet stack (~180 kB gzip) is the single heaviest thing the app loads.
+// Keeping it behind next/dynamic means every route — including `/`, which has
+// no wallet interaction at all — paints and hydrates without it.
+const NavbarWallet = dynamic(
+  () => import("../wallet/NavbarWallet").then((mod) => mod.NavbarWallet),
+  {
+    ssr: false,
+    loading: () => <div className="h-[34px] w-[118px] rounded-md bg-raised" />,
+  }
+);
 
 const navLinks = [
   { label: "Browse Tasks", href: "/browse" },
@@ -96,7 +107,7 @@ export function Navbar() {
               {createTaskLink.label}
             </Link>
 
-            <ConnectButton />
+            <NavbarWallet />
 
             <button
               onClick={() => setDrawerOpen(true)}
@@ -165,7 +176,9 @@ export function Navbar() {
               >
                 {createTaskLink.label}
               </Link>
-              <ConnectButton />
+              {/* Drawer instance is a second mount of the same shared config —
+                  the navbar instance above already owns the reconnect. */}
+              <NavbarWallet reconnectOnMount={false} />
             </div>
           </div>
         )}
