@@ -16,10 +16,21 @@ import { meApi } from "@/lib/api";
 import { Task } from "@/types";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { PageWrapper } from "@/components/layout/PageWrapper";
+import { useAppStore } from "@/store/useAppStore";
 
 function DashboardContent() {
   const { address } = useAccount();
-  const { data: balance } = useBalance({ address });
+  // Balance is a chain read, so it is cached rather than refetched per render
+  // and never gates paint — StatsRow renders "—" until it lands.
+  const { data: balance } = useBalance({
+    address,
+    query: { staleTime: 30_000, gcTime: 5 * 60_000 },
+  });
+  // The /me/* endpoints authenticate with the stored Bearer token, not with a
+  // live wallet connection. Keying off the persisted address lets them fetch
+  // in parallel with the wagmi reconnect handshake instead of queueing behind
+  // it, while keeping the per-address cache partition the convention requires.
+  const walletAddress = useAppStore((s) => s.walletAddress);
   const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -31,21 +42,21 @@ function DashboardContent() {
   }
 
   const { data: tasksData, isLoading: isTasksLoading } = useQuery({
-    queryKey: ["my-tasks", address],
+    queryKey: ["my-tasks", walletAddress],
     queryFn: () => meApi.getTasks(),
-    enabled: !!address,
+    enabled: !!walletAddress,
   });
 
   const { data: subsData, isLoading: isSubsLoading } = useQuery({
-    queryKey: ["my-submissions", address],
+    queryKey: ["my-submissions", walletAddress],
     queryFn: () => meApi.getSubmissions(),
-    enabled: !!address,
+    enabled: !!walletAddress,
   });
 
   const { data: earningsData, isLoading: isEarningsLoading } = useQuery({
-    queryKey: ["my-earnings", address],
+    queryKey: ["my-earnings", walletAddress],
     queryFn: () => meApi.getEarnings(),
-    enabled: !!address,
+    enabled: !!walletAddress,
   });
 
   const tasks = React.useMemo(() => {
@@ -62,7 +73,6 @@ function DashboardContent() {
 
   const submissions = subsData?.submissions || [];
   const earnings = earningsData || { pending: 0, locked: 0, totalEarned: 0 };
-  const isLoading = isTasksLoading || isSubsLoading || isEarningsLoading;
 
   const ethSpent = tasks.reduce((acc: number, t: Task) => acc + (t.fundedAmount || 0), 0) * 0.001;
 
@@ -77,7 +87,9 @@ function DashboardContent() {
               ethBalance: balance ? Number(balance.formatted).toFixed(3) : "—",
               tasksCreated: tasks.length,
               ethSpent: ethSpent.toFixed(3),
-              ethEarned: (earnings.totalEarned * 0.001).toFixed(3),
+              ethEarned: isEarningsLoading
+                ? "—"
+                : (earnings.totalEarned * 0.001).toFixed(3),
             }}
           />
         </PageWrapper>
@@ -113,10 +125,12 @@ function DashboardContent() {
 
         {/* Table content */}
         <PageWrapper className="py-6">
+          {/* Each table waits only on its own query — the earnings request no
+              longer holds up the tasks table. */}
           {activeTab === "my-tasks" ? (
-            <MyTasks tasks={tasks} isLoading={isLoading} />
+            <MyTasks tasks={tasks} isLoading={isTasksLoading} />
           ) : (
-            <MyWork submissions={submissions} isLoading={isLoading} />
+            <MyWork submissions={submissions} isLoading={isSubsLoading} />
           )}
         </PageWrapper>
 
