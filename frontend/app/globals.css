@@ -52,6 +52,13 @@
   --animate-fade-up:     fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-scroll-hint: scroll-hint 1.6s ease-in-out infinite;
 
+  /* First-load splash. The veil's delay + duration (440+160) is what actually
+     bounds the splash at 600ms — it is CSS, so it still clears on time if
+     hydration stalls and the unmount timer never fires. */
+  --animate-boot-veil:      boot-veil 160ms ease-out 440ms both;
+  --animate-boot-mark:      boot-mark 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-route-progress: route-progress 700ms ease-out both;
+
   --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -68,6 +75,22 @@
 @keyframes scroll-hint {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(5px); }
+}
+
+@keyframes boot-veil {
+  to { opacity: 0; visibility: hidden; }
+}
+
+@keyframes boot-mark {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes route-progress {
+  0%   { width: 0;    opacity: 1; }
+  55%  { width: 70%;  opacity: 1; }
+  85%  { width: 92%;  opacity: 1; }
+  100% { width: 100%; opacity: 0; }
 }
 
 /* Mono uppercase micro-label — the app's signature eyebrow treatment */
@@ -143,14 +166,27 @@ h1, h2, h3, h4, h5, h6 {
   flex-shrink: 0;
 }
 
+/* Reduced-motion form of the progress bar: still reports that a navigation
+   happened, but as a fade with no travel. */
+@keyframes route-progress-static {
+  0%, 70% { width: 100%; opacity: 1; }
+  100%    { width: 100%; opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-shimmer,
   .animate-fade-up,
-  .animate-scroll-hint {
+  .animate-scroll-hint,
+  .animate-boot-mark {
     animation: none;
   }
   .animate-fade-up {
     opacity: 1;
     transform: none;
+  }
+  /* animate-boot-veil is deliberately left running — it is the splash's
+     dismissal, so `animation: none` would strand the overlay on screen. */
+  .animate-route-progress {
+    animation: route-progress-static 500ms ease-out both;
   }
 }
