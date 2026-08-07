@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { buttonVariants } from "@/components/ui/buttonVariants";
+import { Logomark } from "@/components/ui/Logomark";
 import { cn } from "@/lib/utils";
 
 // The wallet stack (~180 kB gzip) is the single heaviest thing the app loads.
@@ -83,8 +84,12 @@ export function Navbar() {
           <div className="flex items-stretch gap-8 self-stretch">
             <Link
               href="/"
-              className={cn(WORDMARK, "flex items-center transition-opacity duration-150 hover:opacity-80")}
+              className={cn(
+                WORDMARK,
+                "flex items-center gap-2 transition-opacity duration-150 hover:opacity-80"
+              )}
             >
+              <Logomark className="size-[18px]" />
               CLIXO
             </Link>
 
@@ -136,7 +141,10 @@ export function Navbar() {
           <div className="flex h-full flex-col">
             {/* Drawer header */}
             <div className="flex h-[52px] shrink-0 items-center justify-between border-b border-line px-5">
-              <span className={WORDMARK}>CLIXO</span>
+              <span className={cn(WORDMARK, "flex items-center gap-2")}>
+                <Logomark className="size-[18px]" />
+                CLIXO
+              </span>
               <button
                 onClick={() => dialogRef.current?.close()}
                 aria-label="Close navigation"
