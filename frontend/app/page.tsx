@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { LiveStats } from "@/components/home/LiveStats";
-import { HeroResultsCard } from "@/components/home/HeroResultsCard";
 import { HeroParticles } from "@/components/home/HeroParticles";
+import { HeroBallot } from "@/components/home/HeroBallot";
 import { Reveal } from "@/components/ui/Reveal";
 import { Card } from "@/components/ui/Card";
 import { buttonVariants } from "@/components/ui/buttonVariants";
@@ -81,7 +81,7 @@ export default function LandingPage() {
         {/* Cursor-reactive grain field — gathers around the cursor, drifts home */}
         <HeroParticles />
 
-        <div className="relative flex-1 flex flex-col md:flex-row md:items-center">
+        <div className="relative flex-1 flex flex-col md:flex-row md:items-stretch">
           {/* Left: headline content */}
           <div className="flex-1 flex flex-col justify-center pt-12 pb-12 md:pb-0 px-6 md:flex-none md:w-[55%] md:pl-[11%] md:pr-12">
             <div className="animate-fade-up border-l border-line pl-3 font-mono text-[11px] text-dim tracking-[0.1em] uppercase mb-7">
@@ -135,9 +135,20 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right: animated results mockup — desktop only */}
-          <div className="hidden md:flex md:w-[45%] items-center justify-center pr-[8%]">
-            <HeroResultsCard />
+          {/* Right: playable ballot in a full-height panel — desktop only */}
+          <div className="hidden md:flex md:w-[45%] flex-col border-l border-line">
+            <div className="flex h-11 shrink-0 items-center justify-between border-b border-line px-5 lg:px-8">
+              <span className="eyebrow">Try it</span>
+              <span className="eyebrow">Sample task</span>
+            </div>
+
+            <div className="flex flex-1 items-center justify-center px-5 py-8 lg:px-8">
+              <HeroBallot />
+            </div>
+
+            <div className="flex h-11 shrink-0 items-center border-t border-line px-5 lg:px-8">
+              <span className="eyebrow">Blind voting · Settled on Sepolia</span>
+            </div>
           </div>
         </div>
 
