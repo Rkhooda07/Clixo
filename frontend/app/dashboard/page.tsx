@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Plus } from "lucide-react";
 import { useAccount, useBalance } from "wagmi";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
+import { WalletProviders } from "@/components/wallet/WalletProviders";
 import { StatsRow } from "@/components/dashboard/StatsRow";
 import { MyTasks } from "@/components/dashboard/MyTasks";
 import { MyWork } from "@/components/dashboard/MyWork";
@@ -141,8 +142,13 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <Suspense fallback={null}>
-      <DashboardContent />
-    </Suspense>
+    /* The provider lives here rather than in layout.tsx so that loading.tsx —
+       which is the Suspense fallback inside that layout — can paint before the
+       wallet stack has downloaded. */
+    <WalletProviders reconnectOnMount={false}>
+      <Suspense fallback={null}>
+        <DashboardContent />
+      </Suspense>
+    </WalletProviders>
   );
 }

@@ -15,7 +15,8 @@ export function BootSplash() {
   const [gone, setGone] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setGone(true), 620);
+    // Just past the end of --animate-boot-veil (180ms delay + 140ms fade).
+    const t = setTimeout(() => setGone(true), 340);
     return () => clearTimeout(t);
   }, []);
 

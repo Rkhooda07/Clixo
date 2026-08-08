@@ -62,8 +62,10 @@
   /* First-load splash. The veil's delay + duration (440+160) is what actually
      bounds the splash at 600ms — it is CSS, so it still clears on time if
      hydration stalls and the unmount timer never fires. */
-  --animate-boot-veil:      boot-veil 160ms ease-out 440ms both;
-  --animate-boot-mark:      boot-mark 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* 320ms total. It was 600ms, which is a lot of nothing to show a first-time
+     visitor before the site appears. */
+  --animate-boot-veil:      boot-veil 140ms ease-out 180ms both;
+  --animate-boot-mark:      boot-mark 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-route-progress: route-progress 700ms ease-out both;
 
   --ease-out-quart: cubic-bezier(0.16, 1, 0.3, 1);

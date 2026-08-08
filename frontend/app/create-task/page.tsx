@@ -6,6 +6,7 @@ import type { Eip1193Provider } from "ethers";
 import axios from "axios";
 import { toast } from "sonner";
 import { WalletGuard } from "@/components/wallet/WalletGuard";
+import { WalletProviders } from "@/components/wallet/WalletProviders";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { Card } from "@/components/ui/Card";
 import { StepIndicator } from "@/components/create-task/StepIndicator";
@@ -30,7 +31,18 @@ const STEPS = [
   { n: 3, label: "Confirm" },
 ];
 
-export default function CreateTaskPage() {
+export default function CreateTaskRoute() {
+  return (
+    /* The provider lives here rather than in layout.tsx so that loading.tsx —
+       which is the Suspense fallback inside that layout — can paint before the
+       wallet stack has downloaded. */
+    <WalletProviders reconnectOnMount={false}>
+      <CreateTaskPage />
+    </WalletProviders>
+  );
+}
+
+function CreateTaskPage() {
   const [step, setStep] = useState(1);
 
   const [title, setTitle] = useState("");
