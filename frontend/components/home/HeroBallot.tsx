@@ -7,117 +7,15 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { buttonVariants } from "@/components/ui/buttonVariants";
 import { cn } from "@/lib/utils";
 
-/* ── Miniature layout wireframes ──────────────────────────────────────────
-   Drawn in DOM so the hero ships no image assets. Three bar weights read as
-   a hierarchy against the ink well: line = body, dim = heading, lo = CTA.
-   Swap any of these for a real <Image> when assets exist — nothing below
-   cares what an option looks like. */
-
-const BODY = "rounded-[1px] bg-line";
-const HEAD = "rounded-[1px] bg-dim";
-const CTA = "rounded-[1px] bg-lo";
-
-function CentredHero() {
-  return (
-    <div className="flex h-full flex-col items-center justify-center gap-1.5">
-      <div className={cn(HEAD, "h-1 w-1/2")} />
-      <div className={cn(BODY, "h-1 w-2/3")} />
-      <div className={cn(BODY, "h-1 w-2/3")} />
-      <div className={cn(CTA, "mt-1.5 h-2.5 w-1/3")} />
-    </div>
-  );
-}
-
-function SplitHero() {
-  return (
-    <div className="flex h-full items-center gap-2">
-      <div className="flex flex-1 flex-col gap-1.5">
-        <div className={cn(HEAD, "h-1 w-full")} />
-        <div className={cn(BODY, "h-1 w-4/5")} />
-        <div className={cn(BODY, "h-1 w-3/5")} />
-        <div className={cn(CTA, "mt-1 h-2.5 w-2/3")} />
-      </div>
-      <div className="h-[78%] w-[44%] rounded-xs border border-line bg-raised" />
-    </div>
-  );
-}
-
-function FlatPricing() {
-  return (
-    <div className="flex h-full items-center gap-1.5">
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className="flex h-[82%] flex-1 flex-col gap-1 rounded-xs border border-line p-1.5"
-        >
-          <div className={cn(BODY, "h-1 w-3/4")} />
-          <div className={cn(HEAD, "h-1.5 w-1/2")} />
-          <div className={cn(BODY, "mt-auto h-1.5 w-full")} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function FeaturedPricing() {
-  return (
-    <div className="flex h-full items-center gap-1.5">
-      {[0, 1, 2].map((i) => {
-        const featured = i === 1;
-        return (
-          <div
-            key={i}
-            className={cn(
-              "flex flex-1 flex-col gap-1 rounded-xs border p-1.5",
-              featured ? "h-full border-hi bg-raised" : "h-[70%] border-line"
-            )}
-          >
-            <div className={cn(BODY, "h-1 w-3/4")} />
-            <div className={cn(featured ? HEAD : BODY, "h-1.5 w-1/2")} />
-            <div className={cn(featured ? CTA : BODY, "mt-auto h-1.5 w-full")} />
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function SpaciousGrid() {
-  return (
-    <div className="grid h-full grid-cols-2 items-center gap-2">
-      {[0, 1].map((i) => (
-        <div
-          key={i}
-          className="flex flex-col gap-1.5 rounded-xs border border-line p-1.5"
-        >
-          <div className="h-8 w-full rounded-[1px] bg-raised" />
-          <div className={cn(BODY, "h-1 w-3/4")} />
-          <div className={cn(HEAD, "h-1 w-1/2")} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function DenseGrid() {
-  return (
-    <div className="grid h-full grid-cols-3 grid-rows-2 gap-1">
-      {Array.from({ length: 6 }, (_, i) => (
-        <div
-          key={i}
-          className="flex flex-col gap-0.5 rounded-xs border border-line p-0.5"
-        >
-          <div className="flex-1 rounded-[1px] bg-raised" />
-          <div className={cn(BODY, "h-[3px] w-3/4")} />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ── Ballots ──────────────────────────────────────────────────────────────
    Illustrative splits, not live data — the panel labels itself "Sample task".
-   Percentages are derived from the vote counts so the two can never drift. */
+   Percentages are derived from the vote counts so the two can never drift.
+
+   The artwork is six light-UI mockups in `public/hero/`. They are SVG, so they
+   stay crisp at any thumbnail size and cost less than a photo would; being
+   light-on-dark is also what makes the two options legible inside the ink
+   card — the previous DOM wireframes drew --line bars on --ink, ~1.2:1.
+   Swap a `src` for a real screenshot whenever one exists. */
 
 const BALLOTS = [
   {
@@ -125,8 +23,8 @@ const BALLOTS = [
     question: "Which landing page would you actually click?",
     reward: 0.013,
     options: [
-      { label: "Centred", votes: 16, art: <CentredHero /> },
-      { label: "Split", votes: 9, art: <SplitHero /> },
+      { label: "Centred", votes: 16, src: "/hero/landing-centred.svg" },
+      { label: "Split", votes: 9, src: "/hero/landing-split.svg" },
     ],
   },
   {
@@ -134,8 +32,8 @@ const BALLOTS = [
     question: "Which pricing table would you trust?",
     reward: 0.02,
     options: [
-      { label: "Flat", votes: 9, art: <FlatPricing /> },
-      { label: "Featured", votes: 21, art: <FeaturedPricing /> },
+      { label: "Flat", votes: 9, src: "/hero/pricing-flat.svg" },
+      { label: "Featured", votes: 21, src: "/hero/pricing-featured.svg" },
     ],
   },
   {
@@ -143,14 +41,17 @@ const BALLOTS = [
     question: "Which product grid feels worth browsing?",
     reward: 0.008,
     options: [
-      { label: "Spacious", votes: 13, art: <SpaciousGrid /> },
-      { label: "Dense", votes: 9, art: <DenseGrid /> },
+      { label: "Spacious", votes: 13, src: "/hero/grid-spacious.svg" },
+      { label: "Dense", votes: 9, src: "/hero/grid-dense.svg" },
     ],
   },
 ];
 
 const SEAL_MS = 520;
-const NEXT_DELAY_MS = 1500;
+/* Dwell before the ballot rolls itself over. The slowest reveal animation —
+   the reward count-up — lands at 1100ms, so this leaves ~1.9s of settled
+   result to actually read. */
+const AUTO_ADVANCE_MS = 3000;
 
 export function HeroBallot() {
   const reduce = useReducedMotion();
@@ -159,7 +60,6 @@ export function HeroBallot() {
     BALLOTS.map(() => null)
   );
   const [sealing, setSealing] = useState(false);
-  const [showNext, setShowNext] = useState(false);
   const sealTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const ballot = BALLOTS[index];
@@ -177,19 +77,17 @@ export function HeroBallot() {
 
   useEffect(() => () => clearTimeout(sealTimer.current), []);
 
-  // Hold the advance until the bars have landed, so "Next" never competes
-  // with the result the visitor just asked for.
+  /* Roll to the next ballot on our own once the result has landed. Reduced
+     motion opts out and keeps the manual control: an unrequested timer moving
+     content out from under the reader is exactly what WCAG 2.2.2 is about, and
+     `reduce` is the only signal we have for "don't move things at me". */
   useEffect(() => {
-    if (!revealed) {
-      setShowNext(false);
-      return;
-    }
-    if (reduce) {
-      setShowNext(true);
-      return;
-    }
-    const t = setTimeout(() => setShowNext(true), NEXT_DELAY_MS);
+    if (!revealed || reduce) return;
+    const t = setTimeout(advance, AUTO_ADVANCE_MS);
     return () => clearTimeout(t);
+    // `advance` is re-created every render but only ever reads `index`, which
+    // is already a dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revealed, reduce, index]);
 
   function vote(choice: number) {
@@ -204,10 +102,15 @@ export function HeroBallot() {
     sealTimer.current = setTimeout(() => setSealing(false), SEAL_MS);
   }
 
-  function nextBallot() {
+  /* Wrapping past the last ballot clears every pick. Without that the cycle
+     lands on a ballot that is already voted, reveals instantly, and the
+     auto-advance timer spins the card forever with nothing to interact with. */
+  function advance() {
     clearTimeout(sealTimer.current);
     setSealing(false);
-    setIndex((i) => (i + 1) % BALLOTS.length);
+    const next = (index + 1) % BALLOTS.length;
+    setIndex(next);
+    if (next === 0) setPicks(BALLOTS.map(() => null));
   }
 
   return (
@@ -251,7 +154,7 @@ export function HeroBallot() {
                   : `Vote for ${option.label}`
               }
               className={cn(
-                "flex flex-col rounded-md border bg-surface p-2.5 text-left",
+                "group/opt flex flex-col rounded-md border bg-raised p-2.5 text-left",
                 "transition-[border-color,transform] duration-200",
                 picked !== null ? "cursor-default" : "cursor-pointer",
                 picked === null && "border-line hover:-translate-y-0.5 hover:border-dim",
@@ -259,15 +162,29 @@ export function HeroBallot() {
               )}
             >
               {/* Only the artwork recedes once a pick is in — dimming the whole
-                 tile would drag its numbers under the AA floor. */}
+                 tile would drag its numbers under the AA floor. The ring keeps
+                 the light mockup from bleeding into the tile's own edge. */}
               <div
-                aria-hidden="true"
                 className={cn(
-                  "aspect-[4/3] w-full rounded-xs bg-ink p-2 transition-opacity duration-200",
-                  picked !== null && !isPick && "opacity-45"
+                  "aspect-[4/3] w-full overflow-hidden rounded-xs bg-white",
+                  "ring-1 ring-inset ring-black/10 transition-opacity duration-200",
+                  picked !== null && !isPick && "opacity-40"
                 )}
               >
-                {option.art}
+                {/* eslint-disable-next-line @next/next/no-img-element --
+                    static same-origin SVG at a fixed box: next/image would add
+                    an optimizer round-trip and needs dangerouslyAllowSVG. */}
+                <img
+                  src={option.src}
+                  alt=""
+                  width={320}
+                  height={240}
+                  draggable={false}
+                  className={cn(
+                    "h-full w-full object-cover transition-transform duration-300",
+                    picked === null && "group-hover/opt:scale-[1.04]"
+                  )}
+                />
               </div>
 
               <div className="mt-2.5 flex items-center justify-between">
@@ -361,24 +278,46 @@ export function HeroBallot() {
         )}
       </div>
 
-      <div className="mt-2 h-8">
-        {showNext && (
-          <button
-            type="button"
-            onClick={nextBallot}
-            className={buttonVariants({
-              variant: "ghost",
-              size: "sm",
-              className: "group px-0 hover:bg-transparent",
-            })}
-          >
-            Next task
-            <ArrowRight
-              size={13}
-              className="transition-transform duration-150 group-hover:translate-x-0.5"
-            />
-          </button>
-        )}
+      {/* The card advances itself, so this slot is a countdown rather than a
+          control — without it the ballot would swap with no warning while the
+          visitor is still reading the result. */}
+      <div className="mt-2 flex h-8 items-center gap-3">
+        {revealed &&
+          (reduce ? (
+            <button
+              type="button"
+              onClick={advance}
+              className={buttonVariants({
+                variant: "ghost",
+                size: "sm",
+                className: "group px-0 hover:bg-transparent",
+              })}
+            >
+              Next task
+              <ArrowRight
+                size={13}
+                className="transition-transform duration-150 group-hover:translate-x-0.5"
+              />
+            </button>
+          ) : (
+            <>
+              <span className="shrink-0 font-mono text-[10px] tracking-[0.06em] text-dim uppercase">
+                Next task
+              </span>
+              <div
+                aria-hidden="true"
+                className="h-px flex-1 overflow-hidden bg-line"
+              >
+                <m.div
+                  key={index}
+                  className="h-full bg-lo"
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: AUTO_ADVANCE_MS / 1000, ease: "linear" }}
+                />
+              </div>
+            </>
+          ))}
       </div>
     </div>
   );
