@@ -7,14 +7,17 @@ import { taskApi, submissionApi, meApi } from "@/lib/api";
 import { Task, TaskStats, Thumbnail, WorkerVoteRecord } from "@/types";
 import { ThumbnailGallery } from "@/components/vote/ThumbnailGallery";
 import { AlreadyVoted } from "@/components/vote/AlreadyVoted";
-import { WalletGuard } from "@/components/wallet/WalletGuard";
+import { WalletProviders } from "@/components/wallet/WalletProviders";
+import { ConnectButton } from "@/components/wallet/ConnectButton";
 import { toast } from "sonner";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CloudOff } from "lucide-react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { useAppStore } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
+import VoteLoading from "./loading";
 
 export default function VotePage() {
   const params = useParams();
@@ -28,51 +31,71 @@ export default function VotePage() {
   const [votedOptionId, setVotedOptionId] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  // Bumped by the retry button; the only reason the task effect re-runs.
+  const [reloadKey, setReloadKey] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [contextOpen, setContextOpen] = useState(false);
 
+  // The task is public, so it loads once per id and never waits on auth. It
+  // used to sit in the same effect as /me/submissions with `token` in the deps,
+  // so the persisted token rehydrating replayed all three requests.
   useEffect(() => {
-    const fetchData = async () => {
+    if (!taskId) return;
+    let active = true;
+
+    (async () => {
       setIsLoading(true);
+      setLoadFailed(false);
       try {
-        // No token = not signed in: skip /me/submissions (it would 401) and
-        // treat as "no previous vote".
-        const [taskData, statsData, mySubs] = await Promise.all([
+        const [taskData, statsData] = await Promise.all([
           taskApi.getById(taskId),
           taskApi.getStats(taskId),
-          token
-            ? meApi.getSubmissions()
-            : Promise.resolve<{ submissions: WorkerVoteRecord[] }>({
-                submissions: [],
-              }),
         ]);
-
-        const previousVote = mySubs.submissions.find(
-          (s) => s.taskId === taskId,
-        );
-        if (previousVote) {
-          setHasVoted(true);
-          setVotedOptionId(previousVote.optionId);
-        }
+        if (!active) return;
 
         const updatedOptions = taskData.options?.map((opt: Thumbnail) => {
-          const optStat = statsData.options.find(
-            (s) => s.optionId === opt.id,
-          );
+          const optStat = statsData.options.find((s) => s.optionId === opt.id);
           return { ...opt, votes: optStat ? optStat.votes : 0 };
         });
 
         setTask({ ...taskData, options: updatedOptions });
         setStats(statsData);
       } catch (err) {
+        if (!active) return;
         console.error("Failed to fetch voting data:", err);
-        toast.error("Failed to load task details");
+        setLoadFailed(true);
       } finally {
-        setIsLoading(false);
+        if (active) setIsLoading(false);
       }
-    };
+    })();
 
-    if (taskId) fetchData();
+    return () => {
+      active = false;
+    };
+  }, [taskId, reloadKey]);
+
+  // Whether this visitor has already answered. Signed-out visitors skip it —
+  // /me/submissions would 401 — and simply see the connect prompt.
+  useEffect(() => {
+    if (!taskId || !token) return;
+    let active = true;
+
+    meApi
+      .getSubmissions()
+      .then(({ submissions }: { submissions: WorkerVoteRecord[] }) => {
+        if (!active) return;
+        const previousVote = submissions.find((s) => s.taskId === taskId);
+        if (previousVote) {
+          setHasVoted(true);
+          setVotedOptionId(previousVote.optionId);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch your submissions:", err));
+
+    return () => {
+      active = false;
+    };
   }, [taskId, token]);
 
   const handleVote = async () => {
@@ -112,12 +135,24 @@ export default function VotePage() {
   };
 
   /* ── Loading ──────────────────────────────────────────────────────────── */
-  if (isLoading) {
+  // Reuses the route's own Suspense fallback rather than a second, differently
+  // shaped loading screen — the two used to run back to back and the layout
+  // jumped between them.
+  if (isLoading) return <VoteLoading />;
+
+  /* ── Unreachable API ──────────────────────────────────────────────────── */
+  // Distinct from "not found": a sleeping backend used to render as a deleted
+  // task, which is a much worse thing to tell someone.
+  if (loadFailed) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <span className="font-mono text-[11px] tracking-[0.06em] text-dim">
-          Loading...
-        </span>
+      <div className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-6 py-16">
+        <EmptyState
+          className="flex-1"
+          icon={<CloudOff size={16} />}
+          message="Can't reach the Clixo API."
+          detail="The backend is unreachable or still waking up. This task hasn't gone anywhere."
+          action={{ label: "Try again", onClick: () => setReloadKey((k) => k + 1) }}
+        />
       </div>
     );
   }
@@ -147,60 +182,54 @@ export default function VotePage() {
   /* ── Closed ───────────────────────────────────────────────────────────── */
   if (isCompleted) {
     return (
-      <WalletGuard>
-        <div className="flex flex-1 items-center justify-center p-10">
-          <div className="max-w-[480px] text-center">
-            <div className="eyebrow mb-5">Task #{task.id} · Closed</div>
-            <h2 className="mb-3 text-2xl">Voting is Closed</h2>
-            <p className="mb-7 text-[13px] leading-relaxed text-lo">
-              This task has been completed and consensus has been reached. View
-              the final standings below.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/tasks/${taskId}`)}
-            >
-              View Results →
-            </Button>
-          </div>
+      <div className="flex flex-1 items-center justify-center p-10">
+        <div className="max-w-[480px] text-center">
+          <div className="eyebrow mb-5">Task #{task.id} · Closed</div>
+          <h2 className="mb-3 text-2xl">Voting is Closed</h2>
+          <p className="mb-7 text-[13px] leading-relaxed text-lo">
+            This task has been completed and consensus has been reached. View
+            the final standings below.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/tasks/${taskId}`)}
+          >
+            View Results →
+          </Button>
         </div>
-      </WalletGuard>
+      </div>
     );
   }
 
   /* ── Creator blocked ──────────────────────────────────────────────────── */
   if (isCreator) {
     return (
-      <WalletGuard>
-        <div className="flex flex-1 items-center justify-center p-10">
-          <div className="max-w-[480px] text-center">
-            <div className="eyebrow mb-5">Task #{task.id} · Creator</div>
-            <h2 className="mb-3 text-2xl">You posted this task.</h2>
-            <p className="mb-7 text-[13px] leading-relaxed text-lo">
-              Task creators can&apos;t answer their own tasks.
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => router.push(`/tasks/${taskId}`)}
-            >
-              View Results →
-            </Button>
-          </div>
+      <div className="flex flex-1 items-center justify-center p-10">
+        <div className="max-w-[480px] text-center">
+          <div className="eyebrow mb-5">Task #{task.id} · Creator</div>
+          <h2 className="mb-3 text-2xl">You posted this task.</h2>
+          <p className="mb-7 text-[13px] leading-relaxed text-lo">
+            Task creators can&apos;t answer their own tasks.
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => router.push(`/tasks/${taskId}`)}
+          >
+            View Results →
+          </Button>
         </div>
-      </WalletGuard>
+      </div>
     );
   }
 
   /* ── Already voted ────────────────────────────────────────────────────── */
   if (hasVoted) {
     return (
-      <WalletGuard>
-        <AlreadyVoted
-          votedOption={votedOption}
-          options={task.options || []}
-          totalVotes={stats?.totalSubmissions || 0}
-        />
-      </WalletGuard>
+      <AlreadyVoted
+        votedOption={votedOption}
+        options={task.options || []}
+        totalVotes={stats?.totalSubmissions || 0}
+      />
     );
   }
 
@@ -239,31 +268,47 @@ export default function VotePage() {
     </>
   );
 
+  /* The task itself is public — only answering needs a wallet. Gating the whole
+     page hid every real task from anyone without an extension installed, which
+     is most first-time visitors. The wallet stack loads with this block, not
+     with the page. */
   const submitBlock = (
-    <div className="flex flex-col gap-2.5">
-      <Button
-        variant="primary"
-        size="lg"
-        loading={isSubmitting}
-        disabled={selectedId === null}
-        onClick={handleVote}
-        className="w-full"
-      >
-        {isSubmitting
-          ? "..."
-          : selectedId === null
-            ? "Select an option to continue"
-            : "Submit Opinion"}
-      </Button>
-      <p className="m-0 text-center font-mono text-[10px] leading-normal text-dim">
-        Your opinion is recorded on-chain. You&apos;ll earn ETH when this task closes.
-      </p>
-    </div>
+    <WalletProviders reconnectOnMount={false}>
+      {token ? (
+        <div className="flex flex-col gap-2.5">
+          <Button
+            variant="primary"
+            size="lg"
+            loading={isSubmitting}
+            disabled={selectedId === null}
+            onClick={handleVote}
+            className="w-full"
+          >
+            {isSubmitting
+              ? "..."
+              : selectedId === null
+                ? "Select an option to continue"
+                : "Submit Opinion"}
+          </Button>
+          <p className="m-0 text-center font-mono text-[10px] leading-normal text-dim">
+            Your opinion is recorded on-chain. You&apos;ll earn ETH when this task closes.
+          </p>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-2.5">
+          <ConnectButton />
+          <p className="m-0 text-center font-mono text-[10px] leading-normal text-dim">
+            Browsing is free. Connect a wallet to answer and get paid when this
+            task closes.
+          </p>
+        </div>
+      )}
+    </WalletProviders>
   );
 
   /* ── Voting UI ────────────────────────────────────────────────────────── */
   return (
-    <WalletGuard>
+    <>
       <PageTransition className="flex-1 flex flex-col">
       {/* Desktop layout (md+) ────────────────────────────────────────────── */}
       <div className="hidden md:flex flex-1">
@@ -355,6 +400,6 @@ export default function VotePage() {
       <div className="md:hidden fixed inset-x-0 bottom-0 border-t border-line bg-ink/95 px-4 py-3 backdrop-blur">
         {submitBlock}
       </div>
-    </WalletGuard>
+    </>
   );
 }

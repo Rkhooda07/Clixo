@@ -135,8 +135,10 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right: playable ballot in a full-height panel — desktop only */}
-          <div className="hidden md:flex md:w-[45%] flex-col border-l border-line">
+          {/* Right: playable ballot in a full-height panel. Shown on mobile
+              too — it is the only place the product can be experienced without
+              a wallet, and most inbound traffic is a phone. */}
+          <div className="flex md:w-[45%] flex-col border-t md:border-t-0 md:border-l border-line">
             <div className="flex h-11 shrink-0 items-center justify-between border-b border-line px-5 lg:px-8">
               <span className="eyebrow">Try it</span>
               <span className="eyebrow">Sample task</span>
@@ -155,7 +157,7 @@ export default function LandingPage() {
         {/* Bottom rule + scroll hint */}
         <div className="relative">
           <div className="h-px bg-line" />
-          <div className="hidden md:flex h-8 items-center justify-center gap-1.5 select-none">
+          <div className="flex h-8 items-center justify-center gap-1.5 select-none">
             <span className="eyebrow">Scroll</span>
             <ChevronDown size={12} className="text-dim animate-scroll-hint" />
           </div>

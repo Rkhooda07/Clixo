@@ -19,6 +19,18 @@ export function Footer() {
           <p className="text-xs text-dim">
             Decentralised opinion market on Ethereum.
           </p>
+          {/* The only credits surface on the site. */}
+          <p className="text-xs text-dim">
+            Built by{" "}
+            <a
+              href="https://github.com/rkhooda"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-lo transition-colors hover:text-hi"
+            >
+              Rakshit Hooda
+            </a>
+          </p>
         </div>
 
         {/* Links */}
@@ -33,7 +45,7 @@ export function Footer() {
             <ExternalLink className="w-3 h-3" />
           </a>
           <a
-            href="https://github.com"
+            href="https://github.com/rkhooda/Clixo"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 text-xs text-dim transition-colors hover:text-lo"
