@@ -3,6 +3,10 @@ import { Task, TaskStats, TaskStatus, WorkerVoteRecord, PlatformStats } from "@/
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:4000/api",
+  // A free-tier backend cold-starting takes 30-60s. Unbounded, that hangs the
+  // server render of /browse with no ceiling; better to fail fast and let the
+  // page say the API is unreachable.
+  timeout: 15000,
 });
 
 // Attach Authorization Bearer token header from localStorage to every request

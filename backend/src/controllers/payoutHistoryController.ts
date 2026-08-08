@@ -21,7 +21,7 @@ export const getMypayouts = async (
     });
     return res.json(payouts);
   } catch (error) {
-    console.log("Payout history error: ", error);
+    console.error("Payout history error: ", error);
     return res.status(500).json({
       message: "Failed to fetch payout history",
     });

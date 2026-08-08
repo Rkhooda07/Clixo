@@ -69,7 +69,7 @@ export const getTaskStats = async(req: Request, res: Response) => {
       rewardPerWorker,
     });
   } catch (err) {
-    console.log(err);
+    console.error("Task stats error: ", err);
     return res.status(500).json({
       message: "Failed to fetch stats"
     });

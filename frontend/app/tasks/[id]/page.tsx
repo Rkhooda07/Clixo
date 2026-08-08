@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
+import { CloudOff } from "lucide-react";
 import { taskApi } from "@/lib/api";
 import { Task, TaskStats, Thumbnail } from "@/types";
 import { TaskDetailHeader } from "@/components/tasks/TaskDetailHeader";
@@ -10,6 +11,7 @@ import { WinnerBanner } from "@/components/tasks/WinnerBanner";
 import { ResultsGrid } from "@/components/tasks/ResultsGrid";
 import { Card } from "@/components/ui/Card";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { PageTransition } from "@/components/ui/PageTransition";
 import { PageWrapper } from "@/components/layout/PageWrapper";
 import { useAppStore } from "@/store/useAppStore";
@@ -42,10 +44,14 @@ export default function TaskDetailPage() {
   const [task, setTask] = useState<Task | null>(null);
   const [stats, setStats] = useState<TaskStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
+  // Bumped by the retry button; the only reason this effect re-runs.
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      setLoadFailed(false);
       try {
         const [taskData, statsData] = await Promise.all([
           taskApi.getById(taskId),
@@ -67,15 +73,32 @@ export default function TaskDetailPage() {
         setStats(statsData);
       } catch (err) {
         console.error("Failed to fetch task details:", err);
+        setLoadFailed(true);
       } finally {
         setIsLoading(false);
       }
     };
 
     if (taskId) fetchData();
-  }, [taskId]);
+  }, [taskId, reloadKey]);
 
   if (isLoading) return <LoadingSkeleton />;
+
+  // Distinct from "not found": a sleeping backend used to render as a deleted
+  // task, which is a much worse thing to tell someone.
+  if (loadFailed) {
+    return (
+      <div className="mx-auto flex w-full max-w-[1280px] flex-1 flex-col px-6 py-16">
+        <EmptyState
+          className="flex-1"
+          icon={<CloudOff size={16} />}
+          message="Can't reach the Clixo API."
+          detail="The backend is unreachable or still waking up. This task hasn't gone anywhere."
+          action={{ label: "Try again", onClick: () => setReloadKey((k) => k + 1) }}
+        />
+      </div>
+    );
+  }
 
   if (!task) {
     return (

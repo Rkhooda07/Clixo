@@ -8,7 +8,8 @@ interface EmptyStateProps {
   message: string;
   detail?: string;
   icon?: React.ReactNode;
-  action?: { label: string; href: string };
+  /** Either a link (`href`) or an in-place action such as a retry (`onClick`). */
+  action?: { label: string; href?: string; onClick?: () => void };
   className?: string;
 }
 
@@ -42,14 +43,23 @@ export function EmptyState({
           </div>
           {detail && <div className="text-xs text-lo max-w-[320px]">{detail}</div>}
         </div>
-        {action && (
-          <Link
-            href={action.href}
-            className={buttonVariants({ variant: "outline", size: "sm", className: "mt-1" })}
-          >
-            {action.label} →
-          </Link>
-        )}
+        {action &&
+          (action.href ? (
+            <Link
+              href={action.href}
+              className={buttonVariants({ variant: "outline", size: "sm", className: "mt-1" })}
+            >
+              {action.label} →
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={action.onClick}
+              className={buttonVariants({ variant: "outline", size: "sm", className: "mt-1" })}
+            >
+              {action.label}
+            </button>
+          ))}
       </div>
     </div>
   );

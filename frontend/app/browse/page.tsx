@@ -17,10 +17,13 @@ export default async function BrowseRoute() {
   const queryClient = new QueryClient();
 
   // prefetchQuery swallows errors by design: if the API is unreachable the
-  // page still renders and the client retries the same query key.
+  // page still renders and the client retries the same query key. No retry
+  // here — the axios timeout is 15s, and retrying on the server would hold the
+  // RSC render open for a minute before giving the client anything to draw.
   await queryClient.prefetchQuery({
     queryKey: ["tasks"],
     queryFn: () => taskApi.getAll(),
+    retry: false,
   });
 
   return (

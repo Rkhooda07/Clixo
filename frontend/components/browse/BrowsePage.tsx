@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Compass, Search } from "lucide-react";
+import { CloudOff, Compass, Search } from "lucide-react";
 import { TaskCard } from "@/components/tasks/TaskCard";
 import { TaskCardSkeleton } from "@/components/ui/Skeleton";
 import { Tabs } from "@/components/ui/Tabs";
@@ -31,7 +31,13 @@ export function BrowsePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterId>("all");
 
-  const { data: tasksData, isLoading: isTasksLoading } = useQuery({
+  const {
+    data: tasksData,
+    isLoading: isTasksLoading,
+    isError: isTasksError,
+    isFetching: isTasksFetching,
+    refetch: refetchTasks,
+  } = useQuery({
     queryKey: ["tasks"],
     queryFn: () => taskApi.getAll(),
   });
@@ -112,6 +118,20 @@ export function BrowsePage() {
               <TaskCardSkeleton key={i} />
             ))}
           </div>
+        ) : isTasksError ? (
+          /* Deliberately not the empty state — "no tasks open" and "the API is
+             down" are different facts, and conflating them reads as a dead
+             product rather than a dead connection. */
+          <EmptyState
+            className="flex-1 mb-10"
+            icon={<CloudOff size={16} />}
+            message="Can't reach the Clixo API."
+            detail="The backend is unreachable or still waking up. Your tasks and votes are safe — this is a connection problem, not an empty list."
+            action={{
+              label: isTasksFetching ? "Retrying…" : "Try again",
+              onClick: () => refetchTasks(),
+            }}
+          />
         ) : filteredTasks.length === 0 ? (
           searchQuery || activeFilter !== "all" ? (
             <EmptyState

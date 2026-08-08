@@ -13,6 +13,7 @@ function Divider() {
 
 export function LiveStats() {
   const [stats, setStats] = useState<PlatformStats | null>(null);
+  const [failed, setFailed] = useState(false);
   const [started, setStarted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -23,7 +24,11 @@ export function LiveStats() {
       .then((s) => {
         if (active) setStats(s);
       })
-      .catch(() => {});
+      // Swallowing this left a blank strip under the hero headline, which reads
+      // as a layout bug. Dashes read as "not loaded", which is the truth.
+      .catch(() => {
+        if (active) setFailed(true);
+      });
     return () => {
       active = false;
     };
@@ -60,7 +65,7 @@ export function LiveStats() {
       ref={containerRef}
       className="flex items-center flex-wrap gap-y-2.5 font-mono text-[10px] text-dim tracking-[0.02em] whitespace-nowrap min-h-[15px]"
     >
-      {stats && (
+      {stats ? (
         <>
           <span>{animTasks.toLocaleString()} tasks posted</span>
           <Divider />
@@ -68,7 +73,15 @@ export function LiveStats() {
           <Divider />
           <span>{animOpinions.toLocaleString()} opinions collected</span>
         </>
-      )}
+      ) : failed ? (
+        <>
+          <span>— tasks posted</span>
+          <Divider />
+          <span>— ETH paid out</span>
+          <Divider />
+          <span>— opinions collected</span>
+        </>
+      ) : null}
     </div>
   );
 }
