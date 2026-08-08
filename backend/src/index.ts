@@ -14,7 +14,10 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
+// Deployed origins come from ALLOWED_ORIGINS (comma-separated); the localhost
+// entries stay so a fresh clone works with no env at all.
 const allowedOrigins = new Set([
+  ...(process.env.ALLOWED_ORIGINS?.split(",").map((s) => s.trim()).filter(Boolean) ?? []),
   "http://localhost:3000",
   "http://127.0.0.1:3000",
   "http://localhost:3001",
@@ -23,6 +26,10 @@ const allowedOrigins = new Set([
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+
+  // The response body varies by Origin; without this a CDN can hand one
+  // origin's Access-Control-Allow-Origin to another.
+  res.header("Vary", "Origin");
 
   if (origin && allowedOrigins.has(origin)) {
     res.header("Access-Control-Allow-Origin", origin);

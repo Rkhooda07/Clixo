@@ -1,0 +1,29 @@
+# Render Blueprint for the Clixo API. The frontend deploys to Vercel and the
+# database is the existing Neon instance — neither is described here.
+#
+# Every value below is set in the Render dashboard, not in this file. Secrets
+# stay out of the repository.
+services:
+  - type: web
+    name: clixo-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: RPC_URL
+        sync: false
+      - key: SERVER_PRIVATE_KEY
+        sync: false
+      - key: PINATA_JWT
+        sync: false
+      # The deployed frontend origin. Until this is set, the browser is blocked
+      # by CORS on every request.
+      - key: ALLOWED_ORIGINS
+        sync: false

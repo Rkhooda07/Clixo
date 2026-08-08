@@ -30,8 +30,21 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
+/**
+ * Every OG, Twitter and canonical URL resolves against this. Set
+ * NEXT_PUBLIC_SITE_URL to the real origin; on Vercel the deployment URL is a
+ * good enough fallback, and locally it keeps `next build` from throwing.
+ */
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://clixo.app"),
+  metadataBase: new URL(siteUrl),
   title: {
     default: "Clixo — Decentralised Opinion Market",
     template: "%s — Clixo",
@@ -53,9 +66,10 @@ export const metadata: Metadata = {
       "Post anything that needs real human judgment. Stake ETH. Get answers from real people who get paid to give a damn.",
     siteName: "Clixo",
     type: "website",
+    url: siteUrl,
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Clixo — Decentralised Opinion Market",
     description:
       "Post anything that needs real human judgment. Stake ETH. Get answers from real people who get paid to give a damn.",
