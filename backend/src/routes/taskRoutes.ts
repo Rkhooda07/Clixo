@@ -11,7 +11,7 @@ const router = express.Router();
 router.post("/", requireAuth, createTask);
 
 // Fund a task
-router.post("/:id/fund", fundTask);
+router.post("/:id/fund", requireAuth, fundTask);
 
 // Check stats for a task
 router.get("/:id/stats", getTaskStats);

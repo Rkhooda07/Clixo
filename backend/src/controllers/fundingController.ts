@@ -44,6 +44,17 @@ export async function fundTask (req: Request, res: Response) {
       });
     }
 
+    // This spends the owner's internal balance, so only the owner may call it.
+    const walletAddress = (req as any).auth?.walletAddress;
+    if (
+      !walletAddress ||
+      user.address.toLowerCase() !== walletAddress.toLowerCase()
+    ) {
+      return res.status(403).json({
+        message: "Only the task creator can fund this task.",
+      });
+    }
+
     const remainingBudget = task.budget - task.fundedAmount;
 
     if (remainingBudget <= 0) {

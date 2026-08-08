@@ -21,11 +21,22 @@ export const aggregateTaskResults = async (req: Request, res: Response) => {
       include: {
         options: true,
         submissions: true,
+        user: true,
       },
     });
 
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Closing a task is the creator's call only — this endpoint sets COMPLETED
+    // for any id it is given.
+    const walletAddress = (req as any).auth?.walletAddress;
+    if (
+      !walletAddress ||
+      task.user.address.toLowerCase() !== walletAddress.toLowerCase()
+    ) {
+      return res.status(403).json({ message: "Only the task creator can close this task." });
     }
 
     // Prevent Re-aggregation
