@@ -8,8 +8,12 @@ reached. The stake is the incentive to answer honestly rather than follow the cr
 
 TypeScript end to end, two processes, 159 commits.
 
-> **Status:** Sepolia testnet, not deployed publicly. Runs locally against a hosted Postgres.
-> There is no test suite and no CI — see [Known limitations](#known-limitations).
+> **Status:** Sepolia testnet. No test suite and no CI — see
+> [Known limitations](#known-limitations).
+>
+> **Live demo:** _set `NEXT_PUBLIC_SITE_URL` and paste the URL here after deploying —
+> see [Deploying](#deploying)._ Browsing tasks and playing the landing-page ballot need no
+> wallet; answering a task does.
 
 ---
 
@@ -130,11 +134,13 @@ Requires Node 20+, a PostgreSQL database, a Pinata account, and a funded Sepolia
 ```bash
 # Backend — http://localhost:4000
 cd backend
+cp .env.example .env       # fill it in
 npm install
 npm run dev
 
 # Frontend — http://localhost:3000
 cd frontend
+cp .env.example .env.local # fill it in
 npm install
 npm run dev
 ```
@@ -151,6 +157,7 @@ npm run dev
 | `PORT` | API port (defaults to 4000) |
 | `MAX_UPLOAD_MB` | Upload size cap |
 | `ALLOWED_MIMES` | Permitted image MIME types |
+| `ALLOWED_ORIGINS` | Comma-separated browser origins allowed to call the API. localhost is always allowed on top of these |
 
 Type-check both packages before committing:
 
@@ -169,6 +176,37 @@ destructive reset. Use `prisma db push` for schema changes until the history is 
 
 ---
 
+## Deploying
+
+Two services and one database. Deploying touches no schema — the existing Neon database is
+used as-is, so nothing here goes near Prisma migrations.
+
+**1. Backend → Render** (`render.yaml` in the repo root is picked up by *New → Blueprint*).
+Root directory `backend`, build `npm install && npm run build`, start `npm start`. Set every
+variable from `backend/.env.example`; leave `ALLOWED_ORIGINS` empty for now.
+
+**2. Frontend → Vercel.** Root directory `frontend`; the framework preset is detected. Set:
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | `https://<render-service>.onrender.com/api` |
+| `NEXT_PUBLIC_SITE_URL` | `https://<project>.vercel.app` |
+| `NEXT_PUBLIC_SERVER_WALLET_ADDRESS` | same address as the backend's `SERVER_PRIVATE_KEY` |
+| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | from WalletConnect Cloud |
+
+**3. Close the loop.** Set the backend's `ALLOWED_ORIGINS` to the Vercel URL and redeploy it —
+until then every browser request is blocked by CORS. Add the Vercel URL to the WalletConnect
+project's allowed domains too, or the wallet modal will refuse to open.
+
+**4. Keep it warm.** `.github/workflows/keep-warm.yml` pings the API every 10 minutes so a
+visitor does not land on a 30–60s cold start. Set the repo variable `KEEP_WARM_URL` to the
+Render URL to switch it on.
+
+Then paste the live URL into the badge at the top of this file and into the GitHub repo's
+About field.
+
+---
+
 ## Known limitations
 
 Recorded rather than hidden — these are real and I know where they are.
@@ -182,11 +220,16 @@ Recorded rather than hidden — these are real and I know where they are.
 - **`GAS_FEE` and `ETH_PER_CREDIT` are hardcoded constants** in the payout controller rather
   than configuration or a live gas estimate.
 - **No test suite and no CI.** Type-checking is the only automated gate.
-- **`npm run build` / `npm start` do not work in `backend/`** — `tsconfig.json` sets
-  `noEmit: true`, so `tsc` produces no `dist/`. Development runs through `tsx`.
+- **`backend` runs through `tsx` in production too**, rather than compiling to `dist/`.
+  `tsconfig.json` keeps `noEmit: true` and every internal import carries an explicit `.ts`
+  specifier, so emitting JS would produce a bundle importing files that do not exist.
+  `tsx` is a runtime dependency and `npm start` uses it directly; `npx tsc --noEmit` is still
+  the type gate.
 - **`backend/src/generated/prisma/` is stale** — dead weight from a superseded generator
   config, and the copy `grep` finds first.
-- **Not deployed.** Sepolia testnet only.
+- **The hosted API sleeps.** On a free tier the backend spins down when idle and the first
+  request after that takes 30–60s. The frontend fails fast (15s axios timeout) and says the
+  API is unreachable rather than hanging.
 
 ---
 

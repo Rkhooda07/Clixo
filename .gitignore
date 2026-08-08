@@ -17,3 +17,4 @@ node_modules
 # per-machine. A shared .claude/settings.json stays trackable.
 .claude/worktrees/
 .claude/settings.local.json
+.vscode/
