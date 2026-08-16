@@ -7,6 +7,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { Footer } from "@/components/layout/Footer";
+import { CustomCursor } from "@/components/ui/CustomCursor";
 import "./globals.css";
 
 const geist = Geist({
@@ -86,9 +87,10 @@ export default function RootLayout({
       lang="en"
       className={`${geist.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="antialiased">
+      <body className="antialiased cursor-none">
         <BootSplash />
         <RouteProgress />
+        <CustomCursor />
         <Providers>
           <ScrollToTop />
           <div className="min-h-screen flex flex-col">
