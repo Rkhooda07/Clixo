@@ -118,7 +118,7 @@ export function HeroBallot() {
        open, so casting a vote never shifts the card in its centred panel. */
     <div className="w-full max-w-[400px]">
       <div className="mb-1 flex items-center justify-between">
-        <span className="eyebrow">
+        <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-lo">
           Task #{ballot.id} · {index + 1}/{BALLOTS.length}
         </span>
         <span

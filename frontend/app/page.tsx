@@ -84,7 +84,7 @@ export default function LandingPage() {
         <div className="relative flex-1 flex flex-col md:flex-row md:items-stretch">
           {/* Left: headline content */}
           <div className="flex-1 flex flex-col justify-center pt-12 pb-12 md:pb-0 px-6 md:flex-none md:w-[55%] md:pl-[11%] md:pr-12">
-            <div className="animate-fade-up border-l border-line pl-3 font-mono text-[11px] text-dim tracking-[0.1em] uppercase mb-7">
+            <div className="animate-fade-up border-l border-line pl-3 font-mono text-[11px] text-lo tracking-[0.1em] uppercase mb-7">
               Opinion Market · Powered by Ethereum
             </div>
 
@@ -97,7 +97,7 @@ export default function LandingPage() {
               </span>
             </h1>
 
-            <p className="animate-fade-up [animation-delay:180ms] text-[13px] text-lo max-w-[400px] mt-5 leading-relaxed">
+            <p className="animate-fade-up [animation-delay:180ms] text-[13px] text-hi max-w-[400px] mt-5 leading-relaxed">
               Post anything that needs real opinions. Stake ETH. Get answers
               from real people who get paid to give a damn.
             </p>
@@ -140,8 +140,8 @@ export default function LandingPage() {
               a wallet, and most inbound traffic is a phone. */}
           <div className="flex md:w-[45%] flex-col border-t md:border-t-0 md:border-l border-line">
             <div className="flex h-11 shrink-0 items-center justify-between border-b border-line px-5 lg:px-8">
-              <span className="eyebrow">Try it</span>
-              <span className="eyebrow">Sample task</span>
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-lo">Try it</span>
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-lo">Sample task</span>
             </div>
 
             <div className="flex flex-1 items-center justify-center px-5 py-8 lg:px-8">
@@ -149,7 +149,7 @@ export default function LandingPage() {
             </div>
 
             <div className="flex h-11 shrink-0 items-center border-t border-line px-5 lg:px-8">
-              <span className="eyebrow">Blind voting · Settled on Sepolia</span>
+              <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-lo">Blind voting · Settled on Sepolia</span>
             </div>
           </div>
         </div>
@@ -158,8 +158,8 @@ export default function LandingPage() {
         <div className="relative">
           <div className="h-px bg-line" />
           <div className="flex h-8 items-center justify-center gap-1.5 select-none">
-            <span className="eyebrow">Scroll</span>
-            <ChevronDown size={12} className="text-dim animate-scroll-hint" />
+            <span className="font-mono text-[10px] tracking-[0.12em] uppercase text-lo">Scroll</span>
+            <ChevronDown size={12} className="text-lo animate-scroll-hint" />
           </div>
         </div>
       </section>
