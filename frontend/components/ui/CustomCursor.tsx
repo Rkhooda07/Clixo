@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { m, useReducedMotion } from "framer-motion";
 
 function isInteractiveElement(el: Element | null): boolean {
@@ -14,16 +14,22 @@ function isInteractiveElement(el: Element | null): boolean {
 
 export function CustomCursor() {
   const reduce = useReducedMotion();
-  const [pos, setPos] = useState({ x: 0, y: 0 });
+  const [mounted, setMounted] = useState(false);
+  const [pos, setPos] = useState({ x: -100, y: -100 });
   const [hovering, setHovering] = useState(false);
   const [clicking, setClicking] = useState(false);
-  const rafRef = useRef<number | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (reduce) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (reduce || !mounted) return;
 
     function onMouseMove(e: MouseEvent) {
       setPos({ x: e.clientX, y: e.clientY });
+      if (!isVisible) setIsVisible(true);
       const target = e.target as Element;
       setHovering(isInteractiveElement(target));
     }
@@ -36,67 +42,72 @@ export function CustomCursor() {
       setClicking(false);
     }
 
+    function onMouseLeave() {
+      setIsVisible(false);
+    }
+
+    function onMouseEnter() {
+      setIsVisible(true);
+    }
+
     window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("mousedown", onMouseDown);
     window.addEventListener("mouseup", onMouseUp);
+    document.documentElement.addEventListener("mouseleave", onMouseLeave);
+    document.documentElement.addEventListener("mouseenter", onMouseEnter);
 
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mousedown", onMouseDown);
       window.removeEventListener("mouseup", onMouseUp);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      document.documentElement.removeEventListener("mouseleave", onMouseLeave);
+      document.documentElement.removeEventListener("mouseenter", onMouseEnter);
     };
-  }, [reduce]);
+  }, [reduce, mounted, isVisible]);
 
-  if (reduce) return null;
+  if (reduce || !mounted || !isVisible) return null;
+
+  // Outer ring dimension: base = 32px, hover = 46px, click = 20px
+  const ringSize = clicking ? 20 : hovering ? 46 : 32;
 
   return (
-    <m.div
-      className="fixed top-0 left-0 pointer-events-none z-[9999] w-8 h-8 -translate-x-1/2 -translate-y-1/2"
-      style={{
-        transformOrigin: "center center",
-        willChange: "transform, width, height, border-color, background-color, box-shadow",
-        borderRadius: "50%",
-        borderStyle: "solid",
-        borderColor: "white",
-        backgroundColor: "transparent",
-        borderWidth: 2,
-        boxShadow: "0 0 0 1px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.4)",
-      }}
-      animate={{
-        x: pos.x,
-        y: pos.y,
-        width: hovering ? 48 : clicking ? 24 : 32,
-        height: hovering ? 48 : clicking ? 24 : 32,
-        borderColor: hovering ? "var(--amber)" : "white",
-        backgroundColor: clicking ? "rgba(232,160,32,0.2)" : "transparent",
-        borderWidth: clicking ? 3 : hovering ? 2.5 : 2,
-        boxShadow: hovering
-          ? "0 0 0 1px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.4), 0 0 24px rgba(232,160,32,0.5)"
-          : "0 0 0 1px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.4)",
-      }}
-      transition={{
-        type: "spring",
-        stiffness: clicking ? 500 : hovering ? 350 : 300,
-        damping: clicking ? 35 : hovering ? 30 : 28,
-        mass: 0.8,
-      }}
-    >
+    <>
+      {/* Outer Ring */}
       <m.div
-        className="absolute inset-0 rounded-full"
+        className="fixed top-0 left-0 pointer-events-none z-[99999] rounded-full border border-white/90 shadow-[0_0_12px_rgba(255,255,255,0.3),0_2px_8px_rgba(0,0,0,0.5)]"
         animate={{
-          scale: clicking ? 0.25 : hovering ? 1.15 : 1,
+          x: pos.x - ringSize / 2,
+          y: pos.y - ringSize / 2,
+          width: ringSize,
+          height: ringSize,
+          opacity: 1,
+          borderColor: hovering ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.75)",
+          borderWidth: clicking ? 2.5 : hovering ? 2 : 1.5,
+          backgroundColor: hovering ? "rgba(255, 255, 255, 0.06)" : "transparent",
         }}
         transition={{
           type: "spring",
-          stiffness: 600,
-          damping: 30,
-        }}
-        style={{
-          background: "white",
-          opacity: 1,
+          stiffness: clicking ? 600 : hovering ? 400 : 350,
+          damping: clicking ? 30 : hovering ? 28 : 26,
+          mass: 0.5,
         }}
       />
-    </m.div>
+
+      {/* Center White Dot */}
+      <m.div
+        className="fixed top-0 left-0 pointer-events-none z-[99999] w-2 h-2 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.8),0_1px_4px_rgba(0,0,0,0.6)]"
+        animate={{
+          x: pos.x - 4,
+          y: pos.y - 4,
+          scale: clicking ? 0.7 : hovering ? 1.4 : 1,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 700,
+          damping: 35,
+          mass: 0.2,
+        }}
+      />
+    </>
   );
 }
