@@ -58,27 +58,27 @@ export function CustomCursor() {
 
   if (!visible) return null;
 
-  const scale = clicking ? 0.5 : hovering ? 1.35 : 1;
+  const scale = clicking ? 0.55 : hovering ? 1.3 : 1;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[999999] overflow-hidden">
-      {/* Outer Ring — enlarged distance, centered transform scale, clean border without glow */}
+      {/* Outer Ring — pulled closer (28px base diameter), clean thin border */}
       <div
-        className="pointer-events-none absolute h-11 w-11 rounded-full border border-white/80"
+        className="pointer-events-none absolute h-[28px] w-[28px] rounded-full border border-white/80"
         style={{
-          transform: `translate3d(${pos.x - 22}px, ${pos.y - 22}px, 0) scale(${scale})`,
+          transform: `translate3d(${pos.x - 14}px, ${pos.y - 14}px, 0) scale(${scale})`,
           transformOrigin: "center center",
-          transition: "transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease-out, border-color 0.15s ease-out",
+          transition: "transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.15s ease-out",
           borderColor: hovering ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.7)",
-          borderWidth: clicking ? "2px" : "1.5px",
+          borderWidth: clicking ? "1.5px" : "1px",
         }}
       />
 
-      {/* Solid White Center Dot — perfectly centered */}
+      {/* Center Dot — thin micro dot (4px x 4px) */}
       <div
-        className="pointer-events-none absolute h-2 w-2 rounded-full bg-white"
+        className="pointer-events-none absolute h-1 w-1 rounded-full bg-white"
         style={{
-          transform: `translate3d(${pos.x - 4}px, ${pos.y - 4}px, 0) scale(${clicking ? 0.75 : hovering ? 1.25 : 1})`,
+          transform: `translate3d(${pos.x - 2}px, ${pos.y - 2}px, 0) scale(${clicking ? 0.75 : hovering ? 1.25 : 1})`,
           transformOrigin: "center center",
           transition: "transform 0.05s linear, scale 0.15s ease-out",
         }}
