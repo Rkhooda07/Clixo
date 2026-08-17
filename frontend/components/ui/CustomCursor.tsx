@@ -58,30 +58,29 @@ export function CustomCursor() {
 
   if (!visible) return null;
 
-  const ringRadius = clicking ? 10 : hovering ? 24 : 16;
-  const ringDiameter = ringRadius * 2;
+  const scale = clicking ? 0.5 : hovering ? 1.35 : 1;
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[999999] overflow-hidden">
-      {/* Outer Ring */}
+      {/* Outer Ring — enlarged distance, centered transform scale, clean border without glow */}
       <div
-        className="pointer-events-none absolute rounded-full border-2 border-white shadow-[0_0_10px_rgba(255,255,255,0.8),0_0_20px_rgba(255,255,255,0.4),0_2px_8px_rgba(0,0,0,0.8)]"
+        className="pointer-events-none absolute h-11 w-11 rounded-full border border-white/80"
         style={{
-          width: `${ringDiameter}px`,
-          height: `${ringDiameter}px`,
-          transform: `translate3d(${pos.x - ringRadius}px, ${pos.y - ringRadius}px, 0)`,
-          transition: "transform 0.05s ease-out, width 0.15s ease-out, height 0.15s ease-out, border-width 0.15s ease-out, background-color 0.15s ease-out",
-          backgroundColor: hovering ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.05)",
-          borderWidth: clicking ? "3px" : hovering ? "2.5px" : "2px",
+          transform: `translate3d(${pos.x - 22}px, ${pos.y - 22}px, 0) scale(${scale})`,
+          transformOrigin: "center center",
+          transition: "transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.15s ease-out, border-color 0.15s ease-out",
+          borderColor: hovering ? "rgba(255, 255, 255, 1)" : "rgba(255, 255, 255, 0.7)",
+          borderWidth: clicking ? "2px" : "1.5px",
         }}
       />
 
-      {/* Solid White Center Dot */}
+      {/* Solid White Center Dot — perfectly centered */}
       <div
-        className="pointer-events-none absolute h-2.5 w-2.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,1),0_0_2px_rgba(0,0,0,0.9)]"
+        className="pointer-events-none absolute h-2 w-2 rounded-full bg-white"
         style={{
-          transform: `translate3d(${pos.x - 5}px, ${pos.y - 5}px, 0) scale(${clicking ? 0.6 : hovering ? 1.3 : 1})`,
-          transition: "transform 0.02s linear, scale 0.15s ease-out",
+          transform: `translate3d(${pos.x - 4}px, ${pos.y - 4}px, 0) scale(${clicking ? 0.75 : hovering ? 1.25 : 1})`,
+          transformOrigin: "center center",
+          transition: "transform 0.05s linear, scale 0.15s ease-out",
         }}
       />
     </div>
