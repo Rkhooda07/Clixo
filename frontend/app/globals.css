@@ -200,8 +200,23 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+*,
+*::before,
+*::after,
+a,
+button,
+input,
+textarea,
+select,
+summary,
+[role="button"],
+.cursor-pointer {
+  cursor: none !important;
+}
+
 input,
 textarea,
 select {
-  cursor: auto;
+  cursor: auto !important;
 }
+
