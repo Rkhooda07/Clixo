@@ -50,8 +50,20 @@ export interface TaskStats {
   rewardPerWorker: number;
 }
 
+export interface RecentTaskSummary {
+  id: number;
+  title: string;
+  budget: number;
+  status: TaskStatus;
+  optionsCount: number;
+  totalSubmissions: number;
+  options: Array<{ label: string; thumbnailCid: string | null }>;
+  createdAt: string;
+}
+
 export interface PlatformStats {
   totalTasks: number;
   totalEthDistributed: string;
   totalOpinions: number;
+  recentTasks: RecentTaskSummary[];
 }

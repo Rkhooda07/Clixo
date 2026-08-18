@@ -3,54 +3,25 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 import { LiveStats } from "@/components/home/LiveStats";
 import { HeroParticles } from "@/components/home/HeroParticles";
 import { HeroBallot } from "@/components/home/HeroBallot";
-import { Reveal } from "@/components/ui/Reveal";
-import { Card } from "@/components/ui/Card";
-import { buttonVariants } from "@/components/ui/buttonVariants";
+import { TrustSignals } from "@/components/home/TrustSignals";
+import { UseCases } from "@/components/home/UseCases";
+import { FAQ } from "@/components/home/FAQ";
+import { FinalCTA } from "@/components/home/FinalCTA";
+import { Footer } from "@/components/layout/Footer";
+import { statsApi } from "@/lib/api";
 
-const STEPS = [
-  {
-    n: "01",
-    title: "Post",
-    body: "Write your question or upload your options — images, concepts, ideas, designs. Add context so voters understand what they're judging. Set your ETH reward.",
-  },
-  {
-    n: "02",
-    title: "Vote",
-    body: "Contributors browse open tasks and share their honest opinion. No results shown before they vote — every answer is independent.",
-  },
-  {
-    n: "03",
-    title: "Earn",
-    body: "Task closes when the vote target is hit. The task poster sees ranked results and the winning option. Contributors split the ETH reward.",
-  },
-] as const;
+async function getStats(): Promise<null> {
+  try {
+    await statsApi.get();
+  } catch {
+    // ignore
+  }
+  return null;
+}
 
-const CARDS = [
-  {
-    eyebrow: "POST A TASK",
-    title: "Stop guessing what people want.",
-    body: "Post your question, upload your options, and get real crowd opinions in hours. Works for product ideas, creative decisions, startup validation — anything that needs honest human judgment.",
-    bullets: [
-      "Real opinions, not algorithmic predictions",
-      "Know before you build, launch, or publish",
-      "Any question, any format, any industry",
-    ],
-    cta: { label: "Post a Task", href: "/create-task" },
-  },
-  {
-    eyebrow: "EARN ETH",
-    title: "Get paid for your opinion.",
-    body: "Browse open tasks. Give your honest take. Earn ETH when the task closes — no staking, no lock-ups, no crypto expertise required. Just your judgment.",
-    bullets: [
-      "No minimum time commitment",
-      "Earn ETH for every opinion you give",
-      "Paid out automatically on task close",
-    ],
-    cta: { label: "Browse Tasks", href: "/browse" },
-  },
-] as const;
+export default async function LandingPage() {
+  await getStats(); // warm cache for other pages
 
-export default function LandingPage() {
   return (
     <div className="bg-ink">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -105,11 +76,7 @@ export default function LandingPage() {
             <div className="animate-fade-up [animation-delay:240ms] flex items-center gap-5 mt-8">
               <Link
                 href="/create-task"
-                className={buttonVariants({
-                  variant: "primary",
-                  size: "lg",
-                  className: "group",
-                })}
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-hi text-ink border border-transparent hover:bg-hi/90 active:translate-y-px font-display font-medium tracking-[-0.01em] leading-none whitespace-nowrap select-none transition-colors duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed h-10 px-5 text-[13px] group"
               >
                 Post a Task
                 <ArrowRight
@@ -164,85 +131,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── How It Works ─────────────────────────────────────────────────── */}
-      <section id="how-it-works" className="scroll-mt-[52px] py-24 bg-ink">
-        <div className="max-w-[1280px] mx-auto px-6 md:px-10">
-          <Reveal>
-            <div className="eyebrow tracking-[0.15em] mb-12">Process</div>
-          </Reveal>
+      {/* ── Trust Signals ────────────────────────────────────────────────── */}
+      <TrustSignals />
 
-          <div className="grid grid-cols-1 md:grid-cols-3">
-            {STEPS.map((step, i) => (
-              <Reveal
-                key={step.n}
-                delay={i * 0.1}
-                className={
-                  i > 0
-                    ? "border-t border-line pt-10 mt-10 md:border-t-0 md:pt-0 md:mt-0 md:border-l"
-                    : ""
-                }
-              >
-                <div
-                  className={`group h-full ${i === 0 ? "md:pr-10" : "md:px-10"}`}
-                >
-                  <div className="font-mono text-[11px] text-dim mb-6 transition-colors duration-200 group-hover:text-amber">
-                    {step.n}
-                  </div>
-                  <h3 className="text-lg font-display font-medium tracking-[-0.02em] text-hi mb-2 mt-0">
-                    {step.title}
-                  </h3>
-                  <p className="text-[13px] text-lo leading-[1.7] max-w-[280px] m-0">
-                    {step.body}
-                  </p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── Use Cases ────────────────────────────────────────────────────── */}
+      <UseCases />
 
-      {/* ── Value Props ──────────────────────────────────────────────────── */}
-      <section className="bg-ink px-6 md:px-12 lg:px-20 pb-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {CARDS.map((card, i) => (
-            <Reveal key={card.eyebrow} delay={i * 0.1} className="h-full">
-              <Card interactive className="group p-8 h-full flex flex-col">
-                <div className="eyebrow tracking-[0.1em]">{card.eyebrow}</div>
+      {/* ── FAQ ──────────────────────────────────────────────────────────── */}
+      <FAQ />
 
-                <h3 className="text-[22px] font-display font-medium tracking-[-0.02em] text-hi mt-2 mb-0">
-                  {card.title}
-                </h3>
+      {/* ── Final CTA ────────────────────────────────────────────────────── */}
+      <FinalCTA />
 
-                <p className="text-[13px] text-lo leading-[1.7] mt-3 mb-0">
-                  {card.body}
-                </p>
-
-                <div className="flex flex-col gap-2 mt-5">
-                  {card.bullets.map((b) => (
-                    <div key={b} className="flex gap-2 text-xs text-lo">
-                      <span className="text-dim shrink-0">—</span>
-                      <span>{b}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-auto pt-7">
-                  <Link
-                    href={card.cta.href}
-                    className={buttonVariants({ variant: "primary" })}
-                  >
-                    {card.cta.label}
-                    <ArrowRight
-                      size={14}
-                      className="transition-transform duration-150 group-hover:translate-x-0.5"
-                    />
-                  </Link>
-                </div>
-              </Card>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {/* ── Footer ───────────────────────────────────────────────────────── */}
+      <Footer />
     </div>
   );
 }

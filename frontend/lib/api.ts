@@ -163,10 +163,30 @@ export const statsApi = {
       (t) => t.status === "COMPLETED" || t.status === "CLOSED" || t.status === "SETTLED"
     );
     const totalEth = completedTasks.reduce((acc, t) => acc + t.budget * 0.001, 0);
+
+    // Get recent tasks (last 3 open/active tasks for home page showcase)
+    const recentTasks = data.tasks
+      .filter((t) => t.status === "ACTIVE" || t.status === "CREATED")
+      .slice(0, 3)
+      .map((t) => ({
+        id: t.id,
+        title: t.title,
+        budget: t.budget,
+        status: t.status,
+        optionsCount: t.optionsCount ?? t.options?.length ?? 0,
+        totalSubmissions: t.totalSubmissions ?? 0,
+        options: t.options?.map((opt) => ({
+          label: opt.ipfs_cid ? `Option ${opt.option_id ?? "?"}` : `Option ${opt.option_id ?? "?"}`,
+          thumbnailCid: opt.ipfs_cid,
+        })) ?? [],
+        createdAt: t.createdAt,
+      }));
+
     return {
       totalTasks: data.tasks.length,
       totalEthDistributed: totalEth.toFixed(3),
       totalOpinions: data.tasks.reduce((acc, t) => acc + (t.totalSubmissions ?? 0), 0),
+      recentTasks,
     };
   },
 };

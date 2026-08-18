@@ -200,6 +200,65 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* FAQ Accordion — native <details> with smooth CSS-only animation */
+.faq-item {
+  border-top: 1px solid var(--line);
+  border-bottom: none;
+  background: transparent;
+}
+
+.faq-item:first-of-type {
+  border-top: none;
+}
+
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item .faq-answer {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-item[open] .faq-answer {
+  max-height: 500px;
+  transition: max-height 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-top: 0.75rem;
+}
+
+@starting-style {
+  .faq-item[open] .faq-answer {
+    max-height: 0;
+  }
+}
+
+.faq-item summary .chevron {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-item[open] summary .chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-item .faq-answer,
+  .faq-item[open] .faq-answer,
+  .faq-item summary .chevron,
+  .faq-item[open] summary .chevron {
+    transition: none;
+  }
+  .faq-item[open] .faq-answer {
+    max-height: none;
+    padding-top: 0.75rem;
+  }
+}
+
 *,
 *::before,
 *::after,
